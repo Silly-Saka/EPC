@@ -336,6 +336,9 @@ ORDER BY Score ASC</pre>
 <p><img src="assets/ind2025/q19-schema.png" alt="Database schema: Owners (Owner_ID (P), First_name, Surname, Phone, Address, Email) related one-to-many to Pets (Pet_ID (P), Pet_name, Type, DOB, Gender, Owner_ID (F))"></p>`,
       items: [
         { type: 'sql', marks: 4,
+          sqlAnswer: { orderBy: [[3, 'asc']], queries: [
+            `SELECT Owners.First_name, Owners.Surname, Owners.Email, Pets.Pet_name, Pets.DOB FROM Owners RIGHT JOIN Pets ON Owners.Owner_ID = Pets.Owner_ID WHERE Pets.Type = 'Dog' ORDER BY Pets.Pet_name`,
+            `SELECT Owners.First_name, Owners.Surname, Owners.Email, Pets.Pet_name, Pets.DOB FROM Owners, Pets WHERE Owners.Owner_ID = Pets.Owner_ID AND Pets.Type = 'Dog' ORDER BY Pets.Pet_name`] },
           question: `<p>Construct an SQL query that retrieves all records where the Type of pet is a dog. Each row retrieved should include the first name, surname and email of the owner along with the pet’s name and DOB. The results are to be sorted alphabetically by the pet’s name.</p>
 <p><em>(The practice database below contains sample data for testing your query; the paper shows only the schema.)</em></p>`,
           setup: `CREATE TABLE Owners (Owner_ID INTEGER PRIMARY KEY, First_name TEXT, Surname TEXT, Phone TEXT, Address TEXT, Email TEXT);

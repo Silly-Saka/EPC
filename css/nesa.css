@@ -285,6 +285,13 @@ body.hl-on .highlighter-text, body.hl-on .highlighter-text * { cursor: url("data
 .self-mark select { padding: .2em .4em; }
 .auto-mark { font-weight: 700; margin-top: .4rem; }
 .auto-mark.correct { color: #00804f; } .auto-mark.wrong { color: #b81237; }
+.sql-check { margin-top: .5rem; }
+.sql-check > p { margin: 0 0 .4rem; }
+.sql-check > p .fa-times-circle { color: #b81237; }
+.sql-check .label { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: #555; font-weight: 700; margin-bottom: .25rem; }
+.sql-check table { border-collapse: collapse; margin: 0 0 .5rem; }
+.sql-check th, .sql-check td { border: 1px solid currentColor; padding: 3px 6px; text-align: left; }
+.sql-check th { background: rgba(95, 204, 245, .3); }
 .mc-table tr.is-answer td { background: #d8f5df; }
 .mc-table tr.is-wrong td { background: #ffe0e6; }
 .input-correct { outline: 3px solid #2ecc71 !important; }

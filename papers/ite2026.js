@@ -669,6 +669,9 @@ C2  =IF(B2&gt;$B$11,"Busy Day")</pre>
 <li>ParkingSession 1 — m Payment; PaymentLocation 1 — m Payment</li>
 </ul>` },
         { type: 'sql', part: 'b', marks: 4,
+          sqlAnswer: { orderBy: [[2, 'desc']], queries: [
+            `SELECT ParkingSession.RegistrationPlate, COUNT(ParkingSession.SessionID) AS NumberOfVisits, SUM(Payment.AmountPaid) AS TotalSpend FROM ParkingSession LEFT JOIN Payment ON ParkingSession.SessionID = Payment.SessionID GROUP BY ParkingSession.RegistrationPlate ORDER BY TotalSpend DESC`,
+            `SELECT ParkingSession.RegistrationPlate, COUNT(ParkingSession.SessionID) AS NumberOfVisits, SUM(Payment.AmountPaid) AS TotalSpend FROM ParkingSession, Payment WHERE ParkingSession.SessionID = Payment.SessionID GROUP BY ParkingSession.RegistrationPlate ORDER BY TotalSpend DESC`] },
           question: `<p>Write an SQL statement to return the registration plate, number of times each vehicle has been in the carpark along with their total spend. The results should be sorted in descending order by total spend.</p>`,
           setup: `CREATE TABLE ParkingSession (SessionID INTEGER PRIMARY KEY, RegistrationPlate TEXT, EntryTime TEXT, ExitTime TEXT);
 INSERT INTO ParkingSession VALUES (101,'YXE950','2026-07-12 12:45:00','2026-07-12 15:04:00');

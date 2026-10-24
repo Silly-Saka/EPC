@@ -383,6 +383,7 @@ registerExam({
 </tbody></table>
 <p>Doctor is linked to Appointment through DoctorID; Patient is linked to Appointment through PatientID.</p>` },
         { type: 'sql', part: 'b', marks: 2,
+          sqlAnswer: { orderBy: [[2, 'asc']], queries: [`SELECT PatientFirstName, PatientLastName, PatientDOB FROM Patient WHERE PatientDOB >= '2007-01-01' ORDER BY PatientDOB ASC`] },
           question: `<p>The following shows an extract of the information stored in the system’s Patient table:</p>
 <table class="hoa-table-normal"><thead><tr><th>PatientID</th><th>PatientFirstName</th><th>PatientLastName</th><th>PatientDOB</th></tr></thead><tbody>
 <tr><td>ALM001</td><td>Ally</td><td>MacDonald</td><td>01/01/2007</td></tr>

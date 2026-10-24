@@ -372,6 +372,7 @@ registerExam({
 <li>(vi) Boolean</li>
 </ul>` },
         { type: 'sql', part: 'b', marks: 4,
+          sqlAnswer: { orderBy: [[1, 'asc']], queries: [`SELECT FirstName, LastName FROM Student, Class, ClassEnrolment WHERE Student.StudentID = ClassEnrolment.StudentID AND Class.ClassID = ClassEnrolment.ClassID AND Student.ActiveStudent = 'Y' AND Class.Subject = 'Enterprise Computing' ORDER BY LastName ASC`] },
           question: `<p>Write an SQL query to display the first name and last name of all currently active students studying Enterprise Computing. Display the results in alphabetical order by last name.</p>`,
           setup: `CREATE TABLE Student (StudentID TEXT, FirstName TEXT, LastName TEXT, DateOfBirth TEXT, YearGroup INTEGER, ActiveStudent TEXT);
 INSERT INTO Student VALUES ('JSM001','Jane','Smith','01/12/2010',11,'Y');

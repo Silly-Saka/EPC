@@ -471,7 +471,7 @@ registerExam({
           question: `<p>How can understanding the requirements of an enterprise system inform the choice of a development approach?</p>`,
           options: [`A complex system with evolving needs might benefit from an agile approach.`, `A simple system with clearly defined features might suit a waterfall approach.`, `A system requiring extensive customisation might be best suited for outsourcing.`, `All of the above.`],
           answer: 4,
-          guide: `<p><strong>Answer: D</strong> — All of the above. The choice of approach depends on characteristics such as complexity and how stable the requirements are: agile suits changing needs, waterfall suits well-defined requirements, and outsourcing suits work needing specialised skills the team lacks (textbook pp. 82–88).</p>` }
+          guide: `<p><strong>Answer: D</strong> — All of the above. The choice of approach depends on characteristics such as complexity, budget and time frame (p. 82): agile is ideal for projects with dynamic requirements (p. 85), waterfall suits projects with well-defined goals and stable requirements (p. 84), and outsourcing suits complex projects needing specialised skills the team lacks (pp. 87–88).</p>` }
       ] },
     { number: '58', marks: 1, layout: 0, section: 'Exercise 1.3.1',
       items: [
@@ -576,8 +576,8 @@ registerExam({
         { type: 'mcq',
           question: `<p>A significant risk of outsourcing system development is:</p>`,
           options: [`Increased control over the development process.`, `Reduced communication challenges.`, `The loss of intellectual property.`, `Project security and confidentiality.`],
-          answer: 4,
-          guide: `<p><strong>Answer: D</strong> — Project security and confidentiality. The textbook lists "potential security risks with sharing sensitive information externally" as a limitation of outsourcing (textbook p. 88).</p><p><em>Note: option C is also arguable because losing intellectual property is a real outsourcing risk (the textbook raises IP ownership for freelance work, p. 26). D matches the textbook's wording for outsourcing.</em></p>` }
+          answer: 3,
+          guide: `<p><strong>Answer: C</strong> — The loss of intellectual property. Outsourcing means sharing sensitive project information with an external party; the textbook lists "potential security risks with sharing sensitive information externally" as a limitation of outsourcing (p. 88) and notes that outsourced freelance work raises challenges with ownership of the work and intellectual property rights (p. 26). A and B are the opposite of the listed limitations (less direct control, communication challenges).</p><p><em>Note: option D is arguable if read as "risks to project security and confidentiality", but as printed it names something to protect rather than a risk, while C is the only option that states an actual risk.</em></p>` }
       ] },
 
     // ---------------- Exercise 1.3.3 ----------------

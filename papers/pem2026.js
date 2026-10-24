@@ -384,6 +384,7 @@ registerExam({
 <p><img src="assets/pem2026/q19a-sample-answer.png" alt="Sample schema: PetTBL (PetID PK, Name, Type, DOB, Gender) 1-to-many CheckupTBL (CheckupID PK, CheckupDate, Pet FK, Owner FK, Treatment, Paid) many-to-1 OwnerTBL (OwnerID PK, FirstName, Surname, ContactDetails)"></p>
 <p>PetTBL (PetID (PK), Name, Type, DOB, Gender) — 1 : many — CheckupTBL (CheckupID (PK), CheckupDate, Pet (FK), Owner (FK), Treatment, Paid) — many : 1 — OwnerTBL (OwnerID (PK), FirstName, Surname, ContactDetails)</p>` },
         { type: 'sql', part: 'b', marks: 4,
+          sqlAnswer: { orderBy: [[2, 'asc']], queries: [`SELECT OwnerFirstName, OwnerSurname, PetName, PetDOB FROM FlatFile WHERE PetType = 'Dog' ORDER BY PetName ASC`] },
           question: `<p>The following shows the output from the GreenPaws Veterinary Clinic database after an SQL query was run.</p>
 <p style="margin-left:2em"><em>Priya Sharma, <u>psharma@gmail.com</u>, Bluey, 6/8/20<br>Ava Zhang, <u>ahang@gmail.com</u>, Frankie, 13/11/23<br>Sam Hayes, <u>shayes@gmail.com</u>, Oscar, 3/10/22</em></p>
 <p>Construct the SQL query that would have provided these results.</p>

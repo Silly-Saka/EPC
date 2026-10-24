@@ -4,7 +4,7 @@ registerExam({
   source: 'Textbook', year: 2025, kind: 'textbook',
   readingMinutes: 0, workingMinutes: 0,
   totalMarks: 99,
-  coverNotes: `<p>Multiple-choice questions from the textbook exercises for Module 3. Answers were prepared from the textbook content (the textbook has no answer key).</p>`,
+  coverNotes: `<p>Multiple-choice questions from the textbook exercises for Module 3. Answers were prepared from the textbook content (the textbook has no answer key). Exercise 3.3.1 Question 6 is not included because of a printing error in its answer options (none of the printed options is correct).</p>`,
   groups: [
     // ===== Exercise 3.1.1 =====
     { number: '1', marks: 1, layout: 0, section: 'Exercise 3.1.1',
@@ -77,7 +77,7 @@ registerExam({
           question: `<p>What is the purpose of reducing visual noise in data visualisations?</p>`,
           options: [`To focus attention on key data points.`, `To add more decorative elements.`, `To increase the number of data sources.`, `To make the dataset larger.`],
           answer: 1,
-          guide: `<p><strong>Answer: A</strong> — To focus attention on key data points. Removing unnecessary clutter lets the audience focus on the important data rather than distracting elements (textbook pp. 281–290).</p>` }
+          guide: `<p><strong>Answer: A</strong> — To focus attention on key data points. Visual noise is visual elements that don't add information and detract from important data points, trends and patterns; the priority is to show the data, so noisy elements should be removed or used with care (textbook p. 289).</p>` }
       ] },
     { number: '10', marks: 1, layout: 0, section: 'Exercise 3.1.1',
       items: [
@@ -85,7 +85,7 @@ registerExam({
           question: `<p>Which of the following best describes the use of exponential smoothing in visual analytics?</p>`,
           options: [`To animate data changes over time.`, `To create 3D visual models.`, `To merge datasets from different sources.`, `To predict future values based on weighted past observations.`],
           answer: 4,
-          guide: `<p><strong>Answer: D</strong> — To predict future values based on weighted past observations. Exponential smoothing is a forecasting technique that weights recent observations more heavily than older ones to predict future values (textbook pp. 281–290).</p>` }
+          guide: `<p><strong>Answer: D</strong> — To predict future values based on weighted past observations. Exponential smoothing is a forecasting method that gives more weight to recent data points to make short-term predictions, e.g. for sales forecasting or inventory planning (textbook p. 290).</p>` }
       ] },
 
     // ===== Exercise 3.1.2 =====
@@ -677,7 +677,7 @@ registerExam({
           question: `<p>What would be most appropriate for visualising data trends over time?</p>`,
           options: [`Pie chart.`, `Bubble plot.`, `Area chart.`, `Sunburst chart.`],
           answer: 3,
-          guide: `<p><strong>Answer: C</strong> — Area chart. Like a line chart, an area chart plots values along a time axis to show trends; pie and sunburst charts show parts of a whole (textbook pp. 384–392).</p>` }
+          guide: `<p><strong>Answer: C</strong> — Area chart. Like a line chart, an area chart plots values along a time axis to show trends; pie and sunburst charts show parts of a whole rather than change over time (textbook pp. 385–391).</p>` }
       ] },
     { number: '83', marks: 1, layout: 0, section: 'Exercise 3.4.1',
       items: [
@@ -709,7 +709,7 @@ registerExam({
           question: `<p>Which statement best describes the difference between a linear and an exponential trendline?</p>`,
           options: [`A linear trendline curves to show slow changes, while an exponential one stays flat.`, `Linear trendlines are for financial data while exponential ones are for scientific data.`, `Linear trendlines are always more accurate than exponential ones.`, `A linear trendline increases or decreases steadily while an exponential one changes faster over time.`],
           answer: 4,
-          guide: `<p><strong>Answer: D</strong> — A linear trendline increases or decreases steadily while an exponential one changes faster over time. A linear trend changes at a constant rate; an exponential trend's rate of change grows over time (textbook pp. 384–392).</p>` }
+          guide: `<p><strong>Answer: D</strong> — A linear trendline increases or decreases steadily while an exponential one changes faster over time. A linear trendline is a straight line showing data increasing or decreasing at a steady rate; an exponential trendline is a curve that gets steeper, showing the data changing faster as time goes on (textbook p. 387).</p>` }
       ] },
     { number: '87', marks: 1, layout: 0, section: 'Exercise 3.4.1',
       items: [
@@ -717,7 +717,7 @@ registerExam({
           question: `<p>What should you do when organising your data for a visualisation?</p>`,
           options: [`Add colourful icons and titles.`, `Group similar data and check for consistency.`, `Change values just lightly to make your graphs look better.`, `Remove all outliers without checking them.`],
           answer: 2,
-          guide: `<p><strong>Answer: B</strong> — Group similar data and check for consistency. Organising data means grouping related data and checking it is consistent; altering values or removing outliers unchecked damages data integrity (textbook pp. 384–392).</p>` }
+          guide: `<p><strong>Answer: B</strong> — Group similar data and check for consistency. Organising means checking for errors and inconsistencies (missing values, units, date formats), then grouping similar data together; altering values or removing outliers unchecked damages data integrity (textbook p. 384).</p>` }
       ] },
     { number: '88', marks: 1, layout: 0, section: 'Exercise 3.4.1',
       items: [
@@ -725,7 +725,7 @@ registerExam({
           question: `<p>Why is it important to keep a record of your data sources?</p>`,
           options: [`So you can reuse them for every project.`, `To avoid having to explain your results.`, `To prove your findings are reliable.`, `To make your visualisation more interesting.`],
           answer: 3,
-          guide: `<p><strong>Answer: C</strong> — To prove your findings are reliable. Recording sources shows where the data came from so others can verify it and trust the findings (textbook pp. 318, 384).</p>` }
+          guide: `<p><strong>Answer: C</strong> — To prove your findings are reliable. Keeping a record of where each piece of data came from is important for transparency and credibility: if someone questions your findings, you can show the source (textbook p. 384).</p>` }
       ] },
     { number: '89', marks: 1, layout: 0, section: 'Exercise 3.4.1',
       items: [
@@ -733,7 +733,7 @@ registerExam({
           question: `<p>What type of question does quantitative data help answer?</p>`,
           options: [`Why did it happen?`, `What does it feel like?`, `How much?`, `Who does it affect?`],
           answer: 3,
-          guide: `<p><strong>Answer: C</strong> — How much? Quantitative data is numerical, so it answers questions about quantity such as how much or how many; "why" and "how it feels" are qualitative (textbook pp. 384–392).</p>` }
+          guide: `<p><strong>Answer: C</strong> — How much? Quantitative (numeric) data answers questions such as "how many?", "how much?" or "how often?"; "why" and "how it feels" are qualitative (textbook p. 384).</p>` }
       ] },
 
     // ===== Exercise 3.4.2 =====

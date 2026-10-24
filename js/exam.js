@@ -44,6 +44,7 @@
           var gi2 = gGuide[ii] || {};
           if (gi2.answer != null) item.answer = gi2.answer;
           if (gi2.guide) item.guide = gi2.guide;
+          if (gi2.sql) item.sqlAnswer = gi2.sql;
           return item;
         });
         // distribute missing part marks
@@ -458,6 +459,20 @@
     return { got: got, total: total, pending: pending };
   }
   function startReview(justFinished) {
+    // compare SQL answers' output with the model answers first (async: the SQL engine may need to load)
+    var checks = [];
+    model.groups.forEach(function (g) {
+      g.items.forEach(function (it) {
+        if (it.type === 'sql' && it.sqlAnswer && state.responses[it.key]) checks.push(ITEMS.checkSql(it, state.responses[it.key]));
+      });
+    });
+    if (checks.length) {
+      app.innerHTML = '<div class="results"><h2><i class="fas fa-spinner fa-spin"></i> Marking your answers…</h2></div>';
+      var timeout = new Promise(function (r) { setTimeout(r, 8000); });
+      Promise.race([Promise.all(checks), timeout]).then(function () { showReview(justFinished); });
+    } else showReview(justFinished);
+  }
+  function showReview(justFinished) {
     ctrls = {}; groupEls = [];
     buildShell(true);
     // render every group so auto-marking can use the controls

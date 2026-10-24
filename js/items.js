@@ -436,9 +436,105 @@
       isAnswered: function (v) { return !!(v && v.trim()); },
       setReadOnly: function (ro) { readOnly = ro; editor && editor.setReadOnly(ro); if (fallback) fallback.readOnly = ro; },
       onShow: function () { init(); editor && editor.resize(); },
-      autoMark: function () { return null; },
+      // Full marks only when the output matches the expected output; otherwise left for self-marking.
+      autoMark: function (v) {
+        var c = item._sqlCheck;
+        if (!c || c.value !== v || !c.match) return null;
+        return { got: item.marks || 0, max: item.marks || 0, detail: 'output matches the expected output' };
+      },
+      review: function (v) {
+        var c = item._sqlCheck;
+        if (!c || c.value !== v || c.match || !v || !String(v).trim()) return;
+        var box = el('<div class="sql-check"><p><i class="fas fa-times-circle"></i> <strong>Output check:</strong> <span class="why"></span> Mark this one yourself using the marking guidelines.</p><div class="label">Expected output</div><div class="exp"></div></div>');
+        box.querySelector('.why').textContent = c.reason + '.';
+        box.querySelector('.exp').innerHTML = c.expectedHtml || '';
+        wrap.querySelector('.item-extra').appendChild(box);
+      },
     };
     return api;
+  };
+
+  // ---------- SQL output checking ----------
+  // item.sqlAnswer = { queries: ['SELECT ...', ...], orderBy: [[col, 'asc'|'desc'], ...] }
+  // Any of the queries is accepted. orderBy uses 0-based columns of the expected output; without it row order is ignored.
+  // Column names/aliases and column order are ignored; the values in every row must match.
+  function runQuery(SQL, setup, q) {
+    var db = new SQL.Database();
+    try {
+      if (setup) db.run(setup);
+      var res = db.exec(q);
+      if (!res.length) return { error: 'the query did not return any rows or columns' };
+      var r = res[res.length - 1];
+      return { columns: r.columns, rows: r.values };
+    } catch (err) { return { error: err.message }; }
+    finally { db.close(); }
+  }
+  function normCell(c) {
+    if (c == null) return '\u0000NULL';
+    if (typeof c === 'number') return String(Math.round(c * 1e6) / 1e6);
+    var s = String(c).trim();
+    if (/^-?\d+(\.\d+)?$/.test(s)) return String(Math.round(parseFloat(s) * 1e6) / 1e6);
+    return s;
+  }
+  function cmpCell(a, b) {
+    if (a == null || b == null) return a == null ? (b == null ? 0 : -1) : 1;   // SQLite: NULLs sort first
+    if (typeof a === 'number' && typeof b === 'number') return a - b;
+    a = String(a); b = String(b); return a < b ? -1 : a > b ? 1 : 0;
+  }
+  function compareResults(exp, got, orderBy) {
+    if (got.error) return { match: false, level: 0, reason: 'Your query gave an error (' + got.error + ')' };
+    var ec = exp.columns.length, gc = got.columns.length;
+    if (gc !== ec) return { match: false, level: 1, reason: 'Your output has ' + gc + ' column' + (gc === 1 ? '' : 's') + '; the expected output has ' + ec };
+    if (got.rows.length !== exp.rows.length) return { match: false, level: 2, reason: 'Your output has ' + got.rows.length + ' row' + (got.rows.length === 1 ? '' : 's') + '; the expected output has ' + exp.rows.length };
+    // match each expected column to one of the student's columns with the same values
+    function colKey(rows, j) { return rows.map(function (r) { return normCell(r[j]); }).sort().join('\u0001'); }
+    var used = [], map = [];
+    for (var j = 0; j < ec; j++) {
+      var k = colKey(exp.rows, j), found = -1;
+      for (var g = 0; g < gc; g++) if (used.indexOf(g) < 0 && colKey(got.rows, g) === k) { found = g; break; }
+      if (found < 0) return { match: false, level: 3, reason: 'The values in your output are different from the expected output (check the columns, conditions and joins)' };
+      used.push(found); map.push(found);
+    }
+    var rows = got.rows.map(function (r) { return map.map(function (g) { return r[g]; }); });
+    function rowKey(r) { return r.map(normCell).join('\u0001'); }
+    var a = exp.rows.map(rowKey).sort(), b = rows.map(rowKey).sort();
+    for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return { match: false, level: 4, reason: 'The rows in your output are different from the expected output (check the conditions and joins)' };
+    // row order: the student's rows must be sorted by the required columns (ties may be in any order)
+    if (orderBy && orderBy.length) {
+      for (var n = 1; n < rows.length; n++) {
+        for (var o = 0; o < orderBy.length; o++) {
+          var col = orderBy[o][0], dir = /desc/i.test(orderBy[o][1] || '') ? -1 : 1;
+          var c = cmpCell(rows[n - 1][col], rows[n][col]) * dir;
+          if (c < 0) break;
+          if (c > 0) return { match: false, level: 5, reason: 'Your output has the right rows but they are not in the required order (check ORDER BY)' };
+        }
+      }
+    }
+    return { match: true };
+  }
+  function resultTable(r) {
+    return '<table class="hoa-table-normal"><thead><tr>' + r.columns.map(function (c) { return '<th>' + escapeHtml(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      r.rows.map(function (row) { return '<tr>' + row.map(function (c) { return '<td>' + escapeHtml(c == null ? 'NULL' : c) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>';
+  }
+  // Runs the student's query and the model answer(s); stores the outcome on item._sqlCheck for autoMark/review/report.
+  ITEMS.checkSql = function (item, value) {
+    var ans = item.sqlAnswer;
+    if (item.type !== 'sql' || !ans || !ans.queries || !ans.queries.length || !value || !String(value).trim() || !window.initSqlJs) return Promise.resolve(null);
+    if (!item.setup) item.setup = ITEMS.extractInitial(item.question).initial;   // NESA items keep their tables in the question HTML
+    return getSql().then(function (SQL) {
+      var got = runQuery(SQL, item.setup, value), best = null, firstExp = null;
+      ans.queries.forEach(function (q) {
+        if (best && best.match) return;
+        var exp = runQuery(SQL, item.setup, q);
+        if (exp.error) { console.warn('model answer failed', exp.error); return; }
+        if (!firstExp) firstExp = exp;
+        var r = compareResults(exp, got, ans.orderBy);
+        if (!best || r.match || r.level > best.level) { best = r; best.exp = exp; }
+      });
+      if (!best) return null;
+      item._sqlCheck = { value: value, match: best.match, reason: best.reason || '', expectedHtml: resultTable(best.exp) + (ans.queries.length > 1 ? '<p class="muted" style="font-size:.85em">Other correct answers may give slightly different output.</p>' : '') };
+      return item._sqlCheck;
+    }).catch(function (e) { console.warn(e); return null; });
   };
 
   // ---------- embedded tools (spreadsheet / drawing) in iframes, like NESA ----------

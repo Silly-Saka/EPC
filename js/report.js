@@ -114,7 +114,9 @@
     if (item.type === 'sql') {
       if (!value || !String(value).trim()) return none;
       var result = await ITEMS.sqlResultHtml(item.setup, value);
-      return '<div class="answer"><pre>' + esc(value) + '</pre>' + (result ? '<div class="label">Output when run</div>' + result : '') + '</div>';
+      var chk = item._sqlCheck && item._sqlCheck.value === value ? item._sqlCheck : null;
+      var expected = chk && !chk.match ? '<p class="auto-bad">Output check: ' + esc(chk.reason) + '.</p><div class="label">Expected output</div>' + chk.expectedHtml : '';
+      return '<div class="answer"><pre>' + esc(value) + '</pre>' + (result ? '<div class="label">Output when run</div>' + result : '') + expected + '</div>';
     }
     if (item.type === 'drawing') {
       if (!value || !(value.elements || []).length) return none;

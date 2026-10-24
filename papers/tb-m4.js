@@ -207,7 +207,7 @@ registerExam({
           question: `<p>Which of the following is NOT typically a hardware requirement for intelligent systems?</p>`,
           options: [`Sensor interfaces.`, `Graphical User Interface (GUI).`, `Memory storage devices.`, `Data processing units.`],
           answer: 2,
-          guide: `<p><strong>Answer: B</strong> — Graphical User Interface (GUI). A GUI is software, not hardware. The hardware of intelligent systems includes sensors, processors/microcontrollers, storage, actuators and peripherals (textbook pp. 447–449).</p>` }
+          guide: `<p><strong>Answer: B</strong> — Graphical User Interface (GUI). A GUI is software, not hardware. The textbook describes the hardware of intelligent systems as sensors that perceive the world, processors, interfaces, peripherals and actuators that act on it (textbook pp. 447–449).</p>` }
       ] },
     { number: '26', marks: 1, layout: 0, section: 'Exercise 4.1.3',
       items: [
@@ -247,7 +247,7 @@ registerExam({
           question: `<p>What technique is commonly used by heuristic inference engines?</p>`,
           options: [`Trial and error.`, `Deductive reasoning.`, `Probabilistic analysis.`, `Memory recall.`],
           answer: 1,
-          guide: `<p><strong>Answer: A</strong> — Trial and error. Heuristic knowledge uses experience-based rules of thumb to make educated guesses rather than evaluating every possibility, which is learning by trial and error (textbook p. 446).</p><p><em>Note: option C is also arguable because heuristics are combined with fuzzy logic to handle uncertainty, but heuristics themselves are experience-based rules of thumb.</em></p>` }
+          guide: `<p><strong>Answer: A</strong> — Trial and error. Heuristic knowledge uses decision-making strategies based on experience, or rules of thumb, to make educated guesses rather than evaluating every possibility. Of the options, trial and error is the experience-based technique that matches this (textbook p. 446).</p><p><em>Note: option C is also arguable because heuristics are combined with fuzzy logic to handle uncertainty, but the textbook describes heuristics as experience-based rules of thumb, not probabilistic analysis.</em></p>` }
       ] },
     // ---------------- Exercise 4.1.4 ----------------
     { number: '31', marks: 1, layout: 0, section: 'Exercise 4.1.4',
@@ -547,7 +547,7 @@ registerExam({
           question: `<p>Which of the following is used to create expert systems?</p>`,
           options: [`SPARK`, `CLIPS`, `El Capitan`, `Shopify`],
           answer: 2,
-          guide: `<p><strong>Answer: B</strong> — CLIPS. The C Language Integrated Production System (CLIPS) is a rule-based programming language for creating expert systems. SPARK is a CSIRO bushfire DSS and El Capitan is a supercomputer (textbook p. 503).</p>` }
+          guide: `<p><strong>Answer: B</strong> — CLIPS. The C Language Integrated Production System (CLIPS) is a rule-based programming language for creating expert systems (textbook p. 503). SPARK is CSIRO's disaster-management decision support system (p. 518); El Capitan and Shopify are not expert system tools.</p>` }
       ] },
     { number: '68', marks: 1, layout: 0, section: 'Exercise 4.3.1',
       items: [
@@ -563,7 +563,7 @@ registerExam({
           question: `<p>Why compare predicted to actual outputs?</p>`,
           options: [`To highlight incorrect actual outputs`, `To identify where adjustments may be needed`, `To prove the model is mathematically correct`, `To remove the need to make future predictions`],
           answer: 2,
-          guide: `<p><strong>Answer: B</strong> — To identify where adjustments may be needed. Organisations compare what a DSS predicted with what actually happened to check how accurate and well-performing the system is (textbook p. 518).</p>` }
+          guide: `<p><strong>Answer: B</strong> — To identify where adjustments may be needed. Organisations compare what a DSS predicted with what actually happened to check how accurate the system is; graphing predicted versus actual results shows how accurate it is and where adjustments, if any, might be needed (textbook pp. 518–519).</p>` }
       ] },
     { number: '70', marks: 1, layout: 0, section: 'Exercise 4.3.1',
       items: [

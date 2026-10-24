@@ -93,7 +93,8 @@ E5: =$E$2+C5*D5</pre>
 <li>E5 = standard pay ($E$2, absolute) + overtime hours &times; overtime pay rate. Check: row 6 gives 750 + 7 &times; 35 = 995.</li>
 </ul>` } ],
 
-  '8': [ { guide: `<p><em>Suggested answer (not an official NESA marking guideline)</em></p>
+  '8': [ { sql: { orderBy: [[0, 'asc']], queries: [`SELECT Games.GameName, Customers.CustName, Orders.PurchaseDate FROM Orders, Games, Customers WHERE Orders.GameID = Games.GameID AND Orders.CustID = Customers.CustID ORDER BY Games.GameName ASC`] },
+    guide: `<p><em>Suggested answer (not an official NESA marking guideline)</em></p>
 <table class="hoa-table-normal"><thead><tr><th>Criteria</th><th>Marks</th></tr></thead><tbody>
 <tr><td>Provides a correct SQL query that joins the three tables, selects the required fields and sorts by game name in ascending order</td><td>3</td></tr>
 <tr><td>Provides a SQL query that addresses most of the requirements</td><td>2</td></tr>

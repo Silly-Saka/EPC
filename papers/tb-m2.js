@@ -513,7 +513,7 @@ registerExam({
           question: `<p>Which of the following is an example of a 'what-if' analysis tool in spreadsheets?</p>`,
           options: [`Conditional formatting.`, `Data validation.`, `Goal seek.`, `Filter.`],
           answer: 3,
-          guide: `<p><strong>Answer: C</strong> — Goal seek. What-if analysis explores different outcomes by changing variables; Goal Seek (like Scenario Manager) is found under Data &gt; What-If Analysis in Excel (textbook pp. 206, 217).</p>` }
+          guide: `<p><strong>Answer: C</strong> — Goal seek. What-if analysis is a tool that explores different outcomes by changing certain variables (textbook p. 206). Goal Seek is one of Excel's What-If Analysis tools, alongside the Scenario Manager used in the textbook's weather activity (textbook p. 217). Conditional formatting, data validation and filters do not model changed variables.</p>` }
       ] },
     { number: '63', marks: 1, layout: 0, section: 'Exercise 2.3.1',
       items: [
@@ -799,7 +799,7 @@ registerExam({
           question: `<p>Why do some meteorologists prefer combining AI models like GenCast with traditional physics-based models?</p>`,
           options: [`AI models are often more accurate than traditional models.`, `Traditional models are based on well-understood scientific principles.`, `AI models work faster than traditional models.`, `Traditional models are easier to interpret and understand.`],
           answer: 2,
-          guide: `<p><strong>Answer: B</strong> — Traditional models are based on well-understood scientific principles. Meteorologists are cautious about relying entirely on AI because traditional models are based on well-understood scientific principles, while AI models work as "black boxes" (textbook p. 264).</p>` }
+          guide: `<p><strong>Answer: B</strong> — Traditional models are based on well-understood scientific principles. Meteorologists are cautious about relying entirely on AI because traditional models are based on well-understood scientific principles, while AI models work as "black boxes" (textbook p. 264).</p><p><em>Note: option D is also arguable because the "black box" problem implies traditional models are easier to interpret, but option B is the reason the textbook states directly.</em></p>` }
       ] },
     { number: '98', marks: 1, layout: 0, section: 'Exercise 2.3.4',
       items: [

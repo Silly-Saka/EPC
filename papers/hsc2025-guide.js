@@ -104,7 +104,8 @@ registerGuide('hsc2025', {
 <li>Customers to Sales: <strong>1</strong> (Customers end) to <strong>&infin;</strong> (Sales end) &ndash; one-to-many</li>
 <li>Products to Sales: <strong>1</strong> (Products end) to <strong>&infin;</strong> (Sales end) &ndash; one-to-many</li>
 </ul>` },
-    { guide: `<table class="hoa-table-normal"><thead><tr><th>Criteria</th><th>Marks</th></tr></thead><tbody>
+    { sql: { orderBy: [[1, 'asc']], queries: [`SELECT ProdN, SaleDate, TotalCost, LastN FROM Customers, Products, Sales WHERE Customers.CustID = Sales.CustID AND Products.ProdID = Sales.ProdID AND Products.Category = 'Electronics' AND Sales.SaleDate < '17-01-2025' ORDER BY SaleDate ASC`] },
+      guide: `<table class="hoa-table-normal"><thead><tr><th>Criteria</th><th>Marks</th></tr></thead><tbody>
 <tr><td>Provides a correct SQL query</td><td>4</td></tr>
 <tr><td>Provides a SQL query that addresses most of the requirements</td><td>3</td></tr>
 <tr><td>Shows some understanding of the problem or SQL</td><td>2</td></tr>
