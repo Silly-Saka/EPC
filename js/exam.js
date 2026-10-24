@@ -130,7 +130,7 @@
       '<label><input type="radio" name="mode" value="untimed" checked><span><strong>Practice</strong> — untimed, no reading time<small>Like the NESA past-exam viewer.</small></span></label>' +
       (model.workingMinutes ? '<label><input type="radio" name="mode" value="timed"><span><strong>Exam conditions</strong> — ' + (model.readingMinutes ? model.readingMinutes + ' min reading time + ' : '') + workText + ' working time<small>Answers lock during reading time; the exam ends when time runs out.</small></span></label>' : '') +
       '</div>' +
-      (hasSaved ? '<p class="resume-note"><i class="fas fa-save"></i> You have saved answers for this exam (' + Object.keys(state.responses).length + ' responses).</p><div style="display:flex;gap:1rem;flex-wrap:wrap"><button class="nsw-button nsw-button--dark" id="resume">RESUME <i class="fas fa-angle-right"></i></button><button class="nsw-button nsw-button--dark-outline" id="restart">Start again</button></div>' :
+      (hasSaved ? '<p class="resume-note"><i class="fas fa-save"></i> You have saved answers for this exam (' + Object.keys(state.responses).length + (Object.keys(state.responses).length === 1 ? ' response' : ' responses') + ').</p><div style="display:flex;gap:1rem;flex-wrap:wrap"><button class="nsw-button nsw-button--dark" id="resume">RESUME <i class="fas fa-angle-right"></i></button><button class="nsw-button nsw-button--dark-outline" id="restart">Start again</button></div>' :
         '<button class="nsw-button nsw-button--dark" id="start">START <i class="fas fa-angle-right"></i></button>') +
       '<a href="index.html">&larr; Back to exam list</a>' +
       '</div></div></div>';
@@ -151,7 +151,8 @@
 
   // ---------------------------------------------------------------- exam shell
   function buildShell(review) {
-    app.innerHTML = header('<span class="phase-label" id="phase-label"></span><span class="timer-chip" id="timer"><i class="far fa-clock"></i> <span></span></span>') +
+    app.innerHTML = header('<span class="phase-label" id="phase-label"></span><span class="timer-chip" id="timer"><i class="far fa-clock"></i> <span></span></span>' +
+      (review || state.mode === 'timed' ? '' : '<button class="hdr-exit" id="hdr-exit" title="Finish and review your answers">Exit exam <i class="fas fa-sign-out-alt"></i></button>')) +
       '<div class="nav-bar"><button class="nav-arrow" id="nav-left" title="Previous questions"><i class="fas fa-angle-left"></i></button><div class="nav-wrapper" id="nav-wrapper"><div class="nav-elems" id="nav-elems"></div></div><button class="nav-arrow" id="nav-right" title="More questions"><i class="fas fa-angle-right"></i></button><div class="nav-toolbar" id="toolbar"></div></div>' +
       (review ? '<div class="review-bar" id="review-bar"></div>' : '') +
       '<div class="exam-main" id="main"></div>';
@@ -168,6 +169,8 @@
     wrapper.addEventListener('scroll', updateArrows);
     window.addEventListener('resize', function () { updateArrows(); positionMain(); });
     buildToolbar(review);
+    var hdrExit = document.getElementById('hdr-exit');
+    if (hdrExit) hdrExit.addEventListener('click', confirmExit);
     positionMain();
   }
   function positionMain() {
