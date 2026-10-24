@@ -20,6 +20,12 @@
     { section: 'Preliminary (Year 11) examinations', exams: [
       { id: 'pem2025', title: 'PEM 2025 Preliminary Enterprise Computing' },
     ] },
+    { section: 'Textbook MCQ', exams: [
+      { id: 'tb-m1', title: 'Module 1 — Enterprise project' },
+      { id: 'tb-m2', title: 'Module 2 — Data science' },
+      { id: 'tb-m3', title: 'Module 3 — Data visualisation' },
+      { id: 'tb-m4', title: 'Module 4 — Intelligent systems' },
+    ] },
   ];
 
   // ---------- data registration (paper files call these) ----------

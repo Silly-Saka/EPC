@@ -57,7 +57,8 @@
         var items = g.items.map(function (it) { var c = {}; for (var k in it) c[k] = it[k]; if (c.marks == null && g.items.length === 1) c.marks = g.marks; return c; });
         groups.push({
           number: String(g.number), marks: g.marks, layout: g.stimulus ? (g.layout == null ? 3 : +g.layout) : (+g.layout || 0),
-          titleHtml: '<h3>Question ' + g.number + ' (' + g.marks + '&nbsp;' + (g.marks === 1 ? 'mark' : 'marks') + ')</h3>',
+          titleHtml: '<h3>Question ' + g.number + ' (' + g.marks + '&nbsp;' + (g.marks === 1 ? 'mark' : 'marks') + ')</h3>' +
+            (g.section ? '<span class="q-section">' + escapeHtml(g.section) + '</span>' : ''),
           stimulus: g.stimulus || '', items: items,
         });
       });
