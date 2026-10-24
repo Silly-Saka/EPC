@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spreadsheet tool</title>
+  <!-- Embedded spreadsheet tool laid out like the Webix SpreadSheet used in the NESA online exam.
+       Formulas are calculated by HyperFormula (Excel-compatible engine, GPLv3); graphs by Chart.js. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="spreadsheet.css">
+  <script src="https://cdn.jsdelivr.net/npm/hyperformula@2.7.1/dist/hyperformula.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="ss" id="ss">
+    <div class="ss-toolbar" id="toolbar"></div>
+    <div class="ss-formula">
+      <input class="ss-namebox" id="namebox" spellcheck="false" title="Cell reference — type a reference and press Enter to go there">
+      <span class="ss-edit-label">Edit:</span>
+      <button class="ss-fx-btn" id="fxbtn" title="Insert function">f(x)</button>
+      <input class="ss-fx" id="fx" spellcheck="false" autocomplete="off">
+    </div>
+    <div class="ss-grid-wrap" id="gridwrap">
+      <div class="ss-sheet" id="sheet">
+        <table class="ss-grid" id="grid"></table>
+        <div class="ss-sel" id="selbox"></div>
+        <div class="ss-active" id="activebox"></div>
+        <div class="ss-pointbox hidden" id="pointbox"></div>
+        <div class="ss-fillbox hidden" id="fillbox"></div>
+        <div class="ss-handle" id="handle" title="Drag to fill"></div>
+        <textarea class="ss-editor" id="editor" spellcheck="false" autocomplete="off"></textarea>
+        <div class="ss-charts" id="charts"></div>
+      </div>
+    </div>
+    <div class="ss-status" id="status"></div>
+  </div>
+  <div class="ss-tooltip hidden" id="tooltip"></div>
+  <script src="spreadsheet.js"></script>
+</body>
+</html>
