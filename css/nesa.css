@@ -73,8 +73,6 @@ select, input, textarea, button { font-family: inherit; font-size: inherit; }
 .timer-chip { background: #fff; color: var(--navy); border-radius: 3px; padding: .1rem .6rem; font-weight: 700; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: .4rem; }
 .timer-chip.warn { background: #ffe6ea; color: #b81237; }
 .phase-label { font-weight: 400; font-size: .95rem; }
-.hdr-exit { background: transparent; color: #fff; border: 1.5px solid #fff; border-radius: 3px; padding: .15rem .7rem; font-weight: 700; font-size: .9rem; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; }
-.hdr-exit:hover { background: #fff; color: var(--navy); }
 .intro { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 25px; }
 .intro h2 { font-weight: 400; font-size: 1.85rem; }
 .intro h3 { font-weight: 600; font-size: 1.35rem; margin-top: 1.25rem; }
