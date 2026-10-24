@@ -153,7 +153,7 @@
   // ---------------------------------------------------------------- exam shell
   function buildShell(review) {
     app.innerHTML = header('<span class="phase-label" id="phase-label"></span><span class="timer-chip" id="timer"><i class="far fa-clock"></i> <span></span></span>' +
-      (review || state.mode === 'timed' ? '' : '<button class="hdr-exit" id="hdr-exit" title="Finish and review your answers">Exit exam <i class="fas fa-sign-out-alt"></i></button>')) +
+      (review || state.mode === 'timed' ? '' : '<button class="hdr-exit" id="hdr-exit" title="Save your answers and go back to the exam list (you can resume later)">Exit exam <i class="fas fa-sign-out-alt"></i></button>')) +
       '<div class="nav-bar"><button class="nav-arrow" id="nav-left" title="Previous questions"><i class="fas fa-angle-left"></i></button><div class="nav-wrapper" id="nav-wrapper"><div class="nav-elems" id="nav-elems"></div></div><button class="nav-arrow" id="nav-right" title="More questions"><i class="fas fa-angle-right"></i></button><div class="nav-toolbar" id="toolbar"></div></div>' +
       (review ? '<div class="review-bar" id="review-bar"></div>' : '') +
       '<div class="exam-main" id="main"></div>';
@@ -171,7 +171,7 @@
     window.addEventListener('resize', function () { updateArrows(); positionMain(); });
     buildToolbar(review);
     var hdrExit = document.getElementById('hdr-exit');
-    if (hdrExit) hdrExit.addEventListener('click', confirmExit);
+    if (hdrExit) hdrExit.addEventListener('click', saveAndLeave);
     positionMain();
   }
   function positionMain() {
@@ -230,7 +230,9 @@
       next.addEventListener('click', function () { go(i + 1); });
       actions.appendChild(next);
     } else if (!review) {
-      var exit = el('<button class="nsw-button nsw-button--dark">Exit exam <i class="fas fa-sign-out-alt"></i></button>');
+      var exit = el(state.mode === 'timed'
+        ? '<button class="nsw-button nsw-button--dark">Exit exam <i class="fas fa-sign-out-alt"></i></button>'
+        : '<button class="nsw-button nsw-button--dark">Finish and mark <i class="fas fa-check"></i></button>');
       exit.addEventListener('click', confirmExit);
       actions.appendChild(exit);
     } else {
@@ -399,7 +401,8 @@
   function confirmExit() {
     var unattempted = model.groups.filter(function (g) { return !groupAnsweredLoose(g); }).length;
     var flagged = Object.keys(state.flags).filter(function (k) { return state.flags[k]; }).length;
-    var m = el('<div class="modal-bg"><div class="modal"><h3>Exit exam</h3><p>You have <strong>' + unattempted + '</strong> question' + (unattempted === 1 ? '' : 's') + ' not fully attempted and <strong>' + flagged + '</strong> flagged question' + (flagged === 1 ? '' : 's') + '.</p><p>Once you exit, your answers are locked and you can review them against the marking guidelines.</p><div class="modal-buttons"><button class="nsw-button nsw-button--dark-outline" data-a="back"><i class="fas fa-angle-left"></i> Return to exam</button><button class="nsw-button nsw-button--dark" data-a="exit">Exit exam <i class="fas fa-sign-out-alt"></i></button></div></div></div>');
+    var label = state.mode === 'timed' ? 'Exit exam' : 'Finish and mark';
+    var m = el('<div class="modal-bg"><div class="modal"><h3>' + label + '</h3><p>You have <strong>' + unattempted + '</strong> question' + (unattempted === 1 ? '' : 's') + ' not fully attempted and <strong>' + flagged + '</strong> flagged question' + (flagged === 1 ? '' : 's') + '.</p><p>Once you exit, your answers are locked and you can review them against the marking guidelines.</p><div class="modal-buttons"><button class="nsw-button nsw-button--dark-outline" data-a="back"><i class="fas fa-angle-left"></i> Return to exam</button><button class="nsw-button nsw-button--dark" data-a="exit">' + label + ' <i class="fas fa-sign-out-alt"></i></button></div></div></div>');
     m.addEventListener('click', function (e) {
       var a = e.target.closest('[data-a]'); if (!a) return;
       m.remove(); if (a.getAttribute('data-a') === 'exit') finishExam();
@@ -412,10 +415,20 @@
     m.querySelector('button').addEventListener('click', function () { m.remove(); cb && cb(); });
     document.body.appendChild(m);
   }
+  // capture latest values from rendered controls
+  function captureResponses() {
+    Object.keys(ctrls).forEach(function (k) { try { var v = ctrls[k].getValue(); if (v !== undefined && v !== null && v !== '') state.responses[k] = v; } catch (e) { } });
+  }
+  // practice mode: keep the exam in progress, save, and go back to the exam list
+  function saveAndLeave() {
+    clearInterval(timerHandle);
+    captureResponses();
+    persist(true);
+    location.href = 'index.html';
+  }
   function finishExam() {
     clearInterval(timerHandle);
-    // capture latest values from rendered controls
-    Object.keys(ctrls).forEach(function (k) { try { var v = ctrls[k].getValue(); if (v !== undefined && v !== null && v !== '') state.responses[k] = v; } catch (e) { } });
+    captureResponses();
     state.finished = true; state.finishedAt = Date.now();
     persist(true);
     startReview(true);
