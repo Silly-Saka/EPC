@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HSC Online Exam Practice — Enterprise Computing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="css/nesa.css">
+  <script src="js/common.js"></script>
+</head>
+<body>
+  <div class="access-bar" id="access-bar"></div>
+
+  <main class="landing">
+    <section class="panel" id="exam-sections"></section>
+    <section class="panel">
+      <p>These practice exams recreate how HSC Enterprise Computing questions are presented and answered in the NESA online exam:
+        question navigation, flagging, highlighting, font size and colour settings, the drawing tool, the spreadsheet tool,
+        the SQL editor and written-response boxes with word counts.</p>
+      <p>The <strong>2025 HSC</strong> and the <strong>familiarisation questions</strong> are the NESA online versions. The trial and
+        preliminary papers were converted from paper-based exams into the online format.</p>
+      <p>When you finish (<em>Exit exam</em>), you can review every question with its marking guidelines, see your mark for
+        multiple-choice and other auto-marked items, and self-mark written answers.</p>
+      <p>Your answers save automatically in this browser, so you can close the page and resume later.</p>
+      <h3 style="margin-top:1.5rem">Past papers (PDF)</h3>
+      <p>All the original papers with their marking guidelines and solutions: the 2025 HSC Enterprise Computing paper,
+        the CSSA, ITE, PEM and independent trials, and the older HSC IPT papers (2010–2024).</p>
+      <div class="exam-list" style="align-items:flex-start">
+        <a class="nsw-button nsw-button--dark" href="downloads/NESA-HSC-Papers.zip" download><i class="fas fa-download"></i> Download NESA HSC papers (2010–2025, .zip, 18 MB)</a>
+        <a class="nsw-button nsw-button--dark" href="downloads/Trial-Papers.zip" download><i class="fas fa-download"></i> Download trial papers (CSSA, ITE, PEM, Independent, .zip, 13 MB)</a>
+      </div>
+      <h3 style="margin-top:1.5rem">Syllabus</h3>
+      <ul>
+        <li><a href="https://curriculum.nsw.edu.au/learning-areas/tas/enterprise-computing-11-12-2022" target="_blank" rel="noopener">Enterprise Computing 11–12</a></li>
+        <li><a href="https://fam.hsconline.nesa.nsw.edu.au/" target="_blank" rel="noopener">Official NESA familiarisation site</a></li>
+      </ul>
+      <h3 style="margin-top:1.5rem">Your saved progress</h3>
+      <p>Progress is saved in this browser on this device only. To continue on another computer, back it up here and restore it there.</p>
+      <p id="storage-warning" class="hidden" style="color:#b81237;font-weight:600">This browser is blocking saving for this site (for example a private/incognito window), so answers won't be kept after you close it.</p>
+      <p style="display:flex;gap:.6rem;flex-wrap:wrap">
+        <button class="nsw-button nsw-button--dark-outline nsw-button--small" id="backup"><i class="fas fa-file-export"></i> Back up progress</button>
+        <button class="nsw-button nsw-button--dark-outline nsw-button--small" id="restore"><i class="fas fa-file-import"></i> Restore progress</button>
+        <button class="nsw-button nsw-button--dark-outline nsw-button--small" id="clear-all">Clear all saved answers</button>
+        <input type="file" id="restore-file" accept=".json,application/json" class="hidden">
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">HSC Online Exam Practice<small>Unofficial study tool</small></footer>
+
+  <script>
+    document.getElementById('access-bar').append(makeFontSizeButton(), makeColourButton());
+
+    function statusText(id) {
+      var s = store.get('exam:' + id, null);
+      if (!s) return '';
+      if (s.finished) {
+        var r = s.result || {};
+        return '<span class="done"><i class="fas fa-check-circle"></i> Completed</span>' + (r.total != null ? ' — ' + r.got + ' / ' + r.total + ' marks' + (r.pending ? ' (' + r.pending + ' marks to self-mark)' : '') : '');
+      }
+      var n = Object.keys(s.responses || {}).length;
+      return '<span class="progress"><i class="fas fa-hourglass-half"></i> In progress</span> — ' + n + ' response' + (n === 1 ? '' : 's') + ' saved';
+    }
+
+    var root = document.getElementById('exam-sections');
+    CATALOG.forEach(function (sec) {
+      root.appendChild(el('<h2>' + escapeHtml(sec.section) + '</h2>'));
+      var list = el('<div class="exam-list"></div>');
+      sec.exams.forEach(function (x) {
+        list.appendChild(el('<div class="exam-row"><a class="nsw-button nsw-button--dark" href="exam.html?id=' + x.id + '">' + escapeHtml(x.title) + '</a><span class="exam-status">' + statusText(x.id) + '</span></div>'));
+      });
+      root.appendChild(list);
+    });
+
+    if (!store.available()) document.getElementById('storage-warning').classList.remove('hidden');
+    document.getElementById('backup').addEventListener('click', function () {
+      var data = { app: 'epc-practice', saved: new Date().toISOString(), data: store.exportAll() };
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
+      a.download = 'epc-practice-progress-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    });
+    var fileInput = document.getElementById('restore-file');
+    document.getElementById('restore').addEventListener('click', function () { fileInput.value = ''; fileInput.click(); });
+    fileInput.addEventListener('change', function () {
+      var f = fileInput.files[0]; if (!f) return;
+      f.text().then(function (txt) {
+        var obj = JSON.parse(txt);
+        if (!obj || obj.app !== 'epc-practice' || !obj.data) throw new Error('not a progress backup');
+        if (!confirm('Restore progress from ' + (obj.saved || 'this file').slice(0, 10) + '? Saved answers for the exams in the backup will be replaced.')) return;
+        var n = store.importAll(obj.data);
+        alert('Restored ' + n + ' saved item(s).'); location.reload();
+      }).catch(function () { alert('That file is not a progress backup from this site.'); });
+    });
+    document.getElementById('clear-all').addEventListener('click', function () {
+      if (!confirm('Delete all saved answers and results for every exam on this computer?')) return;
+      CATALOG.forEach(function (sec) { sec.exams.forEach(function (x) { store.remove('exam:' + x.id); }); });
+      location.reload();
+    });
+  </script>
+</body>
+</html>
