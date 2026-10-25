@@ -156,3 +156,85 @@ body { font-family: 'Public Sans', Roboto, Arial, sans-serif; font-size: 15px; c
 .styles-pick { display: flex; flex-wrap: wrap; gap: 6px; }
 .styles-pick span { padding: 4px 8px; border: 2px solid transparent; border-radius: 3px; cursor: pointer; font-size: 13px; }
 .styles-pick span.on { border-color: #1f5ce0; }
+
+/* ---------- NESA / Webix look: toolbar icons, dropdowns, menus, tooltips (overrides the rules above) ---------- */
+.ss-toolbar { padding: 4px 4px 2px; gap: 0; }
+.tb-group { padding: 0 6px; }
+.tb-rows { gap: 5px; }
+.tb-row { gap: 4px; }
+.tb-label { font-size: 14px; color: #475466; margin-top: 4px; }
+.tbtn { height: 32px; min-width: 34px; padding: 0 5px; border: 1px solid #dadee0; border-radius: 4px; background: #fff; color: #475466; gap: 2px; }
+.tbtn:hover:not(:disabled) { background: #f4f5f9; }
+.tbtn.on, .tbtn.open { background: #e3ebfe; border-color: #c4d4fb; color: #475466; }
+.tbtn svg.ssi { width: 20px; height: 20px; flex: none; }
+.tbtn svg.caret { width: 15px; height: 15px; margin: 0 -3px 0 -1px; color: #94a1b3; }
+.tbtn.ico { width: 34px; padding: 0; }
+.tbtn.drop { padding: 0 3px 0 6px; }
+.tbtn.txt { font-family: Roboto, 'Public Sans', Arial, sans-serif; font-size: 16px; width: 34px; padding: 0; color: #475466; }
+.tbtn.txt.b { font-weight: 700; } .tbtn.txt.i { font-style: italic; font-weight: 500; } .tbtn.txt.u { text-decoration: underline; font-weight: 500; } .tbtn.txt.s { text-decoration: line-through; font-weight: 500; }
+.tbtn.combo { justify-content: space-between; padding: 0 3px 0 8px; font-size: 15px; }
+.tbtn.combo.fs { width: 58px; } .tbtn.combo.fmt { width: 92px; }
+.tbtn .colicon { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
+.tbtn .colicon .bar { display: block; width: 18px; height: 3px; margin-top: -1px; border: 1px solid #c8ced3; border-radius: 1px; }
+.tbtn.wide2 { min-width: 96px; justify-content: flex-start; gap: 6px; padding: 0 8px; font-size: 15px; }
+.tbtn.wide2.drop { padding-right: 4px; } .tbtn.wide2.drop svg.caret { margin-left: auto; }
+.tb-tip { position: fixed; z-index: 500; background: #666; color: #fff; font-size: 13px; padding: 4px 8px; border-radius: 2px; pointer-events: none; white-space: nowrap; display: none; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+
+/* menus (no icons; submenus open to the side) */
+.menu { border: 1px solid #dadee0; border-radius: 3px; box-shadow: 0 3px 10px rgba(0,0,0,.16); padding: 4px 0; min-width: 180px; font-size: 15px; color: #475466; }
+.menu div.mi { padding: 7px 16px; gap: 10px; justify-content: space-between; }
+.menu div.mi:hover, .menu div.mi.open { background: #f4f5f9; }
+.menu div.mi.on { background: #e3ebfe; }
+.menu div.mi.disabled { color: #b8c0c9; cursor: default; }
+.menu .mi-arrow { font-size: 18px; line-height: 1; color: #94a1b3; margin-right: -6px; }
+.menu .sep { margin: 4px 8px; }
+.menu.narrow { min-width: 58px; max-height: 330px; overflow-y: auto; }
+.menu.narrow div.mi { padding: 6px 12px; }
+.menu.formats { min-width: 200px; }
+.menu .fmt-eg { color: #94a1b3; margin-left: 24px; }
+.menu.popup { padding: 6px; min-width: 0; }
+
+/* colour board (8 x 10, like Webix) */
+.color-board { display: grid; grid-template-columns: repeat(10, 18px); gap: 3px; padding: 2px; }
+.color-board span { width: 18px; height: 18px; cursor: pointer; border: 1px solid rgba(0,0,0,.08); }
+.color-board span:hover { outline: 2px solid #94a1b3; outline-offset: 0; }
+.color-board span.on { outline: 2px solid #1f5ce0; outline-offset: 0; }
+.color-board.inline { margin-top: 8px; }
+
+/* align choices */
+.icon-choices { display: flex; gap: 2px; }
+.icon-choices .ic, .borders-grid .ic { width: 34px; height: 32px; display: grid; place-items: center; border-radius: 3px; cursor: pointer; color: #475466; }
+.icon-choices .ic:hover, .borders-grid .ic:hover { background: #f4f5f9; }
+.icon-choices .ic.on, .borders-grid .ic.on { background: #e3ebfe; }
+.icon-choices svg, .borders-grid svg { width: 20px; height: 20px; }
+
+/* borders panel */
+.borders-pop { display: flex; flex-direction: column; gap: 6px; }
+.borders-top { display: flex; gap: 8px; }
+.borders-grid { display: grid; grid-template-columns: repeat(4, 34px); gap: 2px; }
+.borders-side { display: flex; flex-direction: column; gap: 2px; border-left: 1px solid #edeff0; padding-left: 8px; }
+.borders-side .pick { height: 32px; display: flex; align-items: center; gap: 2px; padding: 0 4px; border-radius: 3px; cursor: pointer; color: #475466; position: relative; }
+.borders-side .pick:hover { background: #f4f5f9; }
+.borders-side .pick svg.ssi { width: 20px; height: 20px; }
+.borders-side .pick svg.caret { width: 15px; height: 15px; color: #94a1b3; }
+.borders-side .pick .bar { position: absolute; left: 4px; bottom: 4px; width: 20px; height: 3px; }
+.borders-side .pick:first-child { padding-right: 22px; }
+.borders-side .pick:first-child svg.caret { position: absolute; right: 2px; }
+.borders-pop .apply { width: 100%; height: 32px; border: 1px solid #dadee0; border-radius: 4px; background: #f4f5f9; color: #475466; font: inherit; font-size: 15px; cursor: pointer; }
+.borders-pop .apply:hover { background: #e9ecf1; }
+.line-list { border-top: 1px solid #edeff0; padding-top: 4px; max-height: 220px; overflow-y: auto; }
+.line-list .lt { padding: 6px 8px; cursor: pointer; border-radius: 3px; }
+.line-list .lt:hover { background: #f4f5f9; } .line-list .lt.on { background: #e3ebfe; }
+
+/* hidden / grouped rows and columns, links, invalid data */
+.ss-grid th.hc, .ss-grid td.hc { padding: 0 !important; border: 0 !important; font-size: 0 !important; }
+.ss-grid th.hc .col-resizer { display: none; }
+.ss-grid thead th.after-hidden { box-shadow: inset 3px 0 0 -1px #94a1b3; }
+.ss-grid tbody th.after-hidden { box-shadow: inset 0 3px 0 -1px #94a1b3; }
+.ss-grid thead th.grouped { box-shadow: inset 0 3px 0 #94a1b3; }
+.ss-grid tbody th.grouped { box-shadow: inset 3px 0 0 #94a1b3; }
+.grp-tog { position: absolute; left: 2px; top: 2px; width: 13px; height: 13px; line-height: 11px; font-size: 12px; border: 1px solid #94a1b3; border-radius: 2px; background: #fff; color: #475466; cursor: pointer; z-index: 6; text-align: center; }
+.ss-link { color: #1f5ce0; text-decoration: underline; cursor: pointer; }
+.ss-grid td.invalid { box-shadow: inset 0 0 0 2px #e1251b; }
+.dlg label.chk { display: flex; align-items: center; gap: 8px; font-weight: 400; margin: 8px 0 0; }
+.dlg input[type=checkbox] { width: auto; }
