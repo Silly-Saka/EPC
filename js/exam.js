@@ -15,6 +15,7 @@
     if (!exam) throw new Error('Exam "' + examId + '" not found.');
     model = normalise(exam, GUIDES[examId]);
     state = store.get('exam:' + examId, null);
+    if (state && !state.checked) state.checked = {};   // saves from before "Check answer" existed
     document.title = model.title + ' — HSC Online Exam Practice';
     if (state && state.finished) startReview(); else showIntro();
   }).catch(function (err) {
@@ -86,7 +87,7 @@
     return {
       mode: mode, phase: mode === 'timed' && model.readingMinutes ? 'reading' : 'working',
       readingLeft: model.readingMinutes * 60, workingLeft: (model.workingMinutes || 140) * 60, elapsed: 0,
-      responses: {}, flags: {}, current: 0, selfMarks: {}, finished: false, startedAt: Date.now(),
+      responses: {}, flags: {}, checked: {}, current: 0, selfMarks: {}, finished: false, startedAt: Date.now(),
     };
   }
   var saveTimer = null, saveWarned = false;
@@ -143,7 +144,7 @@
     var resume = document.getElementById('resume');
     if (resume) {
       if (state.mode) { var r = app.querySelector('input[name=mode][value=' + state.mode + ']'); if (r) r.checked = true; }
-      resume.addEventListener('click', function () { var m = chosenMode(); if (m !== state.mode) { var keep = state.responses, flags = state.flags; state = newState(m); state.responses = keep; state.flags = flags; } persist(true); startExam(); });
+      resume.addEventListener('click', function () { var m = chosenMode(); if (m !== state.mode) { var keep = state.responses, flags = state.flags, checked = state.checked; state = newState(m); state.responses = keep; state.flags = flags; state.checked = checked || {}; } persist(true); startExam(); });
       document.getElementById('restart').addEventListener('click', function () {
         if (!confirm('Delete your saved answers for this exam and start again?')) return;
         state = newState(chosenMode()); persist(true); startExam();
@@ -226,7 +227,29 @@
     prev.disabled = i === 0;
     prev.addEventListener('click', function () { go(i - 1); });
     actions.appendChild(prev);
-    if (i < model.groups.length - 1) {
+    // textbook quizzes in practice mode: Check answer first, then Next question
+    var checkItem = !review && model.kind === 'textbook' && state.mode !== 'timed' && g.items.length === 1 && g.items[0].type === 'mcq' && g.items[0].answer != null ? g.items[0] : null;
+    var checkBtn = null;
+    if (checkItem) {
+      checkBtn = el('<button class="nsw-button nsw-button--dark">Check answer <i class="fas fa-check"></i></button>');
+      checkBtn.addEventListener('click', function () {
+        if (state.responses[checkItem.key] == null) { toast('Choose an answer first.'); return; }
+        state.checked[checkItem.key] = true; persist(true);
+        showCheck(checkItem);
+        checkBtn.remove(); actions.appendChild(afterCheck);
+        afterCheck.focus();
+      });
+    }
+    var afterCheck = null;
+    if (checkItem && i < model.groups.length - 1) {
+      afterCheck = el('<button class="nsw-button nsw-button--dark">Next question <i class="fas fa-angle-right"></i></button>');
+      afterCheck.addEventListener('click', function () { go(i + 1); });
+    } else if (checkItem) {
+      afterCheck = el('<button class="nsw-button nsw-button--dark">Finish and mark <i class="fas fa-check"></i></button>');
+      afterCheck.addEventListener('click', confirmExit);
+    }
+    if (checkItem) actions.appendChild(state.checked[checkItem.key] ? afterCheck : checkBtn);
+    else if (i < model.groups.length - 1) {
       var next = el('<button class="nsw-button nsw-button--dark">Next question <i class="fas fa-angle-right"></i></button>');
       next.addEventListener('click', function () { go(i + 1); });
       actions.appendChild(next);
@@ -255,6 +278,7 @@
       else Array.prototype.forEach.call(ctl.el.querySelectorAll('select'), function (s) { if (!Array.prototype.some.call(s.options, function (o) { return o.value === ''; })) s.selectedIndex = -1; });
       if (review) addReview(item, ctl);
     });
+    if (checkItem && state.checked[checkItem.key]) showCheck(checkItem);
 
     if (g.layout === 0) {
       var one = el('<div class="group-onecol"></div>');
@@ -281,6 +305,23 @@
     document.getElementById('main').appendChild(groupEl);
     groupEls[i] = groupEl;
     applyReadOnly();
+  }
+
+  // Shows right/wrong, highlights the correct option and the explanation; the answer is then locked.
+  function showCheck(item) {
+    var ctl = ctrls[item.key]; if (!ctl) return;
+    var v = state.responses[item.key], right = v === item.answer;
+    ctl.setReadOnly(true);
+    ctl.review && ctl.review(v);
+    var extra = ctl.el.querySelector('.item-extra');
+    var old = extra.querySelector('.check-box'); if (old) old.remove();
+    var done = 0, correct = 0;
+    model.groups.forEach(function (g) { g.items.forEach(function (it) { if (state.checked[it.key]) { done++; if (state.responses[it.key] === it.answer) correct++; } }); });
+    var box = el('<div class="check-box ' + (right ? 'correct' : 'wrong') + '"><div class="check-head"><i class="fas ' + (right ? 'fa-check-circle' : 'fa-times-circle') + '"></i> ' +
+      (right ? 'Correct!' : 'Incorrect — the correct answer is ' + 'ABCDEFGH'[item.answer - 1] + '.') +
+      '<span class="check-score">Score so far: ' + correct + ' / ' + done + '</span></div><div class="check-guide"></div></div>');
+    box.querySelector('.check-guide').innerHTML = item.guide || '';
+    extra.appendChild(box);
   }
 
   function go(i) {
@@ -338,7 +379,7 @@
   // ---------------------------------------------------------------- reading/working time
   function applyReadOnly() {
     var ro = state.finished || state.phase === 'reading';
-    Object.keys(ctrls).forEach(function (k) { ctrls[k].setReadOnly(ro); });
+    Object.keys(ctrls).forEach(function (k) { ctrls[k].setReadOnly(ro || !!(state.checked && state.checked[k])); });
     groupEls.forEach(function (g) {
       if (!g) return;
       var banner = g.querySelector('.reading-banner');

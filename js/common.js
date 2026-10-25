@@ -26,6 +26,11 @@
       { id: 'tb-m3', title: 'Module 3 — Data visualisation' },
       { id: 'tb-m4', title: 'Module 4 — Intelligent systems' },
     ] },
+    { section: 'Ec.eforge MCQ', exams: [
+      { id: 'ef-ds', title: 'Data Science' },
+      { id: 'ef-dv', title: 'Data Visualisation' },
+      { id: 'ef-is', title: 'Intelligent Systems' },
+    ] },
   ];
 
   // ---------- data registration (paper files call these) ----------
