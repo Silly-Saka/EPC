@@ -261,7 +261,8 @@
   };
 
   // ---------- written response (NESA item type 2, CKEditor 4) ----------
-  // NESA's textbox toolbar also has a Σ formula composer and an ABC spell-check button.
+  // Same toolbar, dialogs and menus as the NESA exam's text box: Σ opens NESA's "Formula" keypad panel,
+  // ABC is a dropdown with "Enable/Disable Spell-check", and the Table dialog has NESA's six fields.
   // CKEditor needs absolute icon URLs (it prefixes relative ones with its CDN path)
   var SIGMA_ICON = new URL('img/sigma.svg', location.href).href;
   var ABC_ICON = new URL('img/abc.svg', location.href).href;
@@ -270,63 +271,176 @@
     return (window.jQuery ? Promise.resolve() : loadScript('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js'))
       .then(function () { return loadScript('https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.js'); });
   }
-  function openMathDialog(editor) {
+  // NESA formula keypad: [label (LaTeX, or text for digits), action, argument, hover hint, colour]
+  // actions: w = write LaTeX, c = cmd, k = keystroke, f = several steps
+  var FORMULA_KEYS = [
+    [['7', 'w', '7', 'Seven 7', 'y', 1], ['8', 'w', '8', 'Eight 8', 'y', 1], ['9', 'w', '9', 'Nine 9', 'y', 1], ['÷', 'w', '÷', 'Divided by ÷', 'g', 1],
+      ['°', 'w', '°', 'Degree symbol °', 'b'], ['\\cdot', 'w', '\\cdot', 'Dot operator ·', 'b'], ['\\pm', 'w', '±', 'Plus or minus ±', 'b'], ['\\sqrt{ }', 'c', '\\sqrt', 'Square root', 'b'], ['\\sqrt[ ]{ }', 'w', '\\sqrt[]{}', 'Nth root', 'b'], ['<', 'w', '<', 'Less then <', 'b']],
+    [['4', 'w', '4', 'Four 4', 'y', 1], ['5', 'w', '5', 'Five 5', 'y', 1], ['6', 'w', '6', 'Six 6', 'y', 1], ['×', 'w', '×', 'Multiplied by ×', 'g', 1],
+      ['>', 'w', '>', 'Greater then >', 'b'], ['\\le', 'w', '\\le', 'Less then or equal to ≤', 'b'], ['\\ge', 'w', '\\ge', 'Greater then or equal to ≥', 'b'], ['\\ne', 'w', '\\neq', 'Not equal to ≠', 'b'], ['\\equiv', 'w', '\\equiv', 'Equivalent to ≡', 'b'], ['\\sim', 'w', '\\sim', 'Tilde ~', 'b']],
+    [['1', 'w', '1', 'One 1', 'y', 1], ['2', 'w', '2', 'Two 2', 'y', 1], ['3', 'w', '3', 'Three 3', 'y', 1], ['-', 'w', '-', 'Minus -', 'g', 1],
+      ['\\simeq', 'w', '\\simeq', 'Approximately equal to ≃', 'b'], ['\\infty', 'w', '\\infty', 'Infinity ∞', 'b'], ['\\propto', 'w', '\\propto', 'Proportional to ∝', 'b'], ['\\leftarrow', 'w', '\\leftarrow', 'Left arrow ←', 'b'], ['\\rightarrow', 'w', '\\rightarrow', 'Right arrow →', 'b'], ['<span class="sym">⇌</span>', 'f', function (mf) { mf.typedText('⇌'); }, 'Equilibrium arrow ⇌', 'b', 1]],
+    [['0', 'w', '0', 'Zero 0', 'y', 1], ['.', 'w', '.', 'Decimal', 'y', 1], [',', 'w', ',', 'Comma', 'y', 1], ['+', 'w', '+', 'Plus +', 'g', 1],
+      ['_{ }^{ }\\overline{ }', 'f', function (mf) { mf.write('_{}^{}'); mf.keystroke('Right'); mf.cmd('\\overline'); }, 'Atomic symbol', 'b'],
+      ['\\overline{ }_{ }^{ }', 'f', function (mf) { mf.cmd('\\overline'); mf.keystroke('Right'); mf.write('_{}^{}'); ['Left', 'Left', 'Left', 'Left'].forEach(function (k) { mf.keystroke(k); }); }, 'Polyatomic ion', 'b'],
+      ['\\overline{ }^{ }', 'f', function (mf) { mf.cmd('\\overline'); mf.keystroke('Right'); mf.cmd('^'); mf.keystroke('Left'); mf.keystroke('Left'); }, 'Exponent', 'b'],
+      ['\\overline{ }_{ }', 'f', function (mf) { mf.cmd('\\overline'); mf.keystroke('Right'); mf.cmd('_'); mf.keystroke('Left'); mf.keystroke('Left'); }, 'Subscript', 'b'],
+      ['\\frac{ }{ }', 'c', '\\frac', 'Fraction', 'b'], ['\\left|\\ \\right|', 'c', '|', 'Absolute value', 'b']],
+    [['<i class="fas fa-caret-left"></i>', 'k', 'Left', 'Left', 'l', 1], ['<i class="fas fa-caret-right"></i>', 'k', 'Right', 'Right', 'l', 1], ['<i class="fas fa-backspace"></i>', 'k', 'Backspace', 'Backspace', 'l', 1], ['=', 'w', '=', 'Equals =', 'g', 1],
+      ['\\overrightarrow{ }', 'c', '\\overrightarrow', 'Vector', 'b'], ['<span class="sym">∫</span>', 'w', '\\int', 'Integral', 'b', 1], ['\\int_{ }^{ }', 'w', '\\int_{}^{}', 'Integral with limits', 'b'], ['\\Sigma', 'w', '\\Sigma', 'Sigma', 'b'], ['\\sum_{ }^{ }', 'c', '\\sum', 'Sigma with limits', 'b'], ['', '', '', '', 'b', 1]],
+  ];
+  // "Show symbols": the same Greek letters as NESA's special characters (LaTeX where MathQuill has a command)
+  var GREEK = 'Alpha,alpha,Beta,beta,Gamma,gamma,Delta,delta,Epsilon,epsilon,Zeta,zeta,Eta,eta,Theta,theta,Iota,iota,Kappa,kappa,Lambda,lambda,Mu,mu,Nu,nu,Xi,xi,Omicron,omicron,Pi,pi,Rho,rho,Sigma,sigma,Tau,tau,Upsilon,upsilon,Phi,phi,Chi,chi,Psi,psi,Omega,omega'.split(',');
+  var GREEK_CHARS = 'ΑαΒβΓγΔδΕεΖζΗηΘθΙιΚκΛλΜμΝνΞξΟοΠπΡρΣσΤτΥυΦφΧχΨψΩω';
+  var MQ_GREEK = { Gamma: 1, Delta: 1, Theta: 1, Lambda: 1, Xi: 1, Pi: 1, Sigma: 1, Upsilon: 1, Phi: 1, Psi: 1, Omega: 1 };
+  var openFormula = null;
+  function openMathDialog(editor, existing) {
     var bookmarks = null;
     try { bookmarks = editor.getSelection().createBookmarks2(true); } catch (e) { }
     loadMathQuill().then(function () {
+      if (openFormula) openFormula.remove();
       var MQ = MathQuill.getInterface(2);
-      var tools = [['a/b', '\\frac', 'cmd'], ['x²', '^', 'cmd'], ['xₙ', '_', 'cmd'], ['√', '\\sqrt', 'cmd'], ['×', '\\times', 'write'], ['÷', '\\div', 'write'], ['±', '\\pm', 'write'], ['≤', '\\le', 'write'], ['≥', '\\ge', 'write'], ['≠', '\\ne', 'write'], ['π', '\\pi', 'write'], ['Σ', '\\sum', 'cmd'], ['( )', '(', 'cmd'], ['°', '^\\circ', 'write']];
-      var m = el('<div class="modal-bg"><div class="modal"><h3>Formula composer</h3><p style="margin:.2rem 0 .6rem;font-size:.9rem;color:#444">Type your formula. Use the buttons, or type / for a fraction and ^ for a power.</p><div class="mq-tools"></div><div class="mq-box"><span class="mq-field"></span></div><div class="modal-buttons"><button class="nsw-button nsw-button--dark-outline" data-a="cancel">Cancel</button><button class="nsw-button nsw-button--dark" data-a="ok">Insert</button></div></div></div>');
-      document.body.appendChild(m);
-      var mf = MQ.MathField(m.querySelector('.mq-field'), { spaceBehavesLikeTab: false, autoCommands: 'pi sqrt sum', autoOperatorNames: 'sin cos tan log' });
-      var bar = m.querySelector('.mq-tools');
-      tools.forEach(function (t) { var b = el('<button type="button" class="mq-btn"></button>'); b.textContent = t[0]; b.onclick = function () { mf[t[2]](t[1]); mf.focus(); }; bar.appendChild(b); });
-      setTimeout(function () { mf.focus(); }, 50);
-      m.addEventListener('click', function (e) {
-        var a = e.target.closest('[data-a]'); if (!a) return;
-        var latex = mf.latex();
-        m.remove();
-        if (a.getAttribute('data-a') !== 'ok' || !latex.trim()) { editor.focus(); return; }
+      var p = el('<div class="conc-formula" role="dialog" aria-label="Formula"><div class="conc-formula-header">Formula<div class="conc-formula-grip" title="Drag to move"><span></span><span></span><span></span><span></span></div><div class="close-btn" title="Close">×</div><div class="ok-btn" title="Insert">✓</div></div>' +
+        '<div class="conc-formula-input"><span class="mf"></span></div><div class="conc-formula-hint"></div><div class="conc-formula-keyboard"></div>' +
+        '<div class="conc-formula-symbols-toggle"><a href="#">Show symbols</a></div><div class="conc-formula-symbols" hidden></div>' +
+        '<div class="conc-formula-footer"><div class="display-selector">Display: <span class="dval">inline</span> <label><input type="radio" name="fdisp" value="inline" checked> Inline</label><br><label><input type="radio" name="fdisp" value="block"> Block</label></div>' +
+        '<div class="fbtns"><button type="button" class="f-ok">OK</button><button type="button" class="f-cancel">Cancel</button></div></div></div>');
+      document.body.appendChild(p); openFormula = p;
+      var mf = MQ.MathField(p.querySelector('.mf'), { spaceBehavesLikeTab: false, autoCommands: 'pi sqrt sum', autoOperatorNames: 'sin cos tan log ln' });
+      if (existing && existing.latex) mf.latex(existing.latex);
+      var hint = p.querySelector('.conc-formula-hint');
+      function key(def, cls) {
+        var b = el('<button type="button" class="fkey ' + cls + '"></button>');
+        if (def[5] || !def[0]) b.innerHTML = def[0]; else { var s = document.createElement('span'); b.appendChild(s); try { MQ.StaticMath(s).latex(def[0]); } catch (e) { s.textContent = def[0]; } }
+        if (def[3]) { b.addEventListener('mouseenter', function () { hint.textContent = def[3]; }); b.addEventListener('mouseleave', function () { hint.textContent = ''; }); }
+        b.addEventListener('mousedown', function (e) { e.preventDefault(); });
+        b.addEventListener('click', function () {
+          if (!def[1]) return;
+          if (def[1] === 'w') mf.write(def[2]); else if (def[1] === 'c') mf.cmd(def[2]); else if (def[1] === 'k') mf.keystroke(def[2]); else if (def[1] === 'f') def[2](mf);
+          mf.focus();
+        });
+        return b;
+      }
+      var kb = p.querySelector('.conc-formula-keyboard');
+      FORMULA_KEYS.forEach(function (row) { var r = el('<div class="conc-formula-row"></div>'); row.forEach(function (d) { r.appendChild(key(d, { y: 'yellow-btn', g: 'gray-btn', b: 'blue-btn', l: 'light-gray-btn' }[d[4]])); }); kb.appendChild(r); });
+      var sym = p.querySelector('.conc-formula-symbols');
+      GREEK.forEach(function (name, i) {
+        var ch = GREEK_CHARS[i], latex = /^[a-z]/.test(name) ? (name === 'omicron' ? 'o' : '\\' + name) : (MQ_GREEK[name] ? '\\' + name : ch);
+        var b = el('<button type="button" class="fkey symbol-btn gray-btn"></button>'); b.textContent = ch; b.title = 'Greek ' + (/^[A-Z]/.test(name) ? 'capital' : 'small') + ' letter ' + name;
+        b.addEventListener('mousedown', function (e) { e.preventDefault(); });
+        b.addEventListener('click', function () { if (latex === ch) mf.typedText(ch); else mf.write(latex); mf.focus(); });
+        sym.appendChild(b);
+      });
+      var pl = el('<button type="button" class="fkey symbol-btn gray-btn" title="Plimsoll">⦵</button>');
+      pl.addEventListener('mousedown', function (e) { e.preventDefault(); }); pl.addEventListener('click', function () { mf.typedText('⦵'); mf.focus(); }); sym.appendChild(pl);
+      var tog = p.querySelector('.conc-formula-symbols-toggle a');
+      tog.addEventListener('click', function (e) { e.preventDefault(); sym.hidden = !sym.hidden; tog.textContent = sym.hidden ? 'Show symbols' : 'Hide symbols'; place(); });
+      var disp = existing && existing.block ? 'block' : 'inline';
+      Array.prototype.forEach.call(p.querySelectorAll('input[name=fdisp]'), function (r) { r.checked = r.value === disp; r.addEventListener('change', function () { disp = r.value; p.querySelector('.dval').textContent = disp; }); });
+      p.querySelector('.dval').textContent = disp;
+      // place at the top of the window, centred; drag by the header
+      function place() { var w = p.offsetWidth; if (!p._moved) { p.style.left = Math.max(4, (window.innerWidth - w) / 2) + 'px'; p.style.top = '4px'; } }
+      place();
+      p.querySelector('.conc-formula-header').addEventListener('mousedown', function (e) {
+        if (e.target.closest('.close-btn, .ok-btn')) return;
+        e.preventDefault(); var sx = e.clientX, sy = e.clientY, ox = p.offsetLeft, oy = p.offsetTop;
+        function mv(ev) { p._moved = true; p.style.left = Math.max(0, Math.min(window.innerWidth - 60, ox + ev.clientX - sx)) + 'px'; p.style.top = Math.max(0, Math.min(window.innerHeight - 40, oy + ev.clientY - sy)) + 'px'; }
+        function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); }
+        document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up);
+      });
+      function close() { p.remove(); openFormula = null; editor.focus(); }
+      function insert() {
+        var latex = mf.latex(); p.remove(); openFormula = null;
+        editor.focus();
+        if (!latex.trim()) return;
         var holder = document.createElement('span'); holder.style.cssText = 'position:fixed;left:-9999px'; document.body.appendChild(holder);
         MQ.StaticMath(holder).latex(latex);
-        var html = holder.innerHTML; holder.remove();
-        editor.focus();
+        var inner = holder.innerHTML.replace(/^<span[^>]*mq-math-mode[^>]*>|<\/span>$/g, ''); holder.remove();
+        var span = '<span class="epc-math mq-math-mode" data-latex="' + escapeHtml(latex) + '">' + inner + '</span>';
+        if (existing && existing.element) {
+          var target = existing.block ? existing.element.getAscendant('div', true) || existing.element : existing.element;
+          var fresh = CKEDITOR.dom.element.createFromHtml(disp === 'block' ? '<div class="epc-math-block">' + span + '</div>' : span, editor.document);
+          fresh.replace(target); editor.fire('change'); return;
+        }
         try { if (bookmarks) editor.getSelection().selectBookmarks(bookmarks); } catch (e) { }
-        editor.insertHtml('<span class="epc-math mq-math-mode" data-latex="' + escapeHtml(latex) + '">' + html.replace(/^<span[^>]*mq-math-mode[^>]*>|<\/span>$/g, '') + '</span>&nbsp;');
-      });
-    }).catch(function () { alert('The formula composer needs an internet connection.'); });
+        editor.insertHtml(disp === 'block' ? '<div class="epc-math-block">' + span + '</div><p>&nbsp;</p>' : span + '&nbsp;');
+      }
+      p.querySelector('.close-btn').addEventListener('click', close); p.querySelector('.f-cancel').addEventListener('click', close);
+      p.querySelector('.ok-btn').addEventListener('click', insert); p.querySelector('.f-ok').addEventListener('click', insert);
+      p.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); else if (e.key === 'Enter') { e.preventDefault(); insert(); } });
+      setTimeout(function () { mf.focus(); }, 50);
+    }).catch(function () { alert('The formula tool needs an internet connection.'); });
+  }
+  // NESA trims the Table dialog to Rows, Columns, Headers / Width, Height, Align
+  function trimTableDialog(ev) {
+    var name = ev.data.name;
+    if (name === 'specialchar') { ev.data.definition.minHeight = 90; return; }
+    if (name !== 'table' && name !== 'tableProperties') return;
+    var def = ev.data.definition, info = def.getContents('info'); if (!info || info._epcTrimmed) return;
+    info._epcTrimmed = true;
+    var rows = info.get('txtRows'), cols = info.get('txtCols'), hdr = info.get('selHeaders'), w = info.get('txtWidth'), h = info.get('txtHeight'), al = info.get('cmbAlign');
+    if (rows) rows['default'] = 1; if (cols) cols['default'] = 1;
+    if (al && al.items) al.items = [['<not set>', ''], ['Left', 'left'], ['Centre', 'center'], ['Right', 'right']];
+    var hidden = ['txtBorder', 'txtCellSpace', 'txtCellPad', 'txtCaption', 'txtSummary'].map(function (id) { return info.get(id); }).filter(Boolean);
+    hidden.forEach(function (e) { e.hidden = true; });
+    var b = info.get('txtBorder'); if (b) b['default'] = 1;   // tables keep a visible border in the saved answer
+    info.elements = [
+      { type: 'hbox', widths: ['50%', '50%'], children: [
+        { type: 'vbox', padding: 0, children: [rows, cols, { type: 'html', html: '&nbsp;' }, hdr].filter(Boolean) },
+        { type: 'vbox', padding: 0, children: [w, h, { type: 'html', html: '&nbsp;' }, al].filter(Boolean) },
+      ] },
+      { type: 'vbox', hidden: true, children: hidden },
+    ];
+    def.minWidth = 240; def.minHeight = 140;
   }
   function registerCkePlugins() {
     if (!window.CKEDITOR || CKEDITOR.plugins.registered.epcmath) return;
+    CKEDITOR.on('dialogDefinition', trimTableDialog);
     CKEDITOR.plugins.add('epcmath', { init: function (editor) {
-      editor.addCommand('epcMath', { exec: function (ed) { openMathDialog(ed); }, canUndo: false, readOnly: 0 });
-      editor.ui.addButton('EpcMath', { label: 'Formula composer', command: 'epcMath', icon: SIGMA_ICON });
+      editor.addCommand('openMathFormula', { exec: function (ed) { openMathDialog(ed); }, canUndo: false, readOnly: 0 });
+      editor.ui.addButton('Sigma', { label: 'Insert Formula', command: 'openMathFormula', icon: SIGMA_ICON });
+      // double-click a formula to edit it
+      editor.on('doubleclick', function (ev) {
+        var t = ev.data.element, m = t && (t.hasClass && t.hasClass('epc-math') ? t : t.getAscendant(function (x) { return x.hasClass && x.hasClass('epc-math'); }));
+        if (!m) return;
+        ev.cancel();
+        openMathDialog(editor, { latex: m.getAttribute('data-latex') || '', element: m, block: !!m.getAscendant(function (x) { return x.hasClass && x.hasClass('epc-math-block'); }) });
+      }, null, null, 1);
     } });
-    CKEDITOR.plugins.add('epcspell', { init: function (editor) {
-      editor.addCommand('epcSpell', { canUndo: false, exec: function (ed) {
-        var ed2 = ed.editable(), on = ed2.getAttribute('spellcheck') === 'true';
-        ed2.setAttribute('spellcheck', on ? 'false' : 'true');
-        this.setState(on ? CKEDITOR.TRISTATE_OFF : CKEDITOR.TRISTATE_ON);
-        ed2.$.blur(); ed2.focus();
+    CKEDITOR.plugins.add('epcspell', { requires: 'menubutton', init: function (editor) {
+      var on = false;
+      editor.addCommand('epcSpell', { canUndo: false, readOnly: 0, exec: function (ed) {
+        on = !on; var e2 = ed.editable(); e2.setAttribute('spellcheck', on ? 'true' : 'false');
+        e2.$.blur(); e2.focus();
       } });
-      editor.ui.addButton('EpcSpell', { label: 'Spell-check (show spelling errors)', command: 'epcSpell', icon: ABC_ICON });
-      editor.on('instanceReady', function () { editor.editable().setAttribute('spellcheck', 'false'); });
+      editor.addMenuGroup('epcspell');
+      editor.addMenuItems({ epcSpellToggle: { label: 'Enable Spell-check', group: 'epcspell', command: 'epcSpell', order: 1 } });
+      editor.ui.add('Scayt', CKEDITOR.UI_MENUBUTTON, {
+        label: 'Spell Check As You Type', icon: ABC_ICON, modes: { wysiwyg: 1 },
+        onMenu: function () { editor.getMenuItem('epcSpellToggle').label = on ? 'Disable Spell-check' : 'Enable Spell-check'; return { epcSpellToggle: CKEDITOR.TRISTATE_OFF }; },
+      });
+      editor.on('contentDom', function () {
+        var ed2 = editor.editable(); ed2.setAttribute('spellcheck', on ? 'true' : 'false');
+        // with spell-check on, right-clicking text shows the browser's menu (with spelling suggestions); tables keep the editor's menu
+        ed2.$.addEventListener('contextmenu', function (e) { if (on && !(e.target.closest && e.target.closest('table'))) e.stopImmediatePropagation(); }, true);
+      });
     } });
   }
+  // the same special characters as NESA (Greek letters and the Plimsoll symbol)
+  var NESA_SPECIAL_CHARS = GREEK.map(function (n) { return ['&' + n + ';', 'Greek ' + (/^[A-Z]/.test(n) ? 'capital' : 'small') + ' letter ' + n.charAt(0).toUpperCase() + n.slice(1)]; }).concat([['&#10677;', 'Plimsoll']]);
   var CKE_CONFIG = {
     versionCheck: false,
-    toolbar: [
-      ['Bold', 'Underline', 'Italic'], ['BulletedList', 'NumberedList', 'Indent', 'Outdent'], ['Table'],
-      ['Subscript', 'Superscript'], ['Cut', 'Copy', 'Paste'], ['Undo', 'Redo'], ['SpecialChar', 'EpcMath', 'EpcSpell'],
-    ],
+    language: 'en-au',
+    toolbar: [{ name: 'nesa', items: ['Bold', 'Underline', 'Italic', 'BulletedList', 'NumberedList', 'Indent', 'Outdent', 'Table', 'Subscript', 'Superscript', 'Cut', 'Copy', 'Paste', 'Undo', 'Redo', 'SpecialChar', 'Sigma', 'Scayt'] }],
+    removeButtons: '',
     allowedContent: true,
-    extraPlugins: 'divarea,autogrow,epcmath,epcspell',
-    removePlugins: 'elementspath,exportpdf',
-    autoGrow_minHeight: 60, autoGrow_maxHeight: 600, autoGrow_onStartup: true,
+    extraPlugins: 'divarea,autogrow,menubutton,tableresize,epcmath,epcspell',
+    removePlugins: 'elementspath,exportpdf,scayt,wsc',
+    autoGrow_minHeight: 50, autoGrow_maxHeight: 600, autoGrow_onStartup: true,
     resize_enabled: true, resize_dir: 'vertical',
-    disableNativeSpellChecker: false,
-    removeDialogTabs: 'table:advanced',
-    specialChars: ['&lsquo;', '&rsquo;', '&ldquo;', '&rdquo;', '&ndash;', '&mdash;', '&times;', '&divide;', '&plusmn;', '&le;', '&ge;', '&ne;', '&asymp;', '&infin;', '&sum;', '&radic;', '&pi;', '&deg;', '&micro;', '&rarr;', '&larr;', '&harr;', '&uarr;', '&darr;', '&rArr;', '&hArr;', '&and;', '&or;', '&not;', '&isin;', '&cap;', '&cup;', '&sube;', '&forall;', '&exist;', '&alpha;', '&beta;', '&gamma;', '&delta;', '&lambda;', '&sigma;', '&theta;', '&Omega;', '&sup2;', '&sup3;', '&frac12;', '&frac14;', '&frac34;', '&euro;', '&pound;', '&cent;', '&copy;', '&reg;', '&trade;', '&bull;', '&hellip;', '&sect;', '&para;'],
+    disableNativeSpellChecker: true,
+    removeDialogTabs: 'table:advanced;tableProperties:advanced',
+    specialChars: NESA_SPECIAL_CHARS,
   };
   function countWords(text) { var m = (text || '').replace(/ /g, ' ').trim().match(/\S+/g); return m ? m.length : 0; }
   ITEMS.text = function (item, ctx) {

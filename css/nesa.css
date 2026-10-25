@@ -386,3 +386,38 @@ input.hoa-checkbox { margin-right: 1em; }
 .accordian .accordian-header { background-color: var(--accordian-header-background); cursor: pointer; padding: .2rem; border: 1px solid var(--accordian-border-foreground); font-weight: bold; }
 .accordian .accordian-content { padding: 0 1rem; border: 1px solid var(--accordian-border-foreground); display: none; }
 .accordian .accordian-item.active .accordian-content { display: block; }
+
+/* ---------- NESA "Formula" panel (Σ button in text boxes) ---------- */
+.conc-formula { position: fixed; z-index: 10200; width: 496px; max-width: calc(100vw - 8px); background: #f0f0f0; box-shadow: 0 0 3px rgba(0,0,0,.15), 0 6px 24px rgba(0,0,0,.18); font-family: 'Open Sans', 'Public Sans', sans-serif; font-size: 16px; color: #000; user-select: none; }
+.conc-formula-header { position: relative; background: #f0f0f0; padding: 10px; border-radius: 2px 2px 0 0; cursor: move; height: 45px; box-sizing: border-box; }
+.conc-formula-grip { position: absolute; left: 50%; top: 19px; transform: translateX(-50%); display: flex; gap: 3px; }
+.conc-formula-grip span { width: 4px; height: 4px; border-radius: 50%; background: #555; }
+.conc-formula .close-btn, .conc-formula .ok-btn { position: absolute; top: 6px; font-size: 24px; line-height: 30px; cursor: pointer; color: #000; }
+.conc-formula .close-btn { right: 38px; } .conc-formula .ok-btn { right: 10px; }
+.conc-formula-input { background: #fff; border: 1px solid #ddd; padding: 20px; min-height: 65px; box-sizing: border-box; font-family: Symbola, 'Times New Roman', serif; font-size: 20px; user-select: text; }
+.conc-formula-input .mq-editable-field { display: block; width: 100%; border: 0 !important; box-shadow: none !important; min-height: 1.2em; }
+.conc-formula-hint { background: #f0f0f0; padding: 5px 10px 0; height: 24px; box-sizing: border-box; font-family: Symbola, 'Times New Roman', serif; }
+.conc-formula-row { display: flex; }
+.conc-formula .fkey { flex: 1 1 0; min-width: 0; height: 56px; border: 0; margin: 0; padding: 1px 6px; font-family: 'Public Sans', sans-serif; font-size: 16px; color: #333; cursor: pointer; border-radius: 0; }
+.conc-formula .fkey .mq-math-mode, .conc-formula .fkey .mq-math-mode * { cursor: pointer; font-size: 16px; }
+.conc-formula .yellow-btn { background: #fcfcd3; } .conc-formula .gray-btn { background: #ddd; } .conc-formula .blue-btn { background: #e6f2fc; } .conc-formula .light-gray-btn { background: #f0f0f0; }
+.conc-formula .fkey:hover { filter: brightness(.94); }
+.conc-formula .fkey:active { filter: brightness(.88); }
+.conc-formula-symbols-toggle { text-align: right; padding: 10px 0 6px; }
+.conc-formula-symbols-toggle a { color: #002664; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.conc-formula-symbols { display: flex; flex-wrap: wrap; padding: 0 0 4px; }
+.conc-formula .symbol-btn { flex: 0 0 35px; width: 35px; height: 34px; padding: 0; margin: 0 1px 1px 0; font-family: Symbola, 'Times New Roman', serif; }
+.conc-formula-footer { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px 12px 28px; }
+.conc-formula-footer label { cursor: pointer; } .conc-formula-footer input { margin: 0 4px 0 6px; }
+.conc-formula-footer .display-selector { line-height: 1.6; }
+.conc-formula-footer .display-selector br { display: none; }
+.conc-formula-footer .fbtns { display: flex; gap: 6px; }
+.conc-formula-footer button { width: 70px; height: 29px; border-radius: 2px; font: 16px 'Open Sans', sans-serif; cursor: pointer; padding: 2px 5px; }
+.conc-formula-footer .f-ok { background: #3972b8; border: 1px solid #3066ae; color: #fff; }
+.conc-formula-footer .f-cancel { background: #fff; border: 1px solid #ddd; color: #000; }
+.epc-math-block { text-align: center; margin: .4em 0; }
+
+.cke_dialog_ui_labeled_required { display: none; }   /* NESA's (older) CKEditor shows no * on required fields */
+.conc-formula-symbols[hidden] { display: none; }
+.conc-formula .fkey .mq-empty { background: transparent !important; border: 1px solid #777; display: inline-block; min-width: .45em; min-height: .75em; vertical-align: middle; box-sizing: border-box; }
+.conc-formula .fkey .sym { font-family: Symbola, 'Times New Roman', serif; font-size: 18px; }
