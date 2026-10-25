@@ -387,10 +387,10 @@
     var box = el('<div class="sql-wrap"><div class="sql-tab">Query</div><div class="sql-editor"></div><div class="sql-resizer" title="Drag to resize"></div><div class="sql-results"><span class="muted">No results to display</span></div></div>');
     wrap.querySelector('.item-control').appendChild(box);
     var edDiv = box.querySelector('.sql-editor'), out = box.querySelector('.sql-results');
-    var fallback = null;
+    var fallback = null, tablesEl = null;
     // item.showTables: list the starting tables above the editor (so the question doesn't have to repeat them)
     if (item.showTables && item.setup && window.initSqlJs) {
-      var tablesEl = el('<div class="sql-tables"><span class="muted">Loading tables…</span></div>');
+      tablesEl = el('<div class="sql-tables"><span class="muted">Loading tables…</span></div>');
       box.parentNode.insertBefore(tablesEl, box);
       getSql().then(function (SQL) {
         var d = new SQL.Database(); d.run(item.setup);
@@ -451,6 +451,7 @@
       setValue: function (v) { pendingValue = v || ''; if (editor) editor.setValue(pendingValue, 1); if (fallback) fallback.value = pendingValue; },
       isAnswered: function (v) { return !!(v && v.trim()); },
       setReadOnly: function (ro) { readOnly = ro; editor && editor.setReadOnly(ro); if (fallback) fallback.readOnly = ro; },
+      stimEl: tablesEl,
       onShow: function () { init(); editor && editor.resize(); },
       // Full marks only when the output matches the expected output; otherwise left for self-marking.
       autoMark: function (v) {
@@ -662,7 +663,7 @@
     html += '</tbody></table></div><div class="fx-inputs"></div>';
     var box = el('<div class="fx-wrap">' + html + '</div>');
     wrap.querySelector('.item-control').appendChild(box);
-    var inputsEl = box.querySelector('.fx-inputs'), inputs = {};
+    var inputsEl = box.querySelector('.fx-inputs'), inputs = {}, sheetWrap = box.querySelector('.fx-sheet-wrap');
     (item.cells || []).forEach(function (t) {
       var row = el('<label class="fx-row"><span class="fx-cell">' + t.cell + '</span><span class="fx-eq">fx</span><input type="text" class="fx-input" spellcheck="false" autocomplete="off" placeholder="=formula"><span class="fx-mark"></span>' + (t.fill ? '<span class="fx-note">filled ' + (parseRange(t.fill).r2 > parseRange(t.fill).r1 ? 'down' : 'across') + ' to ' + t.fill.split(':')[1] + '</span>' : '') + '</label>');
       var inp = row.querySelector('input');
@@ -676,7 +677,7 @@
     function preview() {
       getHF().then(function (HF) {
         var res = evalFormulas(HF, item, api.getValue()), grid = res.__grid || [];
-        Array.prototype.forEach.call(box.querySelectorAll('td[data-rc]'), function (td) {
+        Array.prototype.forEach.call(sheetWrap.querySelectorAll('td[data-rc]'), function (td) {
           var p = td.getAttribute('data-rc').split(':'), v = (grid[+p[0]] || [])[+p[1]];
           var raw = (data[+p[0]] || [])[+p[1]];
           if (td.classList.contains('fx-target') || td.classList.contains('fx-fill') || (typeof raw === 'string' && raw[0] === '=')) {
@@ -691,6 +692,7 @@
       setValue: function (v) { v = v || {}; Object.keys(inputs).forEach(function (k) { inputs[k].input.value = v[k] || ''; }); schedulePreview(); },
       isAnswered: function (v) { return !!v && (item.cells || []).every(function (t) { return !!String(v[t.cell] || '').trim(); }); },
       setReadOnly: function (ro) { Object.keys(inputs).forEach(function (k) { inputs[k].input.readOnly = ro; }); },
+      stimEl: sheetWrap,
       onShow: function () { schedulePreview(); },
       autoMark: function (v) {
         var c = item._formulaCheck; if (!c || c.key !== JSON.stringify(v || {})) return null;

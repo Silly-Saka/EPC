@@ -28,6 +28,18 @@
     var m = /\((\d+)\s*marks?\)/i.exec(String(h || '').replace(/&nbsp;/g, ' ').replace(/<[^>]+>/g, ''));
     return m ? +m[1] : null;
   }
+  // Pulls data tables (and a bold caption paragraph just before each) out of question HTML.
+  function splitTables(html) {
+    var d = document.createElement('div'); d.innerHTML = html || '';
+    var out = document.createElement('div');
+    Array.prototype.slice.call(d.children).forEach(function (t) {
+      if (t.tagName !== 'TABLE') return;
+      var prev = t.previousElementSibling, strong = prev && prev.tagName === 'P' && prev.querySelector('strong');
+      if (strong && prev.textContent.trim() === strong.textContent.trim()) out.appendChild(prev);
+      out.appendChild(t);
+    });
+    return { question: d.innerHTML, tables: out.innerHTML };
+  }
   function normalise(exam, guide) {
     var groups = [];
     if (exam.nesaGroups) {
@@ -67,6 +79,11 @@
     }
     groups.forEach(function (g, gi) {
       g.index = gi;
+      // SQL / formula practice questions: tables and sheets on the left, question and answer on the right (like the past papers)
+      if (exam.kind === 'textbook' && !g.stimulus && g.items.length && g.items.every(function (it) { return it.type === 'sql' || it.type === 'formula'; })) {
+        g.layout = 1; g.autoStim = true;
+        g.stimulus = g.items.map(function (it) { var s = splitTables(it.question); it.question = s.question; return s.tables; }).join('');
+      }
       // tools need room: give drawing/spreadsheet questions the wide right-hand column
       if (g.layout === 1 && g.items.some(function (it) { return it.type === 'drawing' || it.type === 'spreadsheet'; })) g.layout = 3;
       g.items.forEach(function (it, ii) { it.key = gi + '.' + ii; if (!it.raw) ITEMS.prepareAuthored(it); });
@@ -223,6 +240,7 @@
     var groupEl = el('<div class="group layout-' + g.layout + '"></div>');
     var title = el('<div class="group-title"></div>'); title.innerHTML = g.titleHtml;
     var stim = el('<div class="stimulus highlighter-text"></div>'); stim.innerHTML = g.stimulus || '';
+    var stimSeen = [];
     var items = el('<div class="items"></div>');
     var actions = el('<div class="action-bar"></div>');
     var prev = el('<button class="nsw-button nsw-button--dark-outline"><i class="fas fa-angle-left"></i> Previous question</button>');
@@ -286,6 +304,12 @@
       if (saved !== undefined) ctl.setValue(saved);
       else Array.prototype.forEach.call(ctl.el.querySelectorAll('select'), function (s) { if (!Array.prototype.some.call(s.options, function (o) { return o.value === ''; })) s.selectedIndex = -1; });
       if (review) addReview(item, ctl);
+      // the SQL tables / spreadsheet grid go in the left column (once per distinct data set)
+      if (g.autoStim && ctl.stimEl) {
+        var dataKey = item.type === 'sql' ? 'sql:' + item.setup : 'fx:' + JSON.stringify(item.sheet);
+        if (stimSeen.indexOf(dataKey) < 0) { stimSeen.push(dataKey); stim.appendChild(ctl.stimEl); }
+        else ctl.stimEl.remove();
+      }
     });
     if (allChecked) checkItems.forEach(showCheck);
 
@@ -361,7 +385,7 @@
     var oldSql = extra.querySelector('.sql-check'); if (oldSql) oldSql.remove();
     var s = scoreSoFar();
     var head = right ? 'Correct!' : item.type === 'mcq' ? 'Incorrect — the correct answer is ' + 'ABCDEFGH'[item.answer - 1] + '.' : 'Incorrect — compare your answer with the sample answer below.';
-    var box = el('<div class="check-box ' + (right ? 'correct' : 'wrong') + '"><div class="check-head"><i class="fas ' + (right ? 'fa-check-circle' : 'fa-times-circle') + '"></i> ' + head +
+    var box = el('<div class="check-box ' + (right ? 'correct' : 'wrong') + '"><div class="check-head"><i class="fas ' + (right ? 'fa-check-circle' : 'fa-times-circle') + '"></i><span class="check-msg">' + head + '</span>' +
       '<span class="check-score">Score so far: ' + s.correct + ' / ' + (s.correct + s.wrong) + '</span></div><div class="check-detail"></div><div class="check-guide"></div></div>');
     box.querySelector('.check-guide').innerHTML = item.guide || '';
     extra.appendChild(box);
