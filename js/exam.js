@@ -70,7 +70,7 @@
       exam.groups.forEach(function (g) {
         var items = g.items.map(function (it) { var c = {}; for (var k in it) c[k] = it[k]; if (c.marks == null && g.items.length === 1) c.marks = g.marks; return c; });
         groups.push({
-          number: String(g.number), marks: g.marks, layout: g.stimulus ? (g.layout == null ? 3 : +g.layout) : (+g.layout || 0),
+          number: String(g.number), marks: g.marks, section: g.section || '', layout: g.stimulus ? (g.layout == null ? 3 : +g.layout) : (+g.layout || 0),
           titleHtml: '<h3>Question ' + g.number + ' (' + g.marks + '&nbsp;' + (g.marks === 1 ? 'mark' : 'marks') + ')</h3>' +
             (g.section ? '<span class="q-section">' + escapeHtml(g.section) + '</span>' : ''),
           stimulus: g.stimulus || '', items: items,
@@ -635,7 +635,7 @@
     var r = computeResult();
     bar.innerHTML = '<strong><i class="fas fa-clipboard-check"></i> Review mode</strong><span>Marks so far: <strong>' + r.got + ' / ' + r.total + '</strong>' + (r.pending ? ' — ' + r.pending + ' marks still to self-mark using the marking guidelines' : '') + '</span>' +
       '<button class="nsw-button nsw-button--dark nsw-button--small" id="rb-results">Results summary</button>' +
-      '<button class="nsw-button nsw-button--dark nsw-button--small" id="rb-download"><i class="fas fa-download"></i> Download answers + marking guidelines</button>' +
+      '<button class="nsw-button nsw-button--dark nsw-button--small" id="rb-download"><i class="fas fa-download"></i> Download answers + marking guidelines (PDF)</button>' +
       '<button class="nsw-button nsw-button--dark-outline nsw-button--small" id="rb-print"><i class="fas fa-print"></i> Print / save as PDF</button>' +
       '<button class="nsw-button nsw-button--dark-outline nsw-button--small" id="rb-retake">Retake exam</button>' +
       '<a class="nsw-button nsw-button--dark-outline nsw-button--small" href="index.html"><i class="fas fa-arrow-left"></i> Back to exams</a>';
@@ -661,7 +661,7 @@
     var ov = el('<div class="info-modal"><button class="close-x">Close this screen X</button><div class="results"><h2>Results — ' + escapeHtml(model.title) + '</h2>' +
       '<div class="results-summary"><div class="stat">Total so far<b>' + r.got + ' / ' + r.total + '</b></div><div class="stat">Auto-marked items<b>' + objective + ' / ' + objectiveMax + '</b></div><div class="stat">Still to self-mark<b>' + r.pending + ' marks</b></div></div>' +
       '<p>Click a question to review it. Written answers, drawings, spreadsheets and SQL show the marking guidelines underneath your response — choose a mark for each one to complete your score.</p>' +
-      '<p style="display:flex;gap:1rem;flex-wrap:wrap"><button class="nsw-button nsw-button--dark" data-x="download"><i class="fas fa-download"></i> Download answers + marking guidelines</button><button class="nsw-button nsw-button--dark-outline" data-x="print"><i class="fas fa-print"></i> Print / save as PDF</button><a class="nsw-button nsw-button--dark-outline" href="index.html"><i class="fas fa-arrow-left"></i> Back to exams</a></p>' +
+      '<p style="display:flex;gap:1rem;flex-wrap:wrap"><button class="nsw-button nsw-button--dark" data-x="download"><i class="fas fa-download"></i> Download answers + marking guidelines (PDF)</button><button class="nsw-button nsw-button--dark-outline" data-x="print"><i class="fas fa-print"></i> Print / save as PDF</button><a class="nsw-button nsw-button--dark-outline" href="index.html"><i class="fas fa-arrow-left"></i> Back to exams</a></p>' +
       '<table><thead><tr><th>Question</th><th>Status</th><th>Mark</th><th>Out of</th><th>Marking</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>');
     ov.querySelector('.close-x').addEventListener('click', function () { ov.remove(); });
     ov.querySelector('tbody').addEventListener('click', function (e) { var tr = e.target.closest('tr[data-g]'); if (tr) { ov.remove(); go(+tr.getAttribute('data-g')); } });
@@ -672,8 +672,40 @@
 
   // ---------------------------------------------------------------- download / print answers with marking guidelines
   var exporting = false;
+  function htmlToText(h) {
+    var d = document.createElement('div'); d.innerHTML = String(h || '').replace(/<\/(p|li|tr|h\d|div|pre)>/gi, '$&\n').replace(/<br\s*\/?>/gi, '\n');
+    Array.prototype.forEach.call(d.querySelectorAll('style, script'), function (s) { s.remove(); });
+    return d.textContent.replace(/[ \t ]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{2,}/g, '\n').trim();
+  }
+  // Multiple-choice-only quizzes: a compact, text-based PDF (fast, small, searchable)
+  function exportMcqPdf() {
+    exporting = true;
+    var r = computeResult(), s = scoreSoFar();
+    var when = new Date(state.finishedAt || Date.now());
+    var name = model.title.replace(/[^\w\- ]+/g, '').replace(/\s+/g, ' ').trim() + ' - my answers and marking guidelines.pdf';
+    var data = {
+      title: model.title, subtitle: 'My answers and marking guidelines',
+      meta: ['Completed: ' + when.toLocaleString('en-AU'), state.mode === 'timed' ? 'Exam conditions' : 'Practice (untimed)', state.elapsed ? 'Time used: ' + formatTime(state.elapsed) : ''].filter(Boolean).join('   ·   '),
+      score: 'Score: ' + r.got + ' / ' + r.total + (r.total ? ' (' + Math.round(100 * r.got / r.total) + '%)' : '') + '   ·   Correct: ' + s.correct + '   ·   Wrong: ' + s.wrong + '   ·   Not answered: ' + (model.groups.length - s.correct - s.wrong),
+      questions: model.groups.map(function (g) {
+        var it = g.items[0], v = state.responses[it.key];
+        return { number: g.number, section: g.section || '', question: htmlToText(it.question), options: (it.options || []).map(htmlToText), answer: it.answer, response: v == null ? null : v, guide: htmlToText(it.guide) };
+      }),
+    };
+    var pm = el('<div class="modal-bg"><div class="modal"><h3><i class="fas fa-spinner fa-spin"></i> Creating your PDF…</h3><p class="prog">Preparing.</p></div></div>');
+    document.body.appendChild(pm);
+    makeMcqPdf(data, name, function (i, n) { var p = pm.querySelector('.prog'); if (p) p.textContent = 'Question ' + i + ' of ' + n + '…'; }).then(function () {
+      pm.remove(); exporting = false; toast('Downloaded: ' + name);
+    }).catch(function (err) {
+      pm.remove(); exporting = false;
+      alertModal('Could not create the PDF', 'The PDF tool could not load — check your internet connection and try again. ' + String(err && err.message || err));
+      console.error(err);
+    });
+  }
   function exportReport(print) {
-    if (exporting) return; exporting = true;
+    if (exporting) return;
+    if (!print && model.kind === 'textbook' && model.groups.every(function (g) { return g.items.length === 1 && g.items[0].type === 'mcq'; })) { exportMcqPdf(); return; }
+    exporting = true;
     var win = print ? window.open('', '_blank') : null;
     if (win) win.document.write('<p style="font:16px Arial;padding:2rem">Preparing your answers…</p>');
     var m = el('<div class="modal-bg"><div class="modal"><h3><i class="fas fa-spinner fa-spin"></i> Preparing your answers…</h3><p class="prog">Rendering questions, drawings and spreadsheets.</p></div></div>');
@@ -688,12 +720,23 @@
         win.document.open(); win.document.write(html); win.document.close();
         setTimeout(function () { try { win.focus(); win.print(); } catch (e) { } }, 1200);
       } else {
-        var name = model.title.replace(/[^\w\- ]+/g, '').trim() + ' - my answers and marking guidelines.html';
-        var a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-        a.download = name; document.body.appendChild(a); a.click();
-        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
-        toast('Downloaded: ' + name);
+        // save as a PDF on the device
+        var name = model.title.replace(/[^\w\- ]+/g, '').replace(/\s+/g, ' ').trim() + ' - my answers and marking guidelines.pdf';
+        exporting = true;
+        var pm = el('<div class="modal-bg"><div class="modal"><h3><i class="fas fa-spinner fa-spin"></i> Creating your PDF…</h3><p class="prog">Laying out the pages.</p></div></div>');
+        document.body.appendChild(pm);
+        makePdf(html, name, function (i, n) { var p = pm.querySelector('.prog'); if (p) p.textContent = 'Page ' + i + ' of ' + n + '…'; }).then(function () {
+          pm.remove(); exporting = false;
+          toast('Downloaded: ' + name);
+        }).catch(function (err) {
+          pm.remove(); exporting = false;
+          alertModal('Could not create the PDF', 'The PDF tools could not load (check your internet connection), so the answers will be saved as a web page instead. ' + String(err && err.message || err));
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+          a.download = name.replace(/\.pdf$/, '.html'); document.body.appendChild(a); a.click();
+          setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+          console.error(err);
+        });
       }
     }).catch(function (err) {
       m.remove(); exporting = false; if (win) win.close();
