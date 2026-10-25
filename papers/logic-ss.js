@@ -150,9 +150,10 @@ registerExam({
       ] },
 
 { number: '11', marks: 4, layout: 0, section: 'Textbook p. 148 · Activity: Applying Informatics tools to data analysis',
+  stimulus: `<p><strong>Analysing a movie dataset</strong></p><p>A data analyst is using a spreadsheet to explore a small dataset about five films. Each row describes one film using four fields:</p><p><strong>Movie title</strong>: the name of the film.<br><strong>Genre</strong>: the type of film, such as Action, Comedy or Drama.<br><strong>Box office revenue</strong>: the total amount the film earned from cinema ticket sales, in millions.<br><strong>Audience rating</strong>: how satisfied viewers were, on a scale from 1 (very dissatisfied) to 5 (very satisfied).</p><p>The analyst wants some summary statistics so the films can be compared.</p>`,
   items: [
     { type: 'formula', marks: 4,
-      question: `<p>The movie dataset from the activity has been entered in a spreadsheet (data in rows 2 to 6). Write a formula in each cell:</p>
+      question: `<p>The dataset has been entered in a spreadsheet (data in rows 2 to 6). Write a formula in each cell:</p>
 <ul><li><strong>B8</strong>: the average box office revenue</li><li><strong>B9</strong>: the average audience rating</li><li><strong>B10</strong>: the highest audience rating</li><li><strong>B11</strong>: the lowest audience rating</li></ul>`,
       sheet: [
         ['Movie title', 'Genre', 'Box office revenue (Millions)', 'Audience Rating (1-5)'],
@@ -335,9 +336,10 @@ registerExam({
       guide: `<p><strong>Sample answer:</strong> <code>=((C2-B2)/B2)*100</code>, filled down to D6 (25, -10, 30, -5, 25).</p><p>The textbook's formula is =((New Value - Old Value) / Old Value) * 100 (p. 211). A negative result is a decrease. Relative references change row by row when the formula is filled down.</p>` }
   ] },
 { number: '16', marks: 2, layout: 0, section: 'Textbook p. 215 · Activity: Creating and analysing a weather forecast spreadsheet (Step 2)',
+  stimulus: `<p><strong>Weekly weather spreadsheet</strong></p><p>A student is building a spreadsheet to record and analyse one week of local weather. Each day from Monday to Sunday has its own row on Sheet1, showing the temperature (°C), wind speed (km/h), rainfall (mm) and a one-word description of the conditions (Sunny, Cloudy or Rain).</p><p>The student needs summary figures for the week that can be reported and later reused in a weather dashboard. In the finished workbook these figures sit on a separate Summary sheet whose formulas refer back to the data on Sheet1, so the summary updates whenever the data changes.</p>`,
   items: [
     { type: 'formula', marks: 2,
-      question: `<p>The weather data from Step 1 of the activity is in Sheet1 (rows 2 to 8). In the textbook the summary is on a separate Summary sheet; here, write the summary formulas below the data:</p>
+      question: `<p>The weather data is in Sheet1 (rows 2 to 8). For this question, write the summary formulas below the data:</p>
 <ul><li><strong>B10</strong>: the average temperature for the week</li><li><strong>B11</strong>: the total rainfall for the week</li></ul>`,
       sheet: [
         ['Date', 'Temperature (°C)', 'Wind Speed (km/h)', 'Rainfall (mm)', 'Condition'],
@@ -359,9 +361,10 @@ registerExam({
       guide: `<p><strong>Sample answers:</strong> B10 <code>=AVERAGE(Sheet1!B2:B8)</code> (20.86), B11 <code>=SUM(Sheet1!D2:D8)</code> (35).</p><p>These are the summary formulas from Step 2 (textbook p. 215), which the dashboard activity reuses (p. 227). On the same sheet <code>=AVERAGE(B2:B8)</code> and <code>=SUM(D2:D8)</code> give the same results; the Sheet1! prefix is needed when the formula is on a different sheet.</p>` }
   ] },
 { number: '17', marks: 1, layout: 0, section: 'Textbook p. 222 · Example: Tracking monthly expenses',
+  stimulus: `<p><strong>Tracking monthly expenses</strong></p><p>A person keeps a simple spreadsheet of their spending. Each purchase is entered on its own row with the date, a category (Food, Transport or Bills) and the amount in dollars.</p><p>They want to see quickly how much has been spent in each category. A pivot table could produce this summary, with Category as the rows and the total of Amount as the values. The same totals can also be calculated with ordinary formulas in a small summary table beside the data (columns E and F), which updates as new expenses are added.</p>`,
   items: [
     { type: 'formula', marks: 1,
-      question: `<p>The textbook uses a pivot table to total the monthly expenses by category. The same summary can be made with a formula. In <strong>F2</strong>, write a formula that adds up the amounts for the category named in E2, so that it can be filled down to F4.</p>`,
+      question: `<p>In <strong>F2</strong>, write a formula that adds up the amounts for the category named in E2, so that it can be filled down to F4.</p>`,
       sheet: [
         ['Date', 'Category', 'Amount', null, 'Category', 'Total Amount'],
         ['01/01/2024', 'Food', 50, null, 'Food', null],
@@ -375,9 +378,10 @@ registerExam({
       guide: `<p><strong>Sample answer:</strong> <code>=SUMIF($B$2:$B$7,E2,$C$2:$C$7)</code>, filled down to F4 (Food 100, Transport 70, Bills 100).</p><p>The absolute references ($) keep the data ranges fixed when the formula is filled down, while E2 changes to E3 and E4. The results match the pivot table on textbook p. 222.</p>` }
   ] },
 { number: '18', marks: 2, layout: 0, section: 'Textbook p. 225 · Activity: Building a weather dashboard (Step 3A)',
+  stimulus: `<p><strong>Weather dashboard</strong></p><p>A student is building a dashboard from one week of weather observations. Sheet1 has one row per day showing the temperature (°C), wind speed (km/h), rainfall (mm) and that day's condition (Sunny, Cloudy or Rain).</p><p>To show which kind of weather brought the most rain, the student created a pivot table with Condition as the rows and the <strong>Sum of Rainfall (mm)</strong> as the values. The pivot table lists each condition once, in alphabetical order, and ends with a Grand Total row giving the rainfall for the whole week.</p>`,
   items: [
     { type: 'formula', marks: 2,
-      question: `<p>In the dashboard activity a pivot table shows the <strong>Sum of Rainfall (mm)</strong> for each Condition. Reproduce the pivot table with formulas:</p>
+      question: `<p>Reproduce the pivot table with formulas in columns G and H:</p>
 <ul><li>In <strong>H2</strong>, write a formula for the total rainfall of the condition in G2, so that it can be filled down to H4.</li><li>In <strong>H5</strong>, write a formula for the grand total.</li></ul>`,
       sheet: [
         ['Date', 'Temperature (°C)', 'Wind Speed (km/h)', 'Rainfall (mm)', 'Condition', null, 'Row Labels', 'Sum of Rainfall (mm)'],
@@ -423,9 +427,10 @@ registerExam({
       guide: `<p><strong>Sample answers:</strong> D2 <code>=AVERAGE(A2:A13)</code> (43 ÷ 12 = 3.58), D3 <code>=MEDIAN(A2:A13)</code> (3.5, the mean of the 6th and 7th values in order), D4 <code>=MAX(A2:A13)-MIN(A2:A13)</code> (6 − 2 = 4).</p><p>The activity also asks for the mode: 2, 3 and 4 each appear three times, so this data set has three modes (textbook p. 284).</p>` }
   ] },
 { number: '20', marks: 2, layout: 0, section: 'Textbook p. 286 · Conditional formatting',
+  stimulus: `<p><strong>Colour-coded test scores</strong></p><p>A teacher records each student's test score in a spreadsheet and uses conditional formatting so that every score cell is shaded automatically according to its value. The legend in rows 10 to 13 explains the three bands: green for a high score, yellow for an average score and pink for a low score.</p><p>Colours can be hard to tell apart when the sheet is printed in black and white or read by someone who is colour-blind, so the teacher also wants each student's band shown as a word in column C.</p>`,
   items: [
     { type: 'formula', marks: 2,
-      question: `<p>The textbook's conditional formatting example colours each score using the legend in rows 10 to 13. Instead of colours, write a formula in <strong>C2</strong> that displays the band as text: <strong>High</strong> for a score above 90, <strong>Average</strong> for a score from 70 to 89, and <strong>Low</strong> for a score below 70. It should be possible to fill it down to C8.</p>`,
+      question: `<p>Instead of colours, write a formula in <strong>C2</strong> that displays the band as text: <strong>High</strong> for a score above 90, <strong>Average</strong> for a score from 70 to 89, and <strong>Low</strong> for a score below 70. It should be possible to fill it down to C8.</p>`,
       sheet: [
         ['Student', 'Score', 'Band'],
         ['Ava', 92, null],
@@ -445,9 +450,10 @@ registerExam({
       guide: `<p><strong>Sample answer:</strong> <code>=IF(B2&gt;90,"High",IF(B2&gt;=70,"Average","Low"))</code>, filled down to C8.</p><p>A nested IF tests the conditions in order: above 90 first, then 70 or more, and anything else is Low. Ava and Ella are High, Daniel is Low and the rest are Average (legend from textbook p. 286; the book's screenshot shades Ava's 92 yellow, which does not match its own legend).</p>` }
   ] },
 { number: '21', marks: 1, layout: 0, section: 'Textbook p. 287 · Pivot tables and charts',
+  stimulus: `<p><strong>Student results by task</strong></p><p>A teacher records a class's assessment results in a spreadsheet. Each row is one task: the student's name, the subject (Maths or Science), the task number (1 to 3) and the score. Every student completed three tasks in each subject, so each student has six rows.</p><p>To summarise the data the teacher built a pivot table. It shows each student's average score in each subject, plus a Total column giving the student's <strong>average score</strong> across all six of their tasks.</p>`,
   items: [
     { type: 'formula', marks: 1,
-      question: `<p>The textbook's pivot table shows each student's <strong>average score</strong> across all their Maths and Science tasks (the "Total" column). The data for six of the students is in A1:D37. In <strong>G2</strong>, write a formula that calculates the average score of the student named in F2, so that it can be filled down to G7.</p>`,
+      question: `<p>The data for six of the students is in A1:D37. In <strong>G2</strong>, write a formula that calculates the average score across all tasks (the pivot table's Total) for the student named in F2, so that it can be filled down to G7.</p>`,
       sheet: [
         ['Student', 'Subject', 'Task Number', 'Score', null, 'Student', 'Average score'],
         ['Ava', 'Maths', 1, 92, null, 'Ava', null],
@@ -491,9 +497,10 @@ registerExam({
       guide: `<p><strong>Sample answer:</strong> <code>=AVERAGEIF($A$2:$A$37,F2,$D$2:$D$37)</code>, filled down to G7.</p><p>AVERAGEIF averages the scores in column D whose student in column A matches F2. The results (Ava 82.3, Ben 83, Chloe 81.2, Daniel 77.7, Dave 39.7, Ella 76.8) round to the Total column of the pivot table on textbook p. 287. Finn and Grace are left out because their rows are cut off in the book's screenshot.</p>` }
   ] },
 { number: '22', marks: 5, layout: 0, section: 'Textbook p. 299 · Activity: Correlation',
+  stimulus: `<p><strong>Fred's prediction theory</strong></p><p>Fred, an Enterprise Computing (EC) student, believes that a student's HSC EC result is closely linked to their English and Maths results. To test the idea he collected the EC, English and Maths marks of 15 students in his EC class (including his own) and entered them in a spreadsheet. He hopes to predict any student's English and Maths marks from their EC mark alone.</p><p>Below the marks, Fred summarises each subject with sample statistics. Because his classmates are only a sample of all EC students, he uses the sample standard deviation. The correlation coefficient, which ranges from −1 to 1, measures how closely each subject's marks rise and fall with the EC marks; a value near 1 indicates a strong positive relationship.</p>`,
   items: [
     { type: 'formula', marks: 5,
-      question: `<p>Fred's spreadsheet (reproduced below) compares his classmates' Enterprise Computing (EC) results with their English and Maths results. Reproduce the <strong>sample data statistics</strong>. Write a formula in each cell so that it can be filled across to column D:</p>
+      question: `<p>Reproduce the <strong>sample data statistics</strong> in Fred's spreadsheet. Write a formula in each cell so that it can be filled across to column D:</p>
 <ul><li><strong>B22</strong>: the average (fill across to D22)</li><li><strong>B24</strong>: the median (fill across to D24)</li><li><strong>B25</strong>: the range, max minus min (fill across to D25)</li><li><strong>B26</strong>: the standard deviation of the sample (fill across to D26)</li><li><strong>C27</strong>: the correlation between the EC marks and that column's marks (fill across to D27)</li></ul>`,
       sheet: [
         ['Freds HSC EC Predictor of HSC English and Maths Results', null, null, null],
@@ -575,9 +582,10 @@ registerExam({
       guide: `<p><strong>Sample answers:</strong> B1 <code>=SUM('Raw Data'!B2:B9)</code> (12950), B2 <code>=SUM('Raw Data'!D2:D9)</code> (6280), B3 <code>=B1-B2</code> (6670), B4 <code>=SUMIF('Raw Data'!C2:C9,"Groceries",'Raw Data'!D2:D9)</code> (1610).</p><p>The activity's dashboard uses =SUM for the totals and "=Total Income - Total Expenses" for savings (textbook p. 346). SUMIF gives the total for one expense category, which is what the activity's pie chart of category totals needs.</p>` }
   ] },
 { number: '24', marks: 2, layout: 0, section: 'Textbook p. 394 · Activity: Anonymise and mask a dataset',
+  stimulus: `<p><strong>Protecting personal data</strong></p><p>An organisation holds a fictional dataset about seven people: each person's name, age, suburb, medical condition and mobile phone number. Before the data is used for analysis, personal details must be protected, as Australian privacy law such as the Privacy Act 1988 expects, while the data stays useful for spotting trends.</p><p><strong>Data masking</strong> hides part of a value but keeps its overall format, so a masked phone number still looks like a phone number. <strong>Anonymisation</strong> removes or generalises details that could identify a person; for example, an exact age can be replaced by a broader age group.</p>`,
   items: [
     { type: 'formula', marks: 2,
-      question: `<p>The fictional dataset from the activity must be masked and anonymised before it is used for analysis. Write a formula in each cell so that it can be filled down to row 8:</p>
+      question: `<p>Write a formula in each cell so that it can be filled down to row 8:</p>
 <ul><li><strong>F2</strong>: the masked contact number, which keeps the first four digits and replaces the rest with X, e.g. <code>0413 XXX XXX</code> (fill down to F8)</li><li><strong>G2</strong>: an age group instead of the exact age: <strong>Under 20</strong> or <strong>20 and over</strong> (fill down to G8)</li></ul>`,
       sheet: [
         ['Name', 'Age', 'Suburb', 'Medical Condition', 'Contact', 'Masked contact', 'Age group'],
@@ -596,11 +604,10 @@ registerExam({
       guide: `<p><strong>Sample answers:</strong> F2 <code>=LEFT(E2,4)&amp;" XXX XXX"</code> and G2 <code>=IF(B2&lt;20,"Under 20","20 and over")</code>, each filled down to row 8.</p><p>Masking hides part of a value while keeping its format; replacing exact ages with age ranges is one of the anonymisation techniques on textbook p. 393. Data from the activity on p. 394.</p>` }
   ] },
 { number: '25', marks: 2, layout: 0, section: 'Textbook p. 497 · Combining certainty factors',
+  stimulus: `<p><strong>Certainty factors in MYCIN</strong></p><p>MYCIN was an early expert system for diagnosing infections. Each of its rules has a certainty factor (CF) from −1 to 1: a positive CF is evidence for a conclusion, a negative CF is evidence against it, and 0 means the rule tells us nothing. When two rules that fire bear on the same conclusion, their CFs X and Y are combined into a single CF:</p><ul><li>X + Y − XY if X and Y are both greater than 0</li><li>X + Y + XY if X and Y are both less than 0</li><li>(X + Y) / (1 − Min(|X|, |Y|)) otherwise</li></ul><p>Evidence is added one rule at a time: the combined CF so far becomes X and the next rule's CF becomes Y. The rows of the sheet use rules from a simple expert system for deciding whether a person has a cold.</p>`,
   items: [
     { type: 'formula', marks: 2,
-      question: `<p>MYCIN combines two certainty factors X and Y with these formulas:</p>
-<ul><li>X + Y − XY if X and Y are both greater than 0</li><li>X + Y + XY if X and Y are both less than 0</li><li>(X + Y) / (1 − Min(|X|, |Y|)) otherwise</li></ul>
-<p>In <strong>D2</strong>, write one formula that combines the CFs in B2 and C2 using the correct rule, so that it can be filled down to D8.</p>`,
+      question: `<p>In <strong>D2</strong>, write one formula that combines the CFs in B2 and C2 using the correct rule, so that it can be filled down to D8.</p>`,
       sheet: [
         ['Evidence', 'CF X', 'CF Y', 'Combined CF'],
         ['Runny nose + sore throat', 0.6, 0.7, null],
@@ -615,9 +622,10 @@ registerExam({
       guide: `<p><strong>Sample answer:</strong></p><pre class="hoa-code">=IF(AND(B2&gt;0,C2&gt;0),B2+C2-B2*C2,IF(AND(B2&lt;0,C2&lt;0),B2+C2+B2*C2,(B2+C2)/(1-MIN(ABS(B2),ABS(C2)))))</pre><p>Filled down to D8 this gives 0.88, 0.94, 0.925, 0.375, 0.85, 0.43 and −0.44. The first four match the worked example and decision tree (textbook pp. 497–499), and rows 6 and 7 are the Exercise 4.3.1 multiple-choice questions (p. 525; answers C 0.85 and C 0.43). The last row is extra sample data to test the "both negative" rule.</p>` }
   ] },
 { number: '26', marks: 2, layout: 0, section: 'Textbook p. 518 · Comparing proposed versus actual outputs',
+  stimulus: `<p><strong>Evaluating a decision support system</strong></p><p>A supermarket uses a decision support system (DSS) to forecast how many loaves of bread it will sell each week, so that it can order the right amount of stock. Ordering too much bread leads to waste, while ordering too little means lost sales.</p><p>To judge how well the DSS is performing, the manager compares its proposed output (the predicted sales) with the actual number of loaves sold in each of five weeks. A positive difference means more bread was sold than the DSS predicted; a negative difference means the DSS over-estimated demand.</p>`,
   items: [
     { type: 'formula', marks: 2,
-      question: `<p>A supermarket's decision support system (DSS) predicted its weekly bread sales. The predicted and actual sales from the textbook's graph are below.</p>
+      question: `<p>The predicted and actual weekly sales are shown in the spreadsheet.</p>
 <ul><li>In <strong>D2</strong>, write a formula for the difference between the actual and predicted sales (actual − predicted), so that it can be filled down to D6.</li><li>In <strong>D7</strong>, write a formula for the average difference over the five weeks.</li></ul>`,
       sheet: [
         ['Week', 'Predicted Sales (Loaves)', 'Actual Sales (Loaves)', 'Difference'],

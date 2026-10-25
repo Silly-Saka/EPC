@@ -80,9 +80,10 @@
     groups.forEach(function (g, gi) {
       g.index = gi;
       // SQL / formula practice questions: tables and sheets on the left, question and answer on the right (like the past papers)
-      if (exam.kind === 'textbook' && !g.stimulus && g.items.length && g.items.every(function (it) { return it.type === 'sql' || it.type === 'formula'; })) {
+      // (a written context passage, if the question has one, comes first, then the data)
+      if (exam.kind === 'textbook' && g.items.length && g.items.every(function (it) { return it.type === 'sql' || it.type === 'formula'; })) {
         g.layout = 1; g.autoStim = true;
-        g.stimulus = g.items.map(function (it) { var s = splitTables(it.question); it.question = s.question; return s.tables; }).join('');
+        g.stimulus = (g.stimulus || '') + g.items.map(function (it) { var s = splitTables(it.question); it.question = s.question; return s.tables; }).join('');
       }
       // tools need room: give drawing/spreadsheet questions the wide right-hand column
       if (g.layout === 1 && g.items.some(function (it) { return it.type === 'drawing' || it.type === 'spreadsheet'; })) g.layout = 3;
@@ -689,7 +690,7 @@
       score: 'Score: ' + r.got + ' / ' + r.total + (r.total ? ' (' + Math.round(100 * r.got / r.total) + '%)' : '') + '   ·   Correct: ' + s.correct + '   ·   Wrong: ' + s.wrong + '   ·   Not answered: ' + (model.groups.length - s.correct - s.wrong),
       questions: model.groups.map(function (g) {
         var it = g.items[0], v = state.responses[it.key];
-        return { number: g.number, section: g.section || '', question: htmlToText(it.question), options: (it.options || []).map(htmlToText), answer: it.answer, response: v == null ? null : v, guide: htmlToText(it.guide) };
+        return { number: g.number, section: g.section || '', context: htmlToText(g.stimulus), question: htmlToText(it.question), options: (it.options || []).map(htmlToText), answer: it.answer, response: v == null ? null : v, guide: htmlToText(it.guide) };
       }),
     };
     var pm = el('<div class="modal-bg"><div class="modal"><h3><i class="fas fa-spinner fa-spin"></i> Creating your PDF…</h3><p class="prog">Preparing.</p></div></div>');

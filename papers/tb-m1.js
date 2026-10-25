@@ -15,7 +15,8 @@ registerExam({
           answer: 1,
           guide: `<p><strong>Answer: A</strong> — Identifying and defining. The first stage defines the problem and requirements before any design or development begins (textbook p. 5).</p>` }
       ] },
-    { number: '2', marks: 1, layout: 0, section: 'Exercise 1.1.1',
+    { number: '2', marks: 1, layout: 1, section: 'Exercise 1.1.1',
+      stimulus: `<p><strong>Identifying and defining</strong></p><p>A business is at the first stage of developing a new system: identifying and defining. The project team needs to find out what the current system does, what problems users have with it and what the new system must do, before any design work begins.</p>`,
       items: [
         { type: 'mcq',
           question: `<p>How is data collected during this stage of system development?</p>`,
@@ -605,7 +606,8 @@ registerExam({
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — The approach or strategy for deploying a system into an operational environment. Implementation methods are structured approaches used to deploy a new system into an enterprise (textbook p. 102).</p>` }
       ] },
-    { number: '74', marks: 1, layout: 0, section: 'Exercise 1.3.3',
+    { number: '74', marks: 1, layout: 1, section: 'Exercise 1.3.3',
+      stimulus: `<p><strong>Planning the implementation</strong></p><p>A project team has finished developing a new system and is now preparing its implementation plan. The plan sets out the tasks needed to put the system into use (such as installing hardware, converting data and training staff), and who is responsible for each task.</p>`,
       items: [
         { type: 'mcq',
           question: `<p>What does a Gantt chart illustrate at this point of system development?</p>`,

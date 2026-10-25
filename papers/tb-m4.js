@@ -509,7 +509,8 @@ registerExam({
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — The expert's level of belief in a conclusion. Certainty factors measure an expert's belief that the evidence leads to the outcome; they are based on expert opinion, not on statistical probability (textbook p. 496).</p>` }
       ] },
-    { number: '63', marks: 1, layout: 0, section: 'Exercise 4.3.1',
+    { number: '63', marks: 1, layout: 1, section: 'Exercise 4.3.1',
+      stimulus: `<p><strong>Combining certainty factors</strong></p><p>An expert system can attach a certainty factor (CF) to each rule. A CF lies between −1 and 1 and records how strongly a human expert believes the evidence points to the conclusion; a negative value means the evidence weakens that belief. CFs are expert judgements, not statistical probabilities.</p><p>Using the approach taken by the MYCIN medical expert system, only rules that fire (whose facts are true) are combined. For two rules with certainty factors X and Y that lead to the same outcome:</p><table class="hoa-table-normal"><thead><tr><th>Condition</th><th>Combined CF</th></tr></thead><tbody><tr><td>X &gt; 0 and Y &gt; 0</td><td>X + Y − XY</td></tr><tr><td>X &lt; 0 and Y &lt; 0</td><td>X + Y + XY</td></tr><tr><td>Otherwise (one positive, one negative)</td><td>(X + Y) / (1 − min(|X|, |Y|))</td></tr></tbody></table>`,
       items: [
         { type: 'mcq',
           question: `<p>Two facts lead to a single outcome. If the certainty factors are 0.5 and 0.7, what is the combined certainty factor given both facts are true?</p>`,
@@ -517,7 +518,8 @@ registerExam({
           answer: 3,
           guide: `<p><strong>Answer: C</strong> — 0.85. When both CFs are positive, CF = X + Y − XY = 0.5 + 0.7 − 0.35 = 0.85 (textbook p. 497).</p>` }
       ] },
-    { number: '64', marks: 1, layout: 0, section: 'Exercise 4.3.1',
+    { number: '64', marks: 1, layout: 1, section: 'Exercise 4.3.1',
+      stimulus: `<p><strong>Combining certainty factors</strong></p><p>An expert system can attach a certainty factor (CF) to each rule. A CF lies between −1 and 1 and records how strongly a human expert believes the evidence points to the conclusion; a negative value means the evidence weakens that belief. CFs are expert judgements, not statistical probabilities.</p><p>Using the approach taken by the MYCIN medical expert system, only rules that fire (whose facts are true) are combined. For two rules with certainty factors X and Y that lead to the same outcome:</p><table class="hoa-table-normal"><thead><tr><th>Condition</th><th>Combined CF</th></tr></thead><tbody><tr><td>X &gt; 0 and Y &gt; 0</td><td>X + Y − XY</td></tr><tr><td>X &lt; 0 and Y &lt; 0</td><td>X + Y + XY</td></tr><tr><td>Otherwise (one positive, one negative)</td><td>(X + Y) / (1 − min(|X|, |Y|))</td></tr></tbody></table>`,
       items: [
         { type: 'mcq',
           question: `<p>Two facts lead to a single outcome. If the certainty factors are 0.6 and -0.3, what is the combined certainty factor given both facts are true?</p>`,
@@ -541,7 +543,8 @@ registerExam({
           answer: 4,
           guide: `<p><strong>Answer: D</strong> — flowchart. Flowcharts are visual tools that outline the logical flow of an algorithm; expert systems' IF-THEN rules are well suited to them, as in the car price calculator that inputs facts, applies each rule in turn and outputs a price (textbook p. 502).</p><p><em>Note: option C is also arguable because decision trees also show how conclusions are reached from rules, but they do not show the order of inputs and outputs.</em></p>` }
       ] },
-    { number: '67', marks: 1, layout: 0, section: 'Exercise 4.3.1',
+    { number: '67', marks: 1, layout: 1, section: 'Exercise 4.3.1',
+      stimulus: `<p><strong>Four named technologies</strong></p><ul><li><strong>SPARK</strong>: a CSIRO computer model that simulates how a bushfire is likely to spread, using live weather, wind direction, fuel type and terrain. Emergency managers use its maps and scenarios to plan evacuations and decide where to send firefighting crews and aircraft.</li><li><strong>CLIPS</strong> (C Language Integrated Production System): a programming language originally developed by NASA and now freely available. Developers write knowledge as IF &lt;condition&gt; THEN &lt;action&gt; rules in a bracket-based, Lisp-like syntax, and the program reasons over these rules to reach conclusions.</li><li><strong>El Capitan</strong>: a supercomputer at Lawrence Livermore National Laboratory in California, ranked the world's fastest in the July 2025 TOP500 list, with more than 11 million cores and a measured speed of about 1,742 petaflops.</li><li><strong>Shopify</strong>: a commercial e-commerce platform that businesses use to set up and run online stores and process sales.</li></ul>`,
       items: [
         { type: 'mcq',
           question: `<p>Which of the following is used to create expert systems?</p>`,

@@ -86,7 +86,9 @@
           return lines(o + tag, W - 10, 9.5, (i + 1 === q.answer || i + 1 === q.response) ? 'bold' : 'normal');
         });
         var gLines = lines(q.guide, W - 4, 8.8);
-        var h = lineH(10) + 1 + qLines.length * lineH(10) + 1 + optLines.reduce(function (s, l) { return s + l.length * lineH(9.5) + 0.6; }, 0) + 1.5 + gLines.length * lineH(8.8) + 5;
+        var cLines = q.context ? lines(q.context, W - 8, 9) : [];
+        var cH = cLines.length ? cLines.length * lineH(9) + 4 : 0;
+        var h = lineH(10) + 1 + cH + qLines.length * lineH(10) + 1 + optLines.reduce(function (s, l) { return s + l.length * lineH(9.5) + 0.6; }, 0) + 1.5 + gLines.length * lineH(8.8) + 5;
         if (y + Math.min(h, BOTTOM - MARGIN_MM) > BOTTOM) newPage();
         // heading: Question N · section ............ status
         font(10.5, 'bold', NAVY); pdf.text('Question ' + q.number, L, y + 10.5 * PT * 0.85);
@@ -94,6 +96,14 @@
         if (q.section) { font(8.5, 'normal', GREY); pdf.text(clean(q.section), L + qw, y + 10.5 * PT * 0.85); }
         font(9.5, 'bold', statusColor); pdf.text(status, R, y + 10.5 * PT * 0.85, { align: 'right' });
         y += lineH(10.5) + 1;
+        // the question's context passage (stimulus), in a shaded box
+        if (cLines.length) {
+          if (y + cH > BOTTOM) newPage();
+          pdf.setFillColor(242, 243, 245); pdf.setDrawColor(215); pdf.setLineWidth(0.2);
+          pdf.rect(L, y, W, cH - 1, 'FD'); y += 1.5;
+          cLines.forEach(function (t) { if (y + lineH(9) > BOTTOM) newPage(); font(9, 'normal', [55, 55, 55]); pdf.text(t, L + 4, y + 9 * PT * 0.85); y += lineH(9); });
+          y += 2.5;
+        }
         write(qLines, L, 10, 'bold', BLACK); y += 1;
         optLines.forEach(function (ls, i) {
           if (y + ls.length * lineH(9.5) > BOTTOM) newPage();

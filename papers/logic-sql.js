@@ -243,10 +243,10 @@ WHERE product LIKE '%Tab%';</pre><p>'%Tab%' matches "Tab" anywhere in the text.<
       ] },
 
 { number: '20', marks: 1, layout: 0, section: 'Textbook p. 228 · The flat-file database',
+  stimulus: `<p><strong>School library catalogue</strong></p><p>A school library records its whole collection in a flat-file database: all the data is held in a single table, <strong>Library</strong>, with one row per book. Each row stores the book's ISBN, title, author, genre and year of publication, along with its current loan status.</p><p>The <strong>Availability</strong> field holds either <em>Available</em> (the book is on the shelf) or <em>Borrowed</em> (the book is out on loan). For a borrowed book, <strong>BorrowerName</strong> records who has it and <strong>DueDate</strong> records when it must be returned; for a book on the shelf both fields are empty (NULL). Dates are stored as text in the form YYYY-MM-DD, and field names contain no spaces so they are easy to use in SQL.</p>`,
   items: [
     { type: 'sql', marks: 1,
-      question: `<p>The school library keeps its books in a flat-file database: a single table called <strong>Library</strong> (field names have no spaces so they are easier to use in SQL).</p>
-<p>Write an SQL query that lists the <strong>Title</strong> and <strong>Author</strong> of every book in the <strong>Fantasy</strong> genre that is currently <strong>Available</strong>.</p>
+      question: `<p>Write an SQL query that lists the <strong>Title</strong> and <strong>Author</strong> of every book in the <strong>Fantasy</strong> genre that is currently <strong>Available</strong>.</p>
 <p><strong>Library</strong></p><table class="hoa-table-normal"><thead><tr><th>ISBN</th><th>Title</th><th>Author</th><th>Genre</th><th>YearPublished</th><th>Availability</th><th>BorrowerName</th><th>DueDate</th></tr></thead><tbody>
 <tr><td>978-0064404990</td><td>The Lion, the Witch &amp; Wardrobe</td><td>C.S. Lewis</td><td>Fantasy</td><td>1950</td><td>Borrowed</td><td>Alice Johnson</td><td>2025-03-12</td></tr>
 <tr><td>978-0142410370</td><td>Matilda</td><td>Roald Dahl</td><td>Fiction</td><td>1988</td><td>Available</td><td>NULL</td><td>NULL</td></tr>
@@ -276,9 +276,10 @@ FROM Library
 WHERE Genre = 'Fantasy' AND Availability = 'Available';</pre><p>Both conditions must be true, so they are joined with AND. Only Harry Potter and the Philosopher's Stone and Percy Jackson &amp; The Lightning Thief are returned (textbook p. 228). The book's table shows dates as dd/mm/yyyy and '-' for empty cells; here dates are stored as YYYY-MM-DD and empty cells as NULL.</p>` }
   ] },
 { number: '21', marks: 2, layout: 0, section: 'Textbook p. 228 · The flat-file database',
+  stimulus: `<p><strong>School library catalogue</strong></p><p>A school library records its whole collection in a flat-file database: all the data is held in a single table, <strong>Library</strong>, with one row per book. Each row stores the book's ISBN, title, author, genre and year of publication, along with its current loan status.</p><p>The <strong>Availability</strong> field holds either <em>Available</em> (the book is on the shelf) or <em>Borrowed</em> (the book is out on loan). For a borrowed book, <strong>BorrowerName</strong> records who has it and <strong>DueDate</strong> records when it must be returned; for a book on the shelf both fields are empty (NULL). Dates are stored as text in the form YYYY-MM-DD, and field names contain no spaces so they are easy to use in SQL.</p>`,
   items: [
     { type: 'sql', marks: 2,
-      question: `<p>Using the same <strong>Library</strong> table, write an SQL query that lists the <strong>Title</strong>, <strong>BorrowerName</strong> and <strong>DueDate</strong> of every book that is currently <strong>Borrowed</strong>, with the book that is due back soonest listed first.</p>
+      question: `<p>Using the <strong>Library</strong> table, write an SQL query that lists the <strong>Title</strong>, <strong>BorrowerName</strong> and <strong>DueDate</strong> of every book that is currently <strong>Borrowed</strong>, with the book that is due back soonest listed first.</p>
 <p><strong>Library</strong></p><table class="hoa-table-normal"><thead><tr><th>ISBN</th><th>Title</th><th>Author</th><th>Genre</th><th>YearPublished</th><th>Availability</th><th>BorrowerName</th><th>DueDate</th></tr></thead><tbody>
 <tr><td>978-0064404990</td><td>The Lion, the Witch &amp; Wardrobe</td><td>C.S. Lewis</td><td>Fantasy</td><td>1950</td><td>Borrowed</td><td>Alice Johnson</td><td>2025-03-12</td></tr>
 <tr><td>978-0142410370</td><td>Matilda</td><td>Roald Dahl</td><td>Fiction</td><td>1988</td><td>Available</td><td>NULL</td><td>NULL</td></tr>
@@ -309,9 +310,10 @@ WHERE Availability = 'Borrowed'
 ORDER BY DueDate ASC;</pre><p>WHERE keeps only the borrowed books and ORDER BY DueDate ASC puts the earliest due date (The Secret Garden, 2025-03-10) first. Dates stored as YYYY-MM-DD text sort correctly in date order (textbook p. 228).</p>` }
   ] },
 { number: '22', marks: 2, layout: 0, section: 'Textbook p. 228 · The flat-file database',
+  stimulus: `<p><strong>School library catalogue</strong></p><p>A school library records its whole collection in a flat-file database: all the data is held in a single table, <strong>Library</strong>, with one row per book. Each row stores the book's ISBN, title, author, genre and year of publication, along with its current loan status.</p><p>The <strong>Availability</strong> field holds either <em>Available</em> (the book is on the shelf) or <em>Borrowed</em> (the book is out on loan). For a borrowed book, <strong>BorrowerName</strong> records who has it and <strong>DueDate</strong> records when it must be returned; for a book on the shelf both fields are empty (NULL). Dates are stored as text in the form YYYY-MM-DD, and field names contain no spaces so they are easy to use in SQL.</p>`,
   items: [
     { type: 'sql', marks: 2,
-      question: `<p>Using the same <strong>Library</strong> table, write an SQL query that shows each <strong>Genre</strong> together with the <strong>number of books</strong> in that genre.</p>
+      question: `<p>Using the <strong>Library</strong> table, write an SQL query that shows each <strong>Genre</strong> together with the <strong>number of books</strong> in that genre.</p>
 <p><strong>Library</strong></p><table class="hoa-table-normal"><thead><tr><th>ISBN</th><th>Title</th><th>Author</th><th>Genre</th><th>YearPublished</th><th>Availability</th><th>BorrowerName</th><th>DueDate</th></tr></thead><tbody>
 <tr><td>978-0064404990</td><td>The Lion, the Witch &amp; Wardrobe</td><td>C.S. Lewis</td><td>Fantasy</td><td>1950</td><td>Borrowed</td><td>Alice Johnson</td><td>2025-03-12</td></tr>
 <tr><td>978-0142410370</td><td>Matilda</td><td>Roald Dahl</td><td>Fiction</td><td>1988</td><td>Available</td><td>NULL</td><td>NULL</td></tr>
@@ -369,10 +371,10 @@ FROM Titles
 WHERE Title LIKE 'SDD%';</pre><p>LIKE with the wildcard % matches any title that starts with "SDD" (TitleIDs 3 to 6). The Titles table and its data are from the Microsoft Access library database on textbook p. 236.</p>` }
   ] },
 { number: '24', marks: 2, layout: 0, section: 'Textbook p. 238 · Primary keys',
+  stimulus: `<p><strong>Library loans database</strong></p><p>A library uses a relational database with five tables. <strong>Borrowers</strong> has one row per member, identified by BorrowerID; LoanDuration is the number of days a member may keep a book. <strong>Titles</strong> has one row per published title, identified by TitleID. Because the library can own several copies of the same title, <strong>Books</strong> has one row per physical copy (BookID), linked to its title by the foreign key TitleID.</p><p>Each time a member borrows, a row is added to <strong>Loans</strong> with the date and the member's BorrowerID (a foreign key to Borrowers). LoanID values are generated randomly, so they can look unusual or be negative. A single loan can include several books, so <strong>BookLoans</strong> has one row for each book on each loan; LoanID and BookID together form its composite primary key.</p><p>Relationships: Borrowers 1:∞ Loans 1:∞ BookLoans ∞:1 Books ∞:1 Titles.</p>`,
   items: [
     { type: 'sql', marks: 2,
-      question: `<p>In the library database, each loan is recorded in the <strong>Loans</strong> table and linked to the borrower by the foreign key <strong>BorrowerID</strong>.</p>
-<p>Write an SQL query that lists, for every loan, the borrower's <strong>FirstName</strong> and <strong>LastName</strong> and the <strong>LoanDate</strong>.</p>
+      question: `<p>Write an SQL query that lists, for every loan, the borrower's <strong>FirstName</strong> and <strong>LastName</strong> and the <strong>LoanDate</strong>.</p>
 <p><strong>Borrowers</strong></p><table class="hoa-table-normal"><thead><tr><th>BorrowerID</th><th>FirstName</th><th>LastName</th><th>PhoneNumber</th><th>JoinDate</th><th>LoanDuration</th></tr></thead><tbody>
 <tr><td>1</td><td>Fred</td><td>Nerk</td><td>98769876</td><td>2006-02-15</td><td>14</td></tr>
 <tr><td>2</td><td>Mary</td><td>Lamb</td><td>92343456</td><td>2001-01-07</td><td>14</td></tr>
@@ -395,10 +397,10 @@ FROM Borrowers
 JOIN Loans ON Borrowers.BorrowerID = Loans.BorrowerID;</pre><p>The join matches the primary key BorrowerID in Borrowers with the foreign key BorrowerID in Loans, giving Mary Lamb and Fred Nerk (John Boole has no loans). Table data is from textbook pp. 237–238; the dates are shown as YYYY-MM-DD.</p>` }
   ] },
 { number: '25', marks: 2, layout: 0, section: 'Textbook p. 238 · Primary keys (composite key)',
+  stimulus: `<p><strong>Library loans database</strong></p><p>A library uses a relational database with five tables. <strong>Borrowers</strong> has one row per member, identified by BorrowerID; LoanDuration is the number of days a member may keep a book. <strong>Titles</strong> has one row per published title, identified by TitleID. Because the library can own several copies of the same title, <strong>Books</strong> has one row per physical copy (BookID), linked to its title by the foreign key TitleID.</p><p>Each time a member borrows, a row is added to <strong>Loans</strong> with the date and the member's BorrowerID (a foreign key to Borrowers). LoanID values are generated randomly, so they can look unusual or be negative. A single loan can include several books, so <strong>BookLoans</strong> has one row for each book on each loan; LoanID and BookID together form its composite primary key.</p><p>Relationships: Borrowers 1:∞ Loans 1:∞ BookLoans ∞:1 Books ∞:1 Titles.</p>`,
   items: [
     { type: 'sql', marks: 2,
-      question: `<p>The <strong>BookLoans</strong> table uses a composite primary key (LoanID + BookID): each row records one book that was borrowed as part of a loan.</p>
-<p>Write an SQL query that shows each <strong>LoanID</strong> and the <strong>number of books</strong> borrowed on that loan.</p>
+      question: `<p>Write an SQL query that shows each <strong>LoanID</strong> and the <strong>number of books</strong> borrowed on that loan.</p>
 <p><strong>BookLoans</strong></p><table class="hoa-table-normal"><thead><tr><th>LoanID</th><th>BookID</th></tr></thead><tbody>
 <tr><td>-1311765733</td><td>4</td></tr>
 <tr><td>-1311765733</td><td>11</td></tr>
@@ -418,10 +420,10 @@ FROM BookLoans
 GROUP BY LoanID;</pre><p>GROUP BY LoanID makes one row per loan and COUNT(*) counts its books: loan -1311765733 has 3 books and loan 264188354 has 2 (BookLoans data from textbook p. 238).</p>` }
   ] },
 { number: '26', marks: 3, layout: 0, section: 'Textbook p. 242 · Relationships (library schema)',
+  stimulus: `<p><strong>Library loans database</strong></p><p>A library uses a relational database with five tables. <strong>Borrowers</strong> has one row per member, identified by BorrowerID; LoanDuration is the number of days a member may keep a book. <strong>Titles</strong> has one row per published title, identified by TitleID. Because the library can own several copies of the same title, <strong>Books</strong> has one row per physical copy (BookID), linked to its title by the foreign key TitleID.</p><p>Each time a member borrows, a row is added to <strong>Loans</strong> with the date and the member's BorrowerID (a foreign key to Borrowers). LoanID values are generated randomly, so they can look unusual or be negative. A single loan can include several books, so <strong>BookLoans</strong> has one row for each book on each loan; LoanID and BookID together form its composite primary key.</p><p>Relationships: Borrowers 1:∞ Loans 1:∞ BookLoans ∞:1 Books ∞:1 Titles.</p>`,
   items: [
     { type: 'sql', marks: 3,
-      question: `<p>The correct schema for the library database is Borrowers 1:∞ Loans 1:∞ BookLoans ∞:1 Books ∞:1 Titles.</p>
-<p>Write an SQL query that lists the <strong>Title</strong> of every book borrowed by <strong>Mary Lamb</strong>. (The textbook does not show the Books table's data, so sample data is provided so you can test your query.)</p>
+      question: `<p>Write an SQL query that lists the <strong>Title</strong> of every book borrowed by <strong>Mary Lamb</strong>. (The textbook does not show the Books table's data, so sample data is provided so you can test your query.)</p>
 <p><strong>Borrowers</strong></p><table class="hoa-table-normal"><thead><tr><th>BorrowerID</th><th>FirstName</th><th>LastName</th><th>PhoneNumber</th><th>JoinDate</th><th>LoanDuration</th></tr></thead><tbody>
 <tr><td>1</td><td>Fred</td><td>Nerk</td><td>98769876</td><td>2006-02-15</td><td>14</td></tr>
 <tr><td>2</td><td>Mary</td><td>Lamb</td><td>92343456</td><td>2001-01-07</td><td>14</td></tr>
@@ -670,10 +672,10 @@ INSERT INTO enrolments VALUES (124,2);`,
 WHERE student_id IN (SELECT student_id FROM enrolments WHERE course_id = 1);</pre><p>The inner query finds the student_ids enrolled in course 1 (121 and 123); the outer query returns the names that match: Ava Patel and Chloe Nguyen (textbook p. 244). A JOIN with WHERE enrolments.course_id = 1 gives the same output.</p>` }
   ] },
 { number: '31', marks: 2, layout: 0, section: 'Textbook p. 251 · Activity: Design a relational database for a school system (Step 7)',
+  stimulus: `<p><strong>School enrolment database (School_DB)</strong></p><p>A school uses a relational database, School_DB, to keep track of which students take which courses. It has three tables.</p><p><strong>students</strong> has one row per student, identified by student_id. Its enrolment_date field is the date the student enrolled at the school.</p><p><strong>courses</strong> has one row per course, identified by course_id, with the course's name and code.</p><p><strong>enrolments</strong> has one row for each student enrolled in each course. Its student_id and course_id fields are foreign keys to the other two tables, and grade is the grade the student received in that course. A NULL grade means no grade has been awarded yet. A student can take several courses, and a course can have many students.</p>`,
   items: [
     { type: 'sql', marks: 2,
-      question: `<p>The School_DB database has <strong>students</strong>, <strong>courses</strong> and <strong>enrolments</strong> tables. (The textbook's two sample rows per table have been extended with more sample data so you can test your query.)</p>
-<p>Write an SQL query that shows a table of students with their enrolled courses and grades: each student's <strong>first_name</strong>, <strong>last_name</strong>, the <strong>course_name</strong> and the <strong>grade</strong>.</p>
+      question: `<p>Write an SQL query that shows a table of students with their enrolled courses and grades: each student's <strong>first_name</strong>, <strong>last_name</strong>, the <strong>course_name</strong> and the <strong>grade</strong>. (Sample data is provided so you can test your query.)</p>
 <p><strong>students</strong></p><table class="hoa-table-normal"><thead><tr><th>student_id</th><th>first_name</th><th>last_name</th><th>date_of_birth</th><th>email</th><th>enrolment_date</th></tr></thead><tbody>
 <tr><td>1</td><td>Maryan</td><td>Jones</td><td>2002-05-12</td><td>maryan@email.com</td><td>2024-01-15</td></tr>
 <tr><td>2</td><td>Jordan</td><td>Smith</td><td>2001-09-23</td><td>jordan@email.com</td><td>2024-02-10</td></tr>
@@ -767,9 +769,10 @@ INSERT INTO students VALUES (9,'Grace','Taylor','2007-12-21','grace@email.com','
       guide: `<p><strong>Sample answer:</strong></p><pre class="hoa-code">SELECT first_name, last_name, email FROM students;</pre><p>Replacing * with a list of field names returns only those columns (textbook p. 251).</p>` }
   ] },
 { number: '33', marks: 3, layout: 0, section: 'Textbook p. 252 · Exercise 2: List all students enrolled in a specific course',
+  stimulus: `<p><strong>School enrolment database (School_DB)</strong></p><p>A school uses a relational database, School_DB, to keep track of which students take which courses. It has three tables.</p><p><strong>students</strong> has one row per student, identified by student_id. Its enrolment_date field is the date the student enrolled at the school.</p><p><strong>courses</strong> has one row per course, identified by course_id, with the course's name and code.</p><p><strong>enrolments</strong> has one row for each student enrolled in each course. Its student_id and course_id fields are foreign keys to the other two tables, and grade is the grade the student received in that course. A NULL grade means no grade has been awarded yet. A student can take several courses, and a course can have many students.</p>`,
   items: [
     { type: 'sql', marks: 3,
-      question: `<p>The textbook's query displays the first name, last name and enrolment date of students enrolled in "Enterprise Computing".</p>
+      question: `<p>A query displays the first name, last name and enrolment date of students enrolled in "Enterprise Computing".</p>
 <p><strong>Task:</strong> Write a query to find the students in another course: show the <strong>first_name</strong>, <strong>last_name</strong> and <strong>enrolment_date</strong> of every student enrolled in <strong>Geography</strong>. (Sample data is provided so you can test your query. Note that enrolment_date is stored in the students table.)</p>
 <p><strong>students</strong></p><table class="hoa-table-normal"><thead><tr><th>student_id</th><th>first_name</th><th>last_name</th><th>date_of_birth</th><th>email</th><th>enrolment_date</th></tr></thead><tbody>
 <tr><td>1</td><td>Maryan</td><td>Jones</td><td>2002-05-12</td><td>maryan@email.com</td><td>2024-01-15</td></tr>
@@ -833,12 +836,13 @@ INSERT INTO enrolments VALUES (12,9,3,'B');`,
 FROM students
 JOIN enrolments ON students.student_id = enrolments.student_id
 JOIN courses ON enrolments.course_id = courses.course_id
-WHERE courses.course_name = 'Geography';</pre><p>Only the WHERE condition changes from the Enterprise Computing query. Result: Jordan Smith, Chloe Martin, Finn Walker and Grace Taylor. Note: the textbook's query (p. 252) selects enrolments.enrolment_date, but in this database enrolment_date is a field of the students table (Step 3, p. 247), so it must be students.enrolment_date.</p>` }
+WHERE courses.course_name = 'Geography';</pre><p>Only the WHERE condition changes from the Enterprise Computing query. Result: Jordan Smith, Chloe Martin, Finn Walker and Grace Taylor. Note: the query (p. 252) selects enrolments.enrolment_date, but in this database enrolment_date is a field of the students table (Step 3, p. 247), so it must be students.enrolment_date.</p>` }
   ] },
 { number: '34', marks: 3, layout: 0, section: 'Textbook p. 252 · Exercise 3: Count the number of students in each course',
+  stimulus: `<p><strong>School enrolment database (School_DB)</strong></p><p>A school uses a relational database, School_DB, to keep track of which students take which courses. It has three tables.</p><p><strong>students</strong> has one row per student, identified by student_id. Its enrolment_date field is the date the student enrolled at the school.</p><p><strong>courses</strong> has one row per course, identified by course_id, with the course's name and code.</p><p><strong>enrolments</strong> has one row for each student enrolled in each course. Its student_id and course_id fields are foreign keys to the other two tables, and grade is the grade the student received in that course. A NULL grade means no grade has been awarded yet. A student can take several courses, and a course can have many students.</p>`,
   items: [
     { type: 'sql', marks: 3,
-      question: `<p>The textbook's query shows each course along with the number of students enrolled in it:</p>
+      question: `<p>A query shows each course along with the number of students enrolled in it:</p>
 <pre class="hoa-code">SELECT courses.course_name, COUNT(enrolments.student_id) AS total_students
 FROM courses
 JOIN enrolments ON courses.course_id = enrolments.course_id
@@ -888,6 +892,7 @@ GROUP BY courses.course_name
 HAVING COUNT(enrolments.student_id) > 5;</pre><p>WHERE cannot test an aggregate, so the condition goes in a HAVING clause after GROUP BY. Only Enterprise Computing (6 students) is returned; Geography has 4 and Mathematics 2 (textbook p. 252).</p>` }
   ] },
 { number: '35', marks: 3, layout: 0, section: 'Textbook p. 253 · Exercise 5: Find students who are enrolled in more than one course',
+  stimulus: `<p><strong>School enrolment database (School_DB)</strong></p><p>A school uses a relational database, School_DB, to keep track of which students take which courses. It has three tables.</p><p><strong>students</strong> has one row per student, identified by student_id. Its enrolment_date field is the date the student enrolled at the school.</p><p><strong>courses</strong> has one row per course, identified by course_id, with the course's name and code.</p><p><strong>enrolments</strong> has one row for each student enrolled in each course. Its student_id and course_id fields are foreign keys to the other two tables, and grade is the grade the student received in that course. A NULL grade means no grade has been awarded yet. A student can take several courses, and a course can have many students.</p>`,
   items: [
     { type: 'sql', marks: 3,
       question: `<p>Write an SQL query that finds the students who are enrolled in <strong>more than one course</strong>, showing each student's <strong>first_name</strong> and <strong>last_name</strong>. (Sample data is provided so you can test your query.)</p>
@@ -947,6 +952,7 @@ GROUP BY students.student_id, students.first_name, students.last_name
 HAVING COUNT(enrolments.course_id) > 1;</pre><p>Grouping by student and keeping groups with a count above 1 gives Aisha Khan, Chloe Martin and Grace Taylor. (On textbook p. 253 the query printed under Exercise 5 is a copy of Exercise 4's; this answer follows the exercise's title.)</p>` }
   ] },
 { number: '36', marks: 3, layout: 0, section: 'Textbook p. 253 · Bonus Challenge',
+  stimulus: `<p><strong>School enrolment database (School_DB)</strong></p><p>A school uses a relational database, School_DB, to keep track of which students take which courses. It has three tables.</p><p><strong>students</strong> has one row per student, identified by student_id. Its enrolment_date field is the date the student enrolled at the school.</p><p><strong>courses</strong> has one row per course, identified by course_id, with the course's name and code.</p><p><strong>enrolments</strong> has one row for each student enrolled in each course. Its student_id and course_id fields are foreign keys to the other two tables, and grade is the grade the student received in that course. A NULL grade means no grade has been awarded yet. A student can take several courses, and a course can have many students.</p>`,
   items: [
     { type: 'sql', marks: 3,
       question: `<p><strong>Bonus Challenge:</strong> Write a query to list the students who have not received a grade yet (NULL grades in the enrolments table). Show each student's <strong>first_name</strong>, <strong>last_name</strong> and the <strong>course_name</strong> of the course without a grade. (Sample data is provided so you can test your query.)</p>

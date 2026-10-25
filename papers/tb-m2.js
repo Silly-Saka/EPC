@@ -219,7 +219,8 @@ registerExam({
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — They are open to anyone and usually lack strong security measures. Public connections are open to anyone, are predominantly unencrypted and lack robust data protection; firewalls, encryption and stable connections describe private connections (textbook p. 164).</p>` }
       ] },
-    { number: '27', marks: 1, layout: 0, section: 'Exercise 2.1.3',
+    { number: '27', marks: 1, layout: 1, section: 'Exercise 2.1.3',
+      stimulus: `<p><strong>Walmart's food traceability system</strong></p><p>Walmart is a US-based multinational retailer that also trades in countries such as China, Canada and Mexico. Food contamination is a growing global problem, and finding where a contaminated product (or one of its ingredients) came from has traditionally been slow and expensive. Waste is a further concern: the UN Environment Programme's Food Waste Index Report 2021 estimated that about 17% of the world's food production is wasted, much of it in retail because recalls are imprecise and shelf-life information is limited.</p><p>Walmart responded by building a blockchain-based traceability system into its supply chain. Each movement of a food item is logged as a tamper-proof transaction, so the company can follow a contaminated product back to its source very quickly and recall only the affected items, cutting unnecessary waste and improving food safety and efficiency.</p>`,
       items: [
         { type: 'mcq',
           question: `<p>How does blockchain technology improve accountability in the food supply chain, according to Walmart's case study?</p>`,
@@ -391,7 +392,8 @@ registerExam({
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — It provides context and details about the data. Metadata is information that describes and gives context to data, such as when, how and by whom it was collected (textbook p. 181).</p>` }
       ] },
-    { number: '48', marks: 1, layout: 0, section: 'Exercise 2.2.1',
+    { number: '48', marks: 1, layout: 1, section: 'Exercise 2.2.1',
+      stimulus: `<p><strong>Airline meal planning</strong></p><p>Before a flight, an airline asks each passenger which meal they would like and whether they have any special dietary needs, including food allergies. The catering team then uses this information to plan and prepare meals so that every passenger is catered for.</p><p>If the data is wrong or incomplete, for example if a passenger's allergy was not fully recorded, that passenger could be served food that is unsafe for them and suffer a serious reaction.</p>`,
       items: [
         { type: 'mcq',
           question: `<p>In the airline example, why is accurate data crucial?</p>`,
@@ -769,7 +771,8 @@ registerExam({
           answer: 3,
           guide: `<p><strong>Answer: C</strong> — Performing arithmetic calculations. Predicting disease outbreaks, detecting fraud and personalising recommendations are all given as machine learning applications; simple arithmetic does not require learning from data (textbook pp. 259, 261).</p>` }
       ] },
-    { number: '94', marks: 1, layout: 0, section: 'Exercise 2.3.4',
+    { number: '94', marks: 1, layout: 1, section: 'Exercise 2.3.4',
+      stimulus: `<p><strong>Google DeepMind's GenCast weather model</strong></p><p>GenCast is an AI weather-forecasting system developed by Google DeepMind. Instead of solving physics equations about temperature, air pressure and wind, it uses machine learning to learn from past weather data and refine its forecasts over time. When tested against the ECMWF ENS system, a widely used physics-based model that relies on powerful supercomputers, GenCast's daily forecasts were up to 20% more accurate, and it could anticipate hurricanes and tropical cyclones up to 15 days ahead.</p><p>Because it can work through huge volumes of data and pick out patterns far more quickly than traditional models, GenCast is well suited to early warnings of storms, floods and heatwaves. Some meteorologists remain wary: physics-based models rest on well-established science, whereas GenCast produces forecasts without revealing how it reached them. Experts currently recommend combining the two approaches, which could especially benefit farming, air travel and emergency management.</p>`,
       items: [
         { type: 'mcq',
           question: `<p>What is a key advantage of machine learning over traditional forecasting methods in weather prediction?</p>`,
@@ -793,7 +796,8 @@ registerExam({
           answer: 1,
           guide: `<p><strong>Answer: A</strong> — Linear regression. Linear regression (and logistic regression) are given as statistical models; clustering and neural networks are described as machine learning algorithms (textbook pp. 260, 262).</p>` }
       ] },
-    { number: '97', marks: 1, layout: 0, section: 'Exercise 2.3.4',
+    { number: '97', marks: 1, layout: 1, section: 'Exercise 2.3.4',
+      stimulus: `<p><strong>Google DeepMind's GenCast weather model</strong></p><p>GenCast is an AI weather-forecasting system developed by Google DeepMind. Instead of solving physics equations about temperature, air pressure and wind, it uses machine learning to learn from past weather data and refine its forecasts over time. When tested against the ECMWF ENS system, a widely used physics-based model that relies on powerful supercomputers, GenCast's daily forecasts were up to 20% more accurate, and it could anticipate hurricanes and tropical cyclones up to 15 days ahead.</p><p>Because it can work through huge volumes of data and pick out patterns far more quickly than traditional models, GenCast is well suited to early warnings of storms, floods and heatwaves. Some meteorologists remain wary: physics-based models rest on well-established science, whereas GenCast produces forecasts without revealing how it reached them. Experts currently recommend combining the two approaches, which could especially benefit farming, air travel and emergency management.</p>`,
       items: [
         { type: 'mcq',
           question: `<p>Why do some meteorologists prefer combining AI models like GenCast with traditional physics-based models?</p>`,
@@ -801,7 +805,8 @@ registerExam({
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — Traditional models are based on well-understood scientific principles. Meteorologists are cautious about relying entirely on AI because traditional models are based on well-understood scientific principles, while AI models work as "black boxes" (textbook p. 264).</p><p><em>Note: option D is also arguable because the "black box" problem implies traditional models are easier to interpret, but option B is the reason the textbook states directly.</em></p>` }
       ] },
-    { number: '98', marks: 1, layout: 0, section: 'Exercise 2.3.4',
+    { number: '98', marks: 1, layout: 1, section: 'Exercise 2.3.4',
+      stimulus: `<p><strong>Google DeepMind's GenCast weather model</strong></p><p>GenCast is an AI weather-forecasting system developed by Google DeepMind. Instead of solving physics equations about temperature, air pressure and wind, it uses machine learning to learn from past weather data and refine its forecasts over time. When tested against the ECMWF ENS system, a widely used physics-based model that relies on powerful supercomputers, GenCast's daily forecasts were up to 20% more accurate, and it could anticipate hurricanes and tropical cyclones up to 15 days ahead.</p><p>Because it can work through huge volumes of data and pick out patterns far more quickly than traditional models, GenCast is well suited to early warnings of storms, floods and heatwaves. Some meteorologists remain wary: physics-based models rest on well-established science, whereas GenCast produces forecasts without revealing how it reached them. Experts currently recommend combining the two approaches, which could especially benefit farming, air travel and emergency management.</p>`,
       items: [
         { type: 'mcq',
           question: `<p>What is one of the key challenges with AI models like GenCast in weather forecasting?</p>`,
@@ -809,7 +814,8 @@ registerExam({
           answer: 3,
           guide: `<p><strong>Answer: C</strong> — AI models are considered "black boxes," making it difficult to understand their reasoning. AI models like GenCast produce results without clearly explaining how they arrived at their conclusions (textbook p. 264).</p>` }
       ] },
-    { number: '99', marks: 1, layout: 0, section: 'Exercise 2.3.4',
+    { number: '99', marks: 1, layout: 1, section: 'Exercise 2.3.4',
+      stimulus: `<p><strong>Google DeepMind's GenCast weather model</strong></p><p>GenCast is an AI weather-forecasting system developed by Google DeepMind. Instead of solving physics equations about temperature, air pressure and wind, it uses machine learning to learn from past weather data and refine its forecasts over time. When tested against the ECMWF ENS system, a widely used physics-based model that relies on powerful supercomputers, GenCast's daily forecasts were up to 20% more accurate, and it could anticipate hurricanes and tropical cyclones up to 15 days ahead.</p><p>Because it can work through huge volumes of data and pick out patterns far more quickly than traditional models, GenCast is well suited to early warnings of storms, floods and heatwaves. Some meteorologists remain wary: physics-based models rest on well-established science, whereas GenCast produces forecasts without revealing how it reached them. Experts currently recommend combining the two approaches, which could especially benefit farming, air travel and emergency management.</p>`,
       items: [
         { type: 'mcq',
           question: `<p>In which industries could AI-based forecasting models like GenCast be particularly useful?</p>`,
