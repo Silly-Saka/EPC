@@ -118,6 +118,14 @@
       var expected = chk && !chk.match ? '<p class="auto-bad">Output check: ' + esc(chk.reason) + '.</p><div class="label">Expected output</div>' + chk.expectedHtml : '';
       return '<div class="answer"><pre>' + esc(value) + '</pre>' + (result ? '<div class="label">Output when run</div>' + result : '') + expected + '</div>';
     }
+    if (item.type === 'formula') {
+      var cellsGiven = Object.keys(value || {});
+      if (!cellsGiven.length) return none;
+      var fc = await ITEMS.checkFormula(item, value);
+      return '<div class="answer"><table class="formulas"><thead><tr><th>Cell</th><th>Your formula</th></tr></thead><tbody>' +
+        (item.cells || []).map(function (t) { return '<tr><td>' + t.cell + '</td><td>' + esc((value || {})[t.cell] || '') + '</td></tr>'; }).join('') + '</tbody></table>' +
+        (fc ? '<div class="label">Results</div>' + fc.detailHtml : '') + '</div>';
+    }
     if (item.type === 'drawing') {
       if (!value || !(value.elements || []).length) return none;
       var d = await ITEMS.exportTool('drawing', value);

@@ -74,7 +74,7 @@
     var objective = 0, total = 0;
     groups.forEach(function (g) {
       total += g.marks || 0;
-      g.items.forEach(function (it) { if (it.type === 'mcq' || it.nesaType === 0 || it.kind === 'multi' || it.kind === 'grid' || it.kind === 'order' || (it.raw && it.type === 'html')) objective += it.marks || 0; });
+      g.items.forEach(function (it) { if (it.type === 'mcq' || it.type === 'formula' || it.nesaType === 0 || it.kind === 'multi' || it.kind === 'grid' || it.kind === 'order' || (it.raw && it.type === 'html')) objective += it.marks || 0; });
     });
     return {
       id: exam.id, title: exam.title, groups: groups, totalMarks: exam.totalMarks || total, objectiveMarks: objective,
@@ -92,6 +92,7 @@
   }
   var saveTimer = null, saveWarned = false;
   function save() {
+    if (model.kind === 'textbook') state.score = scoreSoFar();   // shown on the home page
     if (!store.set('exam:' + examId, state) && !saveWarned) {
       saveWarned = true;
       alertModal('Your answers are not being saved', 'This browser is blocking or out of storage for this site (private/incognito windows and some school settings do this). You can keep working, but use "Download answers" at the end before closing the page.');
@@ -161,7 +162,8 @@
       '<div class="exam-main" id="main"></div>';
     var nav = document.getElementById('nav-elems');
     model.groups.forEach(function (g, i) {
-      var b = el('<div class="nav-elem" tabindex="0" title="Question ' + g.number + '">' + g.number + '<i class="fas fa-flag nav-flagged hidden"></i><i class="fas fa-check-circle nav-answered hidden"></i></div>');
+      var b = el('<div class="nav-elem" tabindex="0" title="Question ' + g.number + '">' + g.number + '<i class="fas fa-flag nav-flagged hidden"></i><i class="fas fa-check-circle nav-answered hidden"></i>' +
+        (model.kind === 'textbook' ? '<i class="fas fa-times-circle nav-wrong hidden"></i><i class="fas fa-circle nav-dot hidden"></i>' : '') + '</div>');
       b.addEventListener('click', function () { go(i); });
       b.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(i); });
       nav.appendChild(b);
@@ -228,27 +230,34 @@
     prev.addEventListener('click', function () { go(i - 1); });
     actions.appendChild(prev);
     // textbook quizzes in practice mode: Check answer first, then Next question
-    var checkItem = !review && model.kind === 'textbook' && state.mode !== 'timed' && g.items.length === 1 && g.items[0].type === 'mcq' && g.items[0].answer != null ? g.items[0] : null;
-    var checkBtn = null;
-    if (checkItem) {
+    var checkItems = !review && model.kind === 'textbook' && state.mode !== 'timed' && g.items.length && g.items.every(checkable) ? g.items : null;
+    var allChecked = checkItems && checkItems.every(function (it) { return state.checked[it.key]; });
+    var checkBtn = null, afterCheck = null;
+    if (checkItems) {
       checkBtn = el('<button class="nsw-button nsw-button--dark">Check answer <i class="fas fa-check"></i></button>');
       checkBtn.addEventListener('click', function () {
-        if (state.responses[checkItem.key] == null) { toast('Choose an answer first.'); return; }
-        state.checked[checkItem.key] = true; persist(true);
-        showCheck(checkItem);
-        checkBtn.remove(); actions.appendChild(afterCheck);
-        afterCheck.focus();
+        var missing = checkItems.filter(function (it) { var v = state.responses[it.key]; return v == null || v === '' || (ctrls[it.key] && !ctrls[it.key].isAnswered(v)); });
+        if (missing.length) { toast(missing[0].type === 'mcq' ? 'Choose an answer first.' : checkItems.length > 1 ? 'Answer every part first.' : 'Write your answer first.'); return; }
+        checkBtn.disabled = true;
+        Promise.all(checkItems.map(runCheck)).then(function (results) {
+          checkBtn.disabled = false;
+          if (results.some(function (r) { return r == null; })) { toast('Your answer could not be checked (the checking engine did not load — check your internet connection).'); return; }
+          checkItems.forEach(function (it, k) { state.checked[it.key] = results[k] ? 'right' : 'wrong'; });
+          persist(true);
+          checkItems.forEach(showCheck); refreshNav();
+          checkBtn.remove(); actions.appendChild(afterCheck);
+          afterCheck.focus();
+        });
       });
+      if (i < model.groups.length - 1) {
+        afterCheck = el('<button class="nsw-button nsw-button--dark">Next question <i class="fas fa-angle-right"></i></button>');
+        afterCheck.addEventListener('click', function () { go(i + 1); });
+      } else {
+        afterCheck = el('<button class="nsw-button nsw-button--dark">Finish and mark <i class="fas fa-check"></i></button>');
+        afterCheck.addEventListener('click', confirmExit);
+      }
+      actions.appendChild(allChecked ? afterCheck : checkBtn);
     }
-    var afterCheck = null;
-    if (checkItem && i < model.groups.length - 1) {
-      afterCheck = el('<button class="nsw-button nsw-button--dark">Next question <i class="fas fa-angle-right"></i></button>');
-      afterCheck.addEventListener('click', function () { go(i + 1); });
-    } else if (checkItem) {
-      afterCheck = el('<button class="nsw-button nsw-button--dark">Finish and mark <i class="fas fa-check"></i></button>');
-      afterCheck.addEventListener('click', confirmExit);
-    }
-    if (checkItem) actions.appendChild(state.checked[checkItem.key] ? afterCheck : checkBtn);
     else if (i < model.groups.length - 1) {
       var next = el('<button class="nsw-button nsw-button--dark">Next question <i class="fas fa-angle-right"></i></button>');
       next.addEventListener('click', function () { go(i + 1); });
@@ -278,7 +287,7 @@
       else Array.prototype.forEach.call(ctl.el.querySelectorAll('select'), function (s) { if (!Array.prototype.some.call(s.options, function (o) { return o.value === ''; })) s.selectedIndex = -1; });
       if (review) addReview(item, ctl);
     });
-    if (checkItem && state.checked[checkItem.key]) showCheck(checkItem);
+    if (allChecked) checkItems.forEach(showCheck);
 
     if (g.layout === 0) {
       var one = el('<div class="group-onecol"></div>');
@@ -308,20 +317,59 @@
   }
 
   // Shows right/wrong, highlights the correct option and the explanation; the answer is then locked.
+  // ---- textbook-style "Check answer" (MCQ, SQL with a model answer, spreadsheet formulas)
+  function checkable(it) {
+    return (it.type === 'mcq' && it.answer != null) || (it.type === 'sql' && !!it.sqlAnswer) || it.type === 'formula';
+  }
+  // resolves true / false, or null when the answer could not be checked
+  function runCheck(item) {
+    var v = state.responses[item.key], ctl = ctrls[item.key];
+    if (item.type === 'sql') return ITEMS.checkSql(item, v).then(function (c) { return c ? c.match : null; });
+    if (item.type === 'formula') return ITEMS.checkFormula(item, v).then(function (c) { return c ? c.match : null; });
+    return Promise.resolve(v === item.answer);
+  }
+  // 'right' | 'wrong' | null (not checked / not marked)
+  function itemResult(it) {
+    var c = state.checked && state.checked[it.key];
+    if (c === 'right' || c === 'wrong') return c;
+    if (c && it.type === 'mcq') return state.responses[it.key] === it.answer ? 'right' : 'wrong';   // saves from before right/wrong was stored
+    if (state.finished && state.responses[it.key] != null && state.responses[it.key] !== '') {
+      var m = itemMark(it);
+      if (m.self != null) return m.self >= m.max ? 'right' : 'wrong';
+      if (m.auto) return m.auto.got >= m.auto.max ? 'right' : 'wrong';
+      if (checkable(it)) return 'wrong';
+    }
+    return null;
+  }
+  function groupResult(g) {
+    var r = g.items.map(itemResult);
+    if (!r.length || r.some(function (x) { return !x; })) return null;
+    return r.every(function (x) { return x === 'right'; }) ? 'right' : 'wrong';
+  }
+  function scoreSoFar() {
+    var right = 0, wrong = 0;
+    model.groups.forEach(function (g) { var r = groupResult(g); if (r === 'right') right++; else if (r === 'wrong') wrong++; });
+    return { correct: right, wrong: wrong };
+  }
+  // Shows right/wrong, the correct answer and the explanation; the answer is then locked.
   function showCheck(item) {
     var ctl = ctrls[item.key]; if (!ctl) return;
-    var v = state.responses[item.key], right = v === item.answer;
+    var v = state.responses[item.key], right = itemResult(item) === 'right';
     ctl.setReadOnly(true);
-    ctl.review && ctl.review(v);
     var extra = ctl.el.querySelector('.item-extra');
     var old = extra.querySelector('.check-box'); if (old) old.remove();
-    var done = 0, correct = 0;
-    model.groups.forEach(function (g) { g.items.forEach(function (it) { if (state.checked[it.key]) { done++; if (state.responses[it.key] === it.answer) correct++; } }); });
-    var box = el('<div class="check-box ' + (right ? 'correct' : 'wrong') + '"><div class="check-head"><i class="fas ' + (right ? 'fa-check-circle' : 'fa-times-circle') + '"></i> ' +
-      (right ? 'Correct!' : 'Incorrect — the correct answer is ' + 'ABCDEFGH'[item.answer - 1] + '.') +
-      '<span class="check-score">Score so far: ' + correct + ' / ' + done + '</span></div><div class="check-guide"></div></div>');
+    var oldSql = extra.querySelector('.sql-check'); if (oldSql) oldSql.remove();
+    var s = scoreSoFar();
+    var head = right ? 'Correct!' : item.type === 'mcq' ? 'Incorrect — the correct answer is ' + 'ABCDEFGH'[item.answer - 1] + '.' : 'Incorrect — compare your answer with the sample answer below.';
+    var box = el('<div class="check-box ' + (right ? 'correct' : 'wrong') + '"><div class="check-head"><i class="fas ' + (right ? 'fa-check-circle' : 'fa-times-circle') + '"></i> ' + head +
+      '<span class="check-score">Score so far: ' + s.correct + ' / ' + (s.correct + s.wrong) + '</span></div><div class="check-detail"></div><div class="check-guide"></div></div>');
     box.querySelector('.check-guide').innerHTML = item.guide || '';
     extra.appendChild(box);
+    // details: MCQ highlights, SQL expected output, formula expected values (may need the engines first)
+    var detail = box.querySelector('.check-detail');
+    if (item.type === 'mcq') ctl.review && ctl.review(v);
+    else if (item.type === 'sql' && !right) ITEMS.checkSql(item, v).then(function () { if (!item._sqlCheck || item._sqlCheck.match) return; detail.innerHTML = '<p>' + escapeHtml(item._sqlCheck.reason) + '.</p><div class="label">Expected output</div>' + item._sqlCheck.expectedHtml; });
+    else if (item.type === 'formula') ITEMS.checkFormula(item, v).then(function (c) { if (c) { detail.innerHTML = c.detailHtml; ctl.review && ctl.review(v); } });
   }
 
   function go(i) {
@@ -355,7 +403,14 @@
       var n = navs[i]; if (!n) return;
       n.classList.toggle('nav-elem-current', i === state.current);
       n.querySelector('.nav-flagged').classList.toggle('hidden', !state.flags[i]);
-      n.querySelector('.nav-answered').classList.toggle('hidden', !groupAnsweredLoose(g));
+      var answered = groupAnsweredLoose(g);
+      if (model.kind === 'textbook') {
+        // textbook quizzes: tick = correct, cross = wrong, dot = answered but not checked yet
+        var res = groupResult(g);
+        n.querySelector('.nav-answered').classList.toggle('hidden', res !== 'right');
+        n.querySelector('.nav-wrong').classList.toggle('hidden', res !== 'wrong');
+        n.querySelector('.nav-dot').classList.toggle('hidden', !(answered && !res));
+      } else n.querySelector('.nav-answered').classList.toggle('hidden', !answered);
     });
     var flagTop = document.querySelector('.tb-flag .tb-top');
     if (flagTop) flagTop.classList.toggle('flagged', !!state.flags[state.current]);
@@ -505,6 +560,7 @@
     model.groups.forEach(function (g) {
       g.items.forEach(function (it) {
         if (it.type === 'sql' && it.sqlAnswer && state.responses[it.key]) checks.push(ITEMS.checkSql(it, state.responses[it.key]));
+        if (it.type === 'formula' && state.responses[it.key]) checks.push(ITEMS.checkFormula(it, state.responses[it.key]));
       });
     });
     if (checks.length) {

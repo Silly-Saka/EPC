@@ -31,6 +31,10 @@
       { id: 'ef-dv', title: 'Data Visualisation' },
       { id: 'ef-is', title: 'Intelligent Systems' },
     ] },
+    { section: 'Logic', exams: [
+      { id: 'logic-ss', title: 'Spreadsheet formulas' },
+      { id: 'logic-sql', title: 'SQL queries' },
+    ] },
   ];
 
   // ---------- data registration (paper files call these) ----------

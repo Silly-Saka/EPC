@@ -60,6 +60,8 @@ select, input, textarea, button { font-family: inherit; font-size: inherit; }
 .exam-status { font-size: .95rem; color: #333; }
 .exam-status .done { color: #00804f; font-weight: 600; }
 .exam-status .progress { color: #9c5d00; font-weight: 600; }
+.exam-status .n-right { color: #00804f; font-weight: 600; }
+.exam-status .n-wrong { color: #b81237; font-weight: 600; }
 .landing h2 + .exam-list { margin-top: 0; }
 .notice { font-size: .9rem; color: #444; border-left: 4px solid var(--blue); padding: .5rem .75rem; background: #fff; }
 .site-footer { background: #22272b; color: #fff; text-align: center; padding: 16px 0; margin-top: 40px; }
@@ -103,6 +105,8 @@ select, input, textarea, button { font-family: inherit; font-size: inherit; }
 .nav-elem-current { background: var(--navy); color: #fff; }
 .nav-elem-current::after { content: ''; position: absolute; bottom: -7px; left: -1px; right: -1px; height: 1px; background: var(--navy); }
 .nav-elem .nav-answered { position: absolute; top: -.55em; right: -.55em; color: #2ecc71; font-size: .9em; background: #fff; border-radius: 50%; line-height: 1; }
+.nav-elem .nav-wrong { position: absolute; top: -.55em; right: -.55em; color: #d7153a; font-size: .9em; background: #fff; border-radius: 50%; line-height: 1; }
+.nav-elem .nav-dot { position: absolute; top: -.4em; right: -.4em; color: #146cfd; font-size: .55em; background: #fff; border-radius: 50%; line-height: 1; border: 2px solid #fff; }
 .nav-elem .nav-flagged { position: absolute; top: -1.15em; left: 50%; transform: translateX(-50%); color: var(--blue); font-size: .7em; }
 .nav-elem.review-correct { border-color: #00804f; }
 .nav-elem.review-wrong { border-color: #b81237; }
@@ -294,6 +298,26 @@ body.hl-on .highlighter-text, body.hl-on .highlighter-text * { cursor: url("data
 .check-guide p { margin: .3rem 0; }
 body.custom-colours .check-box { background: transparent; }
 body.custom-colours .check-guide, body.custom-colours .check-score { color: inherit; }
+/* spreadsheet formula questions */
+.fx-sheet-wrap { overflow-x: auto; margin: .25rem 0 .75rem; }
+.fx-sheet { border-collapse: collapse; font-size: .92em; background: #fff; color: #000; }
+.fx-sheet th, .fx-sheet td { border: 1px solid #c6c6c6; padding: 3px 8px; min-width: 3.5em; height: 1.6em; white-space: nowrap; }
+.fx-sheet th { background: #eef0f2; color: #333; font-weight: 600; text-align: center; }
+.fx-sheet tbody th { min-width: 2em; }
+.fx-sheet td.num { text-align: right; }
+.fx-sheet td.fx-target { background: #fff6c2; outline: 2px solid #146cfd; outline-offset: -2px; }
+.fx-sheet td.fx-fill { background: #fffbe3; }
+.fx-sheet td.fx-err { color: #b81237; }
+.fx-row { display: flex; align-items: center; gap: .5rem; margin: .4rem 0; flex-wrap: wrap; }
+.fx-cell { font-weight: 700; min-width: 2.6em; }
+.fx-eq { font-style: italic; color: #555; font-family: Georgia, serif; }
+.fx-input { flex: 1 1 18rem; max-width: 34rem; font-family: Consolas, Menlo, monospace; font-size: 1em; padding: .35rem .5rem; border: 2px solid #146cfd; border-radius: 3px; }
+.fx-input[readonly] { background: #f4f4f4; border-color: #999; }
+.fx-note { color: #555; font-size: .88em; }
+.fx-mark.ok { color: #00804f; } .fx-mark.bad { color: #b81237; }
+.formula-results td:last-child { text-align: center; }
+.check-detail table { margin: .4rem 0; }
+.check-detail .label { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: #555; font-weight: 700; margin: .4rem 0 .2rem; }
 .sql-check { margin-top: .5rem; }
 .sql-check > p { margin: 0 0 .4rem; }
 .sql-check > p .fa-times-circle { color: #b81237; }

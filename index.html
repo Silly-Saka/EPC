@@ -60,8 +60,10 @@
         var r = s.result || {};
         return '<span class="done"><i class="fas fa-check-circle"></i> Completed</span>' + (r.total != null ? ' — ' + r.got + ' / ' + r.total + ' marks' + (r.pending ? ' (' + r.pending + ' marks to self-mark)' : '') : '');
       }
-      var n = Object.keys(s.responses || {}).length;
-      return '<span class="progress"><i class="fas fa-hourglass-half"></i> In progress</span> — ' + n + ' response' + (n === 1 ? '' : 's') + ' saved';
+      var n = Object.keys(s.responses || {}).filter(function (k) { var v = s.responses[k]; return v != null && v !== ''; }).length;
+      var txt = '<span class="progress"><i class="fas fa-hourglass-half"></i> In progress</span> — ' + n + ' response' + (n === 1 ? '' : 's') + ' saved';
+      if (s.score) txt += ' · <span class="n-right"><i class="fas fa-check"></i> ' + s.score.correct + ' correct</span> · <span class="n-wrong"><i class="fas fa-times"></i> ' + s.score.wrong + ' wrong</span>';
+      return txt;
     }
 
     var root = document.getElementById('exam-sections');
