@@ -880,7 +880,7 @@
       onShow: function () {
         if (iframe) return;
         iframe = el('<iframe class="embed-frame" title="' + kind + ' tool"></iframe>');
-        iframe.style.height = (kind === 'drawing' ? 520 : 480) + 'px';
+        iframe.style.height = '500px';   // NESA: spreadsheet and drawing boxes are both 500px
         iframe.src = src + '#id=' + encodeURIComponent(id);
         holder.appendChild(iframe);
       },
