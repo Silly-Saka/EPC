@@ -187,8 +187,8 @@
       nav.appendChild(b);
     });
     var wrapper = document.getElementById('nav-wrapper');
-    document.getElementById('nav-left').addEventListener('click', function () { wrapper.scrollBy({ left: -wrapper.clientWidth * 0.8, behavior: 'smooth' }); });
-    document.getElementById('nav-right').addEventListener('click', function () { wrapper.scrollBy({ left: wrapper.clientWidth * 0.8, behavior: 'smooth' }); });
+    document.getElementById('nav-left').addEventListener('click', function () { if (wrapper.parentElement.classList.contains('nav-compact')) go(state.current - 1); else wrapper.scrollBy({ left: -wrapper.clientWidth * 0.8, behavior: 'smooth' }); });
+    document.getElementById('nav-right').addEventListener('click', function () { if (wrapper.parentElement.classList.contains('nav-compact')) go(state.current + 1); else wrapper.scrollBy({ left: wrapper.clientWidth * 0.8, behavior: 'smooth' }); });
     wrapper.addEventListener('scroll', updateArrows);
     window.addEventListener('resize', function () { updateArrows(); positionMain(); });
     buildToolbar(review);
@@ -203,6 +203,15 @@
   }
   function updateArrows() {
     var w = document.getElementById('nav-wrapper'); if (!w) return;
+    // narrow window (like NESA): no room for question numbers, so hide them and stack the arrows
+    var bar = w.parentElement, tbEl = document.getElementById('toolbar');
+    var was = bar.classList.contains('nav-compact');
+    bar.classList.remove('nav-compact'); // measure in normal mode
+    var room = bar.clientWidth - (tbEl ? tbEl.offsetWidth : 0) - 140;
+    var compact = room < 110;
+    bar.classList.toggle('nav-compact', compact);
+    if (was !== compact) positionMain();
+    if (compact) { var l0 = document.getElementById('nav-left'), r0 = document.getElementById('nav-right'); l0.classList.remove('hidden'); r0.classList.remove('hidden'); l0.disabled = state.current <= 0; r0.disabled = state.current >= model.groups.length - 1; return; }
     var overflow = w.scrollWidth > w.clientWidth + 2;
     var l = document.getElementById('nav-left'), r = document.getElementById('nav-right');
     l.classList.toggle('hidden', !overflow); r.classList.toggle('hidden', !overflow);

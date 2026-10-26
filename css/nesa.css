@@ -149,10 +149,10 @@ body.has-review-bar .exam-main { bottom: 0; }
 .group:not(.active) { display: none !important; }
 .group-onecol { overflow-y: auto; height: 100%; padding: 16px 25px 40px; }
 .group-twocol { display: flex; height: 100%; }
-.col-left { overflow: auto; padding: 16px 20px 40px 25px; flex: 0 0 50%; }
-.col-right { overflow: auto; padding: 16px 25px 40px 20px; flex: 1 1 auto; }
+.col-left { overflow: auto; padding: 16px 10px 40px 25px; margin-right: 12px; flex: 0 0 50%; min-width: 0; box-sizing: border-box; }
+.col-right { overflow: auto; padding: 16px 0 40px 12px; margin-right: 25px; flex: 1 1 0; min-width: 0; box-sizing: border-box; }
 .layout-3 .col-left { flex-basis: 34%; }
-.col-divider { flex: 0 0 14px; background: #bbb; border-left: 5px solid #fff; border-right: 5px solid #fff; margin: 16px 0; }   /* fixed, like NESA (no dragging) */
+.col-divider { display: none; }   /* NESA has no divider bar: each column just scrolls (grey scrollbar) when needed */
 .group-title { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .group-title h3 { margin: 0; padding: 0; display: inline-block; }
 .q-section { background: #cbedfd; color: var(--navy); font-size: .85rem; font-weight: 600; padding: .15rem .55rem; border-radius: 3px; }
@@ -421,3 +421,14 @@ input.hoa-checkbox { margin-right: 1em; }
 .conc-formula-symbols[hidden] { display: none; }
 .conc-formula .fkey .mq-empty { background: transparent !important; border: 1px solid #777; display: inline-block; min-width: .45em; min-height: .75em; vertical-align: middle; box-sizing: border-box; }
 .conc-formula .fkey .sym { font-family: Symbola, 'Times New Roman', serif; font-size: 18px; }
+
+/* NESA scrollbars: 16px, grey thumb, light track with a soft inset shadow (only appear when content overflows) */
+::-webkit-scrollbar { width: 16px; height: 16px; background-color: #f5f5f5; }
+::-webkit-scrollbar-thumb { background-color: #b7b7b7; }
+::-webkit-scrollbar-track { box-shadow: inset 0 0 6px rgba(0,0,0,.3); background-color: #f5f5f5; }
+.nav-wrapper::-webkit-scrollbar { display: none; }
+/* narrow windows: like NESA, hide the question numbers and stack the arrows */
+.nav-bar.nav-compact .nav-wrapper { display: none; }
+.nav-bar.nav-compact { padding-left: 62px; min-height: 76px; }
+.nav-bar.nav-compact .nav-arrow { position: absolute; left: 20px; margin: 0; width: 1.6em; height: 1.65em; display: inline-block !important; }
+.nav-bar.nav-compact #nav-left { top: 6px; } .nav-bar.nav-compact #nav-right { top: calc(6px + 1.65em - 1px); }
