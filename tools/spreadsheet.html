@@ -6,7 +6,7 @@
   <title>Spreadsheet tool</title>
   <!-- Embedded spreadsheet tool laid out like the Webix SpreadSheet used in the NESA online exam.
        Formulas are calculated by HyperFormula (Excel-compatible engine, GPLv3); graphs by Chart.js. -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Public+Sans:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link rel="stylesheet" href="spreadsheet.css">
   <script src="https://cdn.jsdelivr.net/npm/hyperformula@2.7.1/dist/hyperformula.full.min.js"></script>
@@ -16,10 +16,10 @@
   <div class="ss" id="ss">
     <div class="ss-toolbar" id="toolbar"></div>
     <div class="ss-formula">
-      <input class="ss-namebox" id="namebox" spellcheck="false" title="Cell reference — type a reference and press Enter to go there">
+      <div class="ss-namebox-wrap"><input class="ss-namebox" id="namebox" spellcheck="false" autocomplete="off"><span class="ss-namebox-caret"></span></div>
       <span class="ss-edit-label">Edit:</span>
-      <button class="ss-fx-btn" id="fxbtn" title="Insert function">f(x)</button>
-      <input class="ss-fx" id="fx" spellcheck="false" autocomplete="off">
+      <button class="ss-fx-btn" id="fxbtn" type="button">f(x)</button>
+      <div class="ss-fx-wrap"><div class="hl-layer" id="fxhl"></div><input class="ss-fx" id="fx" spellcheck="false" autocomplete="off"></div>
     </div>
     <div class="ss-grid-wrap" id="gridwrap">
       <div class="ss-sheet" id="sheet">
@@ -28,7 +28,9 @@
         <div class="ss-active" id="activebox"></div>
         <div class="ss-pointbox hidden" id="pointbox"></div>
         <div class="ss-fillbox hidden" id="fillbox"></div>
-        <div class="ss-handle" id="handle" title="Drag to fill"></div>
+        <div class="ss-refs" id="refs"></div>
+        <div class="ss-handle" id="handle"></div>
+        <div class="hl-layer ss-editor-hl" id="edhl"></div>
         <textarea class="ss-editor" id="editor" spellcheck="false" autocomplete="off"></textarea>
         <div class="ss-charts" id="charts"></div>
       </div>

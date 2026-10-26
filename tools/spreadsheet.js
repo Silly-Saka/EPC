@@ -7,7 +7,7 @@
  */
 (function () {
   'use strict';
-  var ROWS = 60, COLS = 26, DEF_W = 100, DEF_H = 28, MAX_UNDO = 80;
+  var ROWS = 60, COLS = 26, DEF_W = 120, DEF_H = 36, MAX_UNDO = 80;   // NESA (Webix) default column width / row height
   var embedId = decodeURIComponent((/[#&]id=([^&]+)/.exec(location.hash) || [])[1] || '');
   var $ = function (id) { return document.getElementById(id); };
   var grid = $('grid'), wrap = $('gridwrap'), editor = $('editor'), fx = $('fx'), namebox = $('namebox');
@@ -86,21 +86,147 @@
     var url = m[1].replace(/""/g, '"');
     return { url: url, text: m[2] != null && m[2] !== '' ? m[2].replace(/""/g, '"') : url };
   }
+  // ------------------------------------------------------------------ NESA (Webix) function set
+  // The functions the NESA spreadsheet knows (its f(x) list). Anything else (COUNTIF, SUMIF, IFERROR, TODAY…) shows #ERROR! there,
+  // so the engine is set up the same way.
+  var NESA_FUNCS = ('ABS,ACCRINT,ACOS,ACOSH,ACOT,ACOTH,ADD,AND,ARABIC,ARRAYTOTEXT,ASIN,ASINH,ATAN,ATAN2,ATANH,AVEDEV,AVERAGE,AVERAGEA,BASE,BINOM.DIST,BINOM.DIST.RANGE,BINOM.INV,BINOMDIST,' +
+    'BITAND,BITLSHIFT,BITOR,BITRSHIFT,BITXOR,CEILING,CHAR,CHECKBOX,CHOOSE,CHOOSECOLS,CHOOSEROWS,CLEAN,CODE,COMBIN,COMBINA,COMPLEX,CONCATENATE,CORREL,COS,COSH,COT,COTH,COUNT,COUNTA,COUNTBLANK,' +
+    'COVAR,COVARIANCE.P,COVARIANCE.S,CSC,CSCH,DATE,DATEDIF,DATEVALUE,DAY,DAYS,DAYS360,DB,DDB,DEC2BIN,DEC2HEX,DEC2OCT,DECIMAL,DEGREES,DELTA,DEVSQ,DIVIDE,DOLLAR,DOLLARDE,DOLLARFR,DROP,EDATE,EFFECT,' +
+    'EOMONTH,EQ,ERF,ERFC,EVEN,EXACT,EXP,EXPAND,FACT,FACTDOUBLE,FALSE,FIND,FISHER,FISHERINV,FIXED,FLOOR,FV,FVSCHEDULE,GAMMA,GCD,GEOMEAN,GESTEP,GT,GTE,HARMEAN,HEX2BIN,HEX2DEC,HEX2OCT,HLOOKUP,HOUR,' +
+    'HYPERLINK,IF,IMABS,IMAGE,IMAGINARY,IMCONJUGATE,IMCOS,IMCOSH,IMCOT,IMCSC,IMCSCH,IMDIV,IMEXP,IMLN,IMPOWER,IMPRODUCT,IMREAL,IMSEC,IMSECH,IMSIN,IMSINH,IMSQRT,IMSUB,IMSUM,IMTAN,INDEX,INT,IPMT,IRR,' +
+    'ISBINARY,ISBLANK,ISEVEN,ISNONTEXT,ISNUMBER,ISODD,ISOWEEKNUM,ISPMT,ISTEXT,JOIN,LARGE,LEFT,LEN,LN,LOG,LOG10,LOOKUP,LOWER,LT,LTE,MATCH,MAX,MEDIAN,MID,MIN,MINUS,MINUTE,MOD,MONTH,MROUND,MULTINOMIAL,' +
+    'MULTIPLY,N,NE,NETWORKDAYS,NETWORKDAYS.INTL,NOMINAL,NOT,NOW,NPER,NPV,NUMBERVALUE,OCT2BIN,OCT2DEC,OCT2HEX,ODD,OR,PDURATION,PERCENTILE,PERCENTILE.EXC,PERCENTILE.INC,PERMUT,PI,PMT,POW,POWER,PPMT,' +
+    'PRODUCT,PROPER,PV,QUARTILE,QUARTILE.EXC,QUARTILE.INC,QUOTIENT,RADIANS,RADIO,RAND,RANDARRAY,RANDBETWEEN,REGEXEXTRACT,REGEXMATCH,REGEXREPLACE,REPLACE,REPT,RIGHT,ROMAN,ROUND,ROUNDDOWN,ROUNDUP,' +
+    'SEARCH,SEC,SECH,SECOND,SEQUENCE,SIGN,SIN,SINH,SMALL,SORT,SORTBY,SPARKLINE,SQRT,SQRTPI,STDEV,STDEV.P,STDEV.S,STDEVA,STDEVP,STDEVPA,STEYX,SUBSTITUTE,SUBTOTAL,SUM,SUMPRODUCT,SUMSQ,SUMX2MY2,' +
+    'SUMX2PY2,SUMXMY2,SYD,T,TAKE,TAN,TANH,TBILLPRICE,TBILLYIELD,TEXTSPLIT,TIME,TIMEVALUE,TOCOL,TOROW,TRIM,TRUE,TRUNC,UNIQUE,UPPER,VAR,VAR.P,VAR.S,VARA,VARP,VARPA,VLOOKUP,WEEKDAY,WEEKNUM,WEIBULL,' +
+    'WEIBULL.DIST,WORKDAY,WORKDAY.INTL,WRAPCOLS,WRAPROWS,XLOOKUP,XMATCH,YEAR,YEARFRAC').split(',');
+  var FN_CATS = {
+    common: 'AND,CHECKBOX,CHOOSE,FALSE,HLOOKUP,HYPERLINK,IF,IMAGE,INDEX,ISBINARY,ISBLANK,ISEVEN,ISNONTEXT,ISNUMBER,ISODD,ISTEXT,LOOKUP,MATCH,N,NOT,OR,RADIO,SPARKLINE,TRUE,VLOOKUP,XLOOKUP,XMATCH',
+    date: 'DATE,DATEDIF,DATEVALUE,DAY,DAYS,DAYS360,EDATE,EOMONTH,HOUR,ISOWEEKNUM,MINUTE,MONTH,NETWORKDAYS,NETWORKDAYS.INTL,NOW,SECOND,TIME,TIMEVALUE,WEEKDAY,WEEKNUM,WORKDAY,WORKDAY.INTL,YEAR,YEARFRAC',
+    text: 'ARRAYTOTEXT,CHAR,CLEAN,CODE,CONCATENATE,EXACT,FIND,FIXED,JOIN,LEFT,LEN,LOWER,MID,NUMBERVALUE,PROPER,REGEXEXTRACT,REGEXMATCH,REGEXREPLACE,REPLACE,REPT,RIGHT,SEARCH,SUBSTITUTE,T,TRIM,UPPER',
+    financial: 'ACCRINT,DB,DDB,DOLLAR,DOLLARDE,DOLLARFR,EFFECT,FV,FVSCHEDULE,IPMT,IRR,ISPMT,NOMINAL,NPER,NPV,PDURATION,PMT,PPMT,PV,SYD,TBILLPRICE,TBILLYIELD',
+    array: 'CHOOSECOLS,CHOOSEROWS,DROP,EXPAND,RANDARRAY,SEQUENCE,SORT,SORTBY,TAKE,TEXTSPLIT,TOCOL,TOROW,UNIQUE,WRAPCOLS,WRAPROWS',
+  };
+  var FN_CAT_LABEL = { common: 'Common', date: 'Date', text: 'Text', number: 'Number', financial: 'Financial', array: 'Array' };
+  function fnCategory(name) { for (var k in FN_CATS) if ((',' + FN_CATS[k] + ',').indexOf(',' + name + ',') >= 0) return k; return 'number'; }
+  // argument help shown while typing a function (name, required?, description)
+  function A(n, req, d) { return [n, req, d]; }
+  function nums(word, verb) { return [A(word + '1', true, 'The first ' + verb + '.'), A(word + '2', false, 'The second ' + verb + '.'), A(word + '3', false, 'The third ' + verb + '.')]; }
+  var FN_ARGS = {
+    SUM: nums('Number', 'number or range to add up'), PRODUCT: nums('Number', 'number or range to multiply'),
+    AVERAGE: nums('Number', 'number or range to average'), AVERAGEA: nums('Value', 'value or range to average'),
+    MIN: nums('Number', 'number or range to search for the smallest value'), MAX: nums('Number', 'number or range to search for the largest value'),
+    COUNT: nums('Value', 'value or range to count numbers in'), COUNTA: nums('Value', 'value or range to count non-empty cells in'),
+    MEDIAN: nums('Number', 'number or range'), STDEV: nums('Number', 'number or range (sample)'), 'STDEV.S': nums('Number', 'number or range (sample)'),
+    'STDEV.P': nums('Number', 'number or range (population)'), STDEVP: nums('Number', 'number or range (population)'), VAR: nums('Number', 'number or range (sample)'),
+    'VAR.S': nums('Number', 'number or range (sample)'), 'VAR.P': nums('Number', 'number or range (population)'), VARP: nums('Number', 'number or range (population)'),
+    SUMSQ: nums('Number', 'number or range to square and add'), GEOMEAN: nums('Number', 'positive number or range'), HARMEAN: nums('Number', 'positive number or range'),
+    COUNTBLANK: [A('Range', true, 'The range to count empty cells in.')],
+    LARGE: [A('Array', true, 'The range of numbers.'), A('K', true, 'The position from the largest (1 = largest).')],
+    SMALL: [A('Array', true, 'The range of numbers.'), A('K', true, 'The position from the smallest (1 = smallest).')],
+    ROUND: [A('Number', true, 'The number to round.'), A('Digits', true, 'The number of decimal places.')],
+    ROUNDUP: [A('Number', true, 'The number to round up.'), A('Digits', true, 'The number of decimal places.')],
+    ROUNDDOWN: [A('Number', true, 'The number to round down.'), A('Digits', true, 'The number of decimal places.')],
+    MROUND: [A('Number', true, 'The number to round.'), A('Multiple', true, 'The multiple to round to.')],
+    TRUNC: [A('Number', true, 'The number to cut short.'), A('Digits', false, 'The number of decimal places to keep.')],
+    INT: [A('Number', true, 'The number to round down to a whole number.')], ABS: [A('Number', true, 'The number to make positive.')],
+    SQRT: [A('Number', true, 'The number to find the square root of.')], SIGN: [A('Number', true, 'The number to check.')],
+    POWER: [A('Number', true, 'The base number.'), A('Power', true, 'The power to raise it to.')], POW: [A('Number', true, 'The base number.'), A('Power', true, 'The power to raise it to.')],
+    MOD: [A('Number', true, 'The number to divide.'), A('Divisor', true, 'The number to divide by.')],
+    QUOTIENT: [A('Numerator', true, 'The number to divide.'), A('Denominator', true, 'The number to divide by.')],
+    CEILING: [A('Number', true, 'The number to round up.'), A('Significance', true, 'The multiple to round up to.')],
+    FLOOR: [A('Number', true, 'The number to round down.'), A('Significance', true, 'The multiple to round down to.')],
+    RANDBETWEEN: [A('Bottom', true, 'The smallest whole number.'), A('Top', true, 'The largest whole number.')], RAND: [], PI: [],
+    SUMPRODUCT: [A('Array1', true, 'The first range to multiply.'), A('Array2', false, 'The second range to multiply.'), A('Array3', false, 'The third range to multiply.')],
+    SUBTOTAL: [A('Function_num', true, 'The function to use (e.g. 9 = SUM, 1 = AVERAGE).'), A('Ref1', true, 'The first range.'), A('Ref2', false, 'The second range.')],
+    PERCENTILE: [A('Array', true, 'The range of numbers.'), A('K', true, 'The percentile, from 0 to 1.')],
+    QUARTILE: [A('Array', true, 'The range of numbers.'), A('Quart', true, 'Which quartile (0 to 4).')],
+    IF: [A('Logical_test', true, 'The condition to check.'), A('Value_if_true', false, 'The result when the condition is true.'), A('Value_if_false', false, 'The result when the condition is false.')],
+    AND: [A('Logical1', true, 'The first condition.'), A('Logical2', false, 'The second condition.'), A('Logical3', false, 'The third condition.')],
+    OR: [A('Logical1', true, 'The first condition.'), A('Logical2', false, 'The second condition.'), A('Logical3', false, 'The third condition.')],
+    NOT: [A('Logical', true, 'The condition to reverse.')], TRUE: [], FALSE: [],
+    VLOOKUP: [A('Search_key', true, 'The value to look for in the first column.'), A('Range', true, 'The table to search.'), A('Index', true, 'The column number of the value to return.'), A('Is_sorted', false, 'TRUE (or omitted) for the nearest match in a sorted column, FALSE for an exact match.')],
+    HLOOKUP: [A('Search_key', true, 'The value to look for in the first row.'), A('Range', true, 'The table to search.'), A('Index', true, 'The row number of the value to return.'), A('Is_sorted', false, 'TRUE (or omitted) for the nearest match in a sorted row, FALSE for an exact match.')],
+    XLOOKUP: [A('Search_key', true, 'The value to look for.'), A('Lookup_range', true, 'The range to search.'), A('Result_range', true, 'The range to return a value from.'), A('Missing_value', false, 'The result when nothing is found.')],
+    LOOKUP: [A('Search_key', true, 'The value to look for.'), A('Search_range', true, 'The sorted range to search.'), A('Result_range', false, 'The range to return a value from.')],
+    INDEX: [A('Reference', true, 'The range.'), A('Row', true, 'The row number in the range.'), A('Column', false, 'The column number in the range.')],
+    MATCH: [A('Search_key', true, 'The value to find.'), A('Range', true, 'The row or column to search.'), A('Search_type', false, '1 = nearest smaller (sorted), 0 = exact, -1 = nearest larger.')],
+    XMATCH: [A('Search_key', true, 'The value to find.'), A('Lookup_range', true, 'The row or column to search.')],
+    CHOOSE: [A('Index', true, 'Which value to return (1, 2, 3…).'), A('Choice1', true, 'The first value.'), A('Choice2', false, 'The second value.')],
+    ISBLANK: [A('Value', true, 'The cell to check for being empty.')], ISNUMBER: [A('Value', true, 'The value to check for being a number.')], ISTEXT: [A('Value', true, 'The value to check for being text.')],
+    ISEVEN: [A('Value', true, 'The number to check.')], ISODD: [A('Value', true, 'The number to check.')], N: [A('Value', true, 'The value to turn into a number.')],
+    HYPERLINK: [A('Url', true, 'The web address.'), A('Link_label', false, 'The text to show.')],
+    CONCATENATE: [A('String1', true, 'The first text to join.'), A('String2', false, 'The second text to join.'), A('String3', false, 'The third text to join.')],
+    LEFT: [A('String', true, 'The text.'), A('Number_of_characters', false, 'How many characters to take from the start.')],
+    RIGHT: [A('String', true, 'The text.'), A('Number_of_characters', false, 'How many characters to take from the end.')],
+    MID: [A('String', true, 'The text.'), A('Starting_at', true, 'The position of the first character.'), A('Extract_length', true, 'How many characters to take.')],
+    LEN: [A('Text', true, 'The text to count the characters of.')], UPPER: [A('Text', true, 'The text to change to capitals.')], LOWER: [A('Text', true, 'The text to change to lower case.')],
+    PROPER: [A('Text', true, 'The text to capitalise word by word.')], TRIM: [A('Text', true, 'The text to remove extra spaces from.')],
+    FIND: [A('Search_for', true, 'The text to find (case sensitive).'), A('Text_to_search', true, 'The text to look in.'), A('Starting_at', false, 'The position to start from.')],
+    SEARCH: [A('Search_for', true, 'The text to find.'), A('Text_to_search', true, 'The text to look in.'), A('Starting_at', false, 'The position to start from.')],
+    SUBSTITUTE: [A('Text_to_search', true, 'The text.'), A('Search_for', true, 'The text to replace.'), A('Replace_with', true, 'The new text.'), A('Occurrence_number', false, 'Which occurrence to replace.')],
+    REPLACE: [A('Text', true, 'The text.'), A('Position', true, 'Where to start replacing.'), A('Length', true, 'How many characters to replace.'), A('New_text', true, 'The new text.')],
+    REPT: [A('Text', true, 'The text to repeat.'), A('Number_of_repetitions', true, 'How many times to repeat it.')],
+    EXACT: [A('String1', true, 'The first text.'), A('String2', true, 'The second text.')], CHAR: [A('Number', true, 'The character code.')], CODE: [A('String', true, 'The text.')],
+    FIXED: [A('Number', true, 'The number.'), A('Number_of_places', false, 'The decimal places.'), A('Suppress_separator', false, 'TRUE to leave out commas.')],
+    DATE: [A('Year', true, 'The year.'), A('Month', true, 'The month (1–12).'), A('Day', true, 'The day of the month.')],
+    DATEVALUE: [A('Date_string', true, 'A date written as text.')], DAY: [A('Date', true, 'The date.')], MONTH: [A('Date', true, 'The date.')], YEAR: [A('Date', true, 'The date.')],
+    WEEKDAY: [A('Date', true, 'The date.'), A('Type', false, 'How days are numbered (1 = Sunday is 1).')], WEEKNUM: [A('Date', true, 'The date.'), A('Type', false, 'The day the week starts on.')],
+    DAYS: [A('End_date', true, 'The later date.'), A('Start_date', true, 'The earlier date.')], DAYS360: [A('Start_date', true, 'The start date.'), A('End_date', true, 'The end date.')],
+    DATEDIF: [A('Start_date', true, 'The start date.'), A('End_date', true, 'The end date.'), A('Unit', true, '"Y", "M" or "D".')],
+    EDATE: [A('Start_date', true, 'The start date.'), A('Months', true, 'The number of months to add.')], EOMONTH: [A('Start_date', true, 'The start date.'), A('Months', true, 'The number of months to add.')],
+    NETWORKDAYS: [A('Start_date', true, 'The start date.'), A('End_date', true, 'The end date.'), A('Holidays', false, 'Dates to leave out.')],
+    WORKDAY: [A('Start_date', true, 'The start date.'), A('Num_days', true, 'The number of working days.'), A('Holidays', false, 'Dates to leave out.')],
+    YEARFRAC: [A('Start_date', true, 'The start date.'), A('End_date', true, 'The end date.')], NOW: [],
+    TIME: [A('Hour', true, 'The hour.'), A('Minute', true, 'The minute.'), A('Second', true, 'The second.')], HOUR: [A('Time', true, 'The time.')], MINUTE: [A('Time', true, 'The time.')], SECOND: [A('Time', true, 'The time.')],
+    PMT: [A('Rate', true, 'The interest rate per period.'), A('Number_of_periods', true, 'The number of payments.'), A('Present_value', true, 'The amount borrowed.'), A('Future_value', false, 'The balance left at the end.'), A('End_or_beginning', false, '0 = end of period, 1 = beginning.')],
+    FV: [A('Rate', true, 'The interest rate per period.'), A('Number_of_periods', true, 'The number of payments.'), A('Payment_amount', true, 'The payment each period.'), A('Present_value', false, 'The starting amount.')],
+    PV: [A('Rate', true, 'The interest rate per period.'), A('Number_of_periods', true, 'The number of payments.'), A('Payment_amount', true, 'The payment each period.'), A('Future_value', false, 'The balance left at the end.')],
+    NPER: [A('Rate', true, 'The interest rate per period.'), A('Payment_amount', true, 'The payment each period.'), A('Present_value', true, 'The amount borrowed.')],
+    NPV: [A('Discount', true, 'The discount rate per period.'), A('Cashflow1', true, 'The first cash flow.'), A('Cashflow2', false, 'The second cash flow.')],
+    IRR: [A('Cashflow_amounts', true, 'The range of cash flows.'), A('Rate_guess', false, 'A starting guess for the rate.')],
+    IPMT: [A('Rate', true, 'The interest rate per period.'), A('Period', true, 'The period to find the interest for.'), A('Number_of_periods', true, 'The number of payments.'), A('Present_value', true, 'The amount borrowed.')],
+    PPMT: [A('Rate', true, 'The interest rate per period.'), A('Period', true, 'The period to find the principal for.'), A('Number_of_periods', true, 'The number of payments.'), A('Present_value', true, 'The amount borrowed.')],
+    SORT: [A('Range', true, 'The range to sort.'), A('Sort_column', false, 'The column to sort by.'), A('Is_ascending', false, 'TRUE for ascending, FALSE for descending.')],
+    UNIQUE: [A('Range', true, 'The range to take unique values from.')], SEQUENCE: [A('Rows', true, 'The number of rows.'), A('Columns', false, 'The number of columns.'), A('Start', false, 'The first number.'), A('Step', false, 'The amount to add each time.')],
+  };
+  var NESA_FN_SET = {}; NESA_FUNCS.forEach(function (n) { NESA_FN_SET[n] = 1; });
+  // remove every engine function NESA doesn't have, so they give #ERROR! like the real exam
+  (function () {
+    if (!window.HyperFormula || !HyperFormula.unregisterFunction) return;
+    try {
+      HyperFormula.getRegisteredFunctionNames('enGB').forEach(function (n) {
+        if (!NESA_FN_SET[n] && !/^HF\./.test(n) && n !== 'VERSION') { try { HyperFormula.unregisterFunction(n); } catch (e) { } }
+      });
+    } catch (e) { console.warn('function list', e); }
+  })();
+
+  // Typed values follow NESA's rules: plain numbers become numbers, m/d/yyyy becomes a date,
+  // everything else (12%, $5, 1,000, true…) stays as text.
+  var NUM_RE = /^\s*[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?\s*$/i;
+  var MDY_RE = /^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/;
+  function mdyToSerial(s) {
+    var m = MDY_RE.exec(s); if (!m) return null;
+    var mo = +m[1], d = +m[2], y = +m[3], t = Date.UTC(y, mo - 1, d), dt = new Date(t);
+    if (mo < 1 || mo > 12 || dt.getUTCDate() !== d) return null;
+    return Math.round((t - Date.UTC(1899, 11, 30)) / 86400000);
+  }
   function toEngine(v) {
     if (v === '' || v == null) return null;
     var s = String(v);
     if (isSparkline(s)) return null;
-    var lk = parseLink(s); if (lk) return lk.text;
-    if (s[0] === '=') return mapBooleans(s, true);
-    if (/^\s*-?\$?\s*\d{1,3}(,\d{3})+(\.\d+)?\s*%?\s*$/.test(s) || /^\s*-?\$\s*[\d.]+\s*$/.test(s)) s = s.replace(/[\s,]/g, '');
-    if (/^-?\$/.test(s)) s = s.replace('$', '');
-    return s;
+    var lk = parseLink(s); if (lk) return "'" + lk.text;
+    if (s[0] === '=') return s;
+    if (NUM_RE.test(s)) return s.trim();
+    var ds = mdyToSerial(s); if (ds != null) return ds;
+    return "'" + s;
   }
+  var DATE_FN_RE = /^=\s*(DATE|DATEVALUE|EDATE|EOMONTH|NOW|WORKDAY|WORKDAY\.INTL)\s*\(/i;
 
   // ------------------------------------------------------------------ engine
   function newEngine() {
     hf = HyperFormula.buildEmpty({
-      licenseKey: 'gpl-v3', dateFormats: ['DD/MM/YYYY', 'DD/MM/YY', 'YYYY-MM-DD', 'DD-MM-YYYY'], timeFormats: ['hh:mm', 'hh:mm:ss'],
+      licenseKey: 'gpl-v3', dateFormats: ['MM/DD/YYYY', 'MM/DD/YY', 'YYYY-MM-DD'], timeFormats: ['hh:mm', 'hh:mm:ss'],
       currencySymbol: ['$'], decimalSeparator: '.', thousandSeparator: '', functionArgSeparator: ',', precisionRounding: 10,
       smartRounding: true, leapYear1900: false, nullDate: { year: 1899, month: 12, day: 30 },
     });
@@ -108,7 +234,7 @@
   }
   function getRaw(r, c) {
     var k = key(r, c);
-    try { if (hf.doesCellHaveFormula(addr(r, c))) return mapBooleans(hf.getCellFormula(addr(r, c)), false); } catch (e) { }
+    try { if (hf.doesCellHaveFormula(addr(r, c))) return hf.getCellFormula(addr(r, c)); } catch (e) { }
     return raws[k] == null ? '' : String(raws[k]);
   }
   function setRawNoRender(r, c, v) {
@@ -116,12 +242,9 @@
     v = v == null ? '' : String(v);
     if (v === '') delete raws[k]; else raws[k] = v;
     try { hf.setCellContents(addr(r, c), [[toEngine(v)]]); } catch (e) { try { hf.setCellContents(addr(r, c), [[null]]); } catch (e2) { } }
+    // like NESA: typing a date (m/d/yyyy) or a DATE() formula gives the cell the date format
     var st = styles[k] || {};
-    if (!st.fmt && v && v[0] !== '=') {
-      if (/^\s*-?[\d,]*\.?\d+\s*%\s*$/.test(v)) { st.fmt = 'percent'; if (/\./.test(v)) st.dec = (v.split('.')[1] || '').replace(/\D/g, '').length; styles[k] = st; }
-      else if (/^\s*-?\$\s*[\d,]*\.?\d+\s*$/.test(v)) { st.fmt = 'currency'; styles[k] = st; }
-      else if (/^\s*\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\s*$|^\d{4}-\d{2}-\d{2}$/.test(v) && typeof cellValue(r, c) === 'number') { st.fmt = 'date'; styles[k] = st; }
-    }
+    if (!st.fmt && v && (mdyToSerial(v) != null || DATE_FN_RE.test(v))) { st.fmt = 'date'; styles[k] = st; }
   }
   function cellValue(r, c) { try { return hf.getCellValue(addr(r, c)); } catch (e) { return null; } }
   function isError(v) { return v && typeof v === 'object' && 'value' in v && 'type' in v; }
@@ -131,12 +254,38 @@
   }
 
   // ------------------------------------------------------------------ display formatting
-  function serialToDate(n) {
-    var d = new Date(Date.UTC(1899, 11, 30) + Math.round(n) * 86400000);
-    return String(d.getUTCDate()).padStart(2, '0') + '/' + String(d.getUTCMonth() + 1).padStart(2, '0') + '/' + d.getUTCFullYear();
+  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  // NESA's date formats: mm/dd/yyyy (default), hh:mm AM/PM, mm/dd/yyyy hh:mm AM/PM, dd mmmm yyyy
+  function serialToDate(n, pattern) {
+    var ms = Date.UTC(1899, 11, 30) + n * 86400000, d = new Date(Math.round(ms / 60000) * 60000);
+    var mm = String(d.getUTCMonth() + 1).padStart(2, '0'), dd = String(d.getUTCDate()).padStart(2, '0'), yy = d.getUTCFullYear();
+    var h = d.getUTCHours(), ap = h < 12 ? 'AM' : 'PM', h12 = String(h % 12 || 12).padStart(2, '0'), mi = String(d.getUTCMinutes()).padStart(2, '0');
+    switch (pattern) {
+      case 'time': return h12 + ':' + mi + ' ' + ap;
+      case 'datetime': return mm + '/' + dd + '/' + yy + ' ' + h12 + ':' + mi + ' ' + ap;
+      case 'long': return dd + ' ' + MONTHS[d.getUTCMonth()] + ' ' + yy;
+    }
+    return mm + '/' + dd + '/' + yy;
   }
   function fmtCustom(n, pattern) {
     var p = String(pattern || '0');
+    if (/[dmyh]/i.test(p) && !/[0#]/.test(p)) {   // date pattern such as mm/dd/yyyy or dd mmmm yyyy
+      var d = new Date(Math.round((Date.UTC(1899, 11, 30) + n * 86400000) / 60000) * 60000), h = d.getUTCHours();
+      var ap = /AM\/PM/i.test(p);
+      return p.replace(/AM\/PM/gi, '\u0001').replace(/yyyy|yy|mmmm|mmm|mm|m|dd|d|hh|h|ss|nn/gi, function (t, i, s) {
+        var lt = t.toLowerCase(), prev = s.slice(0, i);
+        if ((lt === 'mm' || lt === 'm') && /h+\s*:\s*$/i.test(prev)) return String(d.getUTCMinutes()).padStart(2, '0');
+        switch (lt) {
+          case 'yyyy': return String(d.getUTCFullYear()); case 'yy': return String(d.getUTCFullYear()).slice(-2);
+          case 'mmmm': return MONTHS[d.getUTCMonth()]; case 'mmm': return MONTHS[d.getUTCMonth()].slice(0, 3);
+          case 'mm': return String(d.getUTCMonth() + 1).padStart(2, '0'); case 'm': return String(d.getUTCMonth() + 1);
+          case 'dd': return String(d.getUTCDate()).padStart(2, '0'); case 'd': return String(d.getUTCDate());
+          case 'hh': return String(ap ? (h % 12 || 12) : h).padStart(2, '0'); case 'h': return String(ap ? (h % 12 || 12) : h);
+          case 'ss': return String(d.getUTCSeconds()).padStart(2, '0'); case 'nn': return String(d.getUTCMinutes()).padStart(2, '0');
+        }
+        return t;
+      }).replace(/\u0001/g, h < 12 ? 'AM' : 'PM');
+    }
     var first = p.search(/[#0]/), last = Math.max(p.lastIndexOf('#'), p.lastIndexOf('0'));
     if (first < 0) return p + n;
     var prefix = p.slice(0, first), core = p.slice(first, last + 1), suffix = p.slice(last + 1);
@@ -146,17 +295,22 @@
     var s = Math.abs(v).toLocaleString('en-AU', { minimumFractionDigits: dec, maximumFractionDigits: dec, useGrouping: group });
     return (v < 0 ? '-' : '') + prefix.replace(/"/g, '') + s + suffix.replace(/"/g, '');
   }
+  // NESA "Common" shows up to 8 decimal places (10/3 -> 3.33333333)
+  function commonNumber(n) { return Number.isInteger(n) ? String(n) : String(+n.toFixed(8)); }
   function fmtNumber(n, st) {
-    var fmt = st.fmt || 'common', dec = st.dec;
-    if (fmt === 'text') return String(n);
+    var fmt = st.fmt || 'common', dec = st.dec, neg = st.neg || 1;
+    if (fmt === 'text') return commonNumber(n);
     if (fmt === 'custom') return fmtCustom(n, st.pattern);
-    if (fmt === 'percent') { dec = dec == null ? 0 : dec; return (n * 100).toFixed(dec) + '%'; }
-    if (fmt === 'currency') { dec = dec == null ? 2 : dec; var s = Math.abs(n).toLocaleString('en-AU', { minimumFractionDigits: dec, maximumFractionDigits: dec }); return (n < 0 ? '-$' : '$') + s; }
-    if (fmt === 'number') { dec = dec == null ? 2 : dec; return n.toLocaleString('en-AU', { minimumFractionDigits: dec, maximumFractionDigits: dec, useGrouping: st.group !== false }); }
-    if (fmt === 'date') return serialToDate(n);
-    if (dec != null) return n.toFixed(dec);
-    return String(+n.toPrecision(10));
+    if (fmt === 'date') return serialToDate(n, st.datePattern);
+    var out;
+    if (fmt === 'percent') { dec = dec == null ? 0 : dec; out = Math.abs(n * 100).toFixed(dec) + '%'; }
+    else if (fmt === 'currency') { dec = dec == null ? 2 : dec; out = (st.cur || '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec, useGrouping: st.group !== false }); }
+    else if (fmt === 'number') { dec = dec == null ? 2 : dec; out = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec, useGrouping: st.group !== false }); }
+    else return dec != null ? n.toFixed(dec) : commonNumber(n);
+    if (n >= 0) return out;
+    return neg === 3 ? out : neg === 4 ? '(' + out + ')' : '-' + out;
   }
+  function negRed(n, st) { return typeof n === 'number' && n < 0 && /currency|number|percent/.test(st.fmt || '') && (st.neg || 1) > 1; }
   function displayOf(r, c) {
     var raw = raws[key(r, c)];
     if (isSparkline(raw)) return { text: '', spark: raw };
@@ -165,9 +319,9 @@
     if (showFormulas) { var f = getRaw(r, c); if (f && f[0] === '=') return { text: f, num: false }; }
     var v = cellValue(r, c), st = styles[key(r, c)] || {};
     if (v == null || v === '') return { text: '', num: false };
-    if (isError(v)) return { text: v.value || '#ERROR!', err: true, title: v.message };
-    if (typeof v === 'number') return { text: fmtNumber(v, st), num: true };
-    if (typeof v === 'boolean') return { text: v ? 'TRUE' : 'FALSE', num: false, bool: true };
+    if (isError(v)) return { text: '#ERROR!', err: true };              // NESA shows every error as #ERROR!
+    if (typeof v === 'number') return { text: fmtNumber(v, st), num: true, red: negRed(v, st) };
+    if (typeof v === 'boolean') return { text: v ? '1' : '', num: false, bool: true };   // NESA: TRUE shows 1, FALSE shows nothing
     return { text: String(v), num: false };
   }
 
@@ -206,15 +360,6 @@
     return out;
   }
 
-  // ------------------------------------------------------------------ filter
-  function rowHiddenByFilter(r) {
-    if (!filter) return false;
-    var g = parseRange(filter.range); if (!g || r <= g.r1 || r > g.r2) return false;
-    return Object.keys(filter.crit || {}).some(function (c) {
-      var allowed = filter.crit[c]; if (!allowed) return false;
-      return allowed.indexOf(displayText(r, +c)) < 0;
-    });
-  }
   function displayText(r, c) { var d = displayOf(r, c); return d.text; }
 
   // ------------------------------------------------------------------ rendering
@@ -272,9 +417,9 @@
     s.fontStyle = st.i ? 'italic' : '';
     s.textDecoration = [st.u ? 'underline' : '', st.s ? 'line-through' : ''].join(' ').trim();
     s.fontSize = st.fs ? st.fs + 'px' : '';
-    s.color = (cs && cs.color) || st.color || '';
+    s.color = (cs && cs.color) || (d.red ? '#ff0000' : '') || st.color || '';
     s.background = (cs && cs.bg) || st.bg || '';
-    s.textAlign = st.ha || (d.num || d.bool ? 'right' : (d.err ? 'center' : 'left'));
+    s.textAlign = st.ha || 'left';   // NESA aligns everything left unless the cell is styled
     s.verticalAlign = st.va || 'middle';   // Webix default
     s.paddingLeft = st.indent ? (6 + st.indent * 14) + 'px' : '';
     td.classList.toggle('wrap', !!st.wrap);
@@ -288,12 +433,11 @@
     s.borderLeft = st.bl ? bcss : '';
     s.borderRight = st.br ? bcss : '';
     s.borderBottom = st.bb ? bcss : '';
-    if (filter) {
-      var fg = parseRange(filter.range);
-      if (fg && r === fg.r1 && c >= fg.c1 && c <= fg.c2) {
-        var on = filter.crit && filter.crit[c];
-        td.insertAdjacentHTML('beforeend', '<span class="ss-filter-btn' + (on ? ' on' : '') + '" data-fc="' + c + '"><i class="fas fa-' + (on ? 'filter' : 'caret-down') + '"></i></span>');
-      }
+    var fcell = filter ? filterCells()[k] : null;
+    td.classList.toggle('has-filter', !!fcell);
+    if (fcell) {
+      var on = !!(fcell.values || fcell.v);
+      td.insertAdjacentHTML('beforeend', '<span class="ss-filter-btn' + (on ? ' on' : '') + '" data-fr="' + r + '" data-fc="' + c + '"><i class="fas fa-filter"></i></span>');
     }
   }
   function cellRect(r, c) {
@@ -313,6 +457,7 @@
     selbox.style.display = multi ? 'block' : 'none';
     if (multi) place(selbox, rangeRect(g));
     place($('activebox'), cellRect(act.r, act.c));
+    $('activebox').classList.toggle('multi', multi);   // NESA draws only the outline of a selected range
     var rr = rangeRect(g), h = $('handle');
     h.style.left = (rr.x + rr.w - 5) + 'px'; h.style.top = (rr.y + rr.h - 5) + 'px';
     Array.prototype.forEach.call(grid.tHead.rows[0].cells, function (th, i) { th.classList.toggle('hsel', i > 0 && i - 1 >= g.c1 && i - 1 <= g.c2); });
@@ -339,15 +484,17 @@
     var rc = cellRect(r, c);
     if (rc.x - 40 < wrap.scrollLeft) wrap.scrollLeft = rc.x - 40;
     else if (rc.x + rc.w > wrap.scrollLeft + wrap.clientWidth) wrap.scrollLeft = rc.x + rc.w - wrap.clientWidth;
-    if (rc.y - 28 < wrap.scrollTop) wrap.scrollTop = rc.y - 28;
+    if (rc.y - 22 < wrap.scrollTop) wrap.scrollTop = rc.y - 22;
     else if (rc.y + rc.h > wrap.scrollTop + wrap.clientHeight) wrap.scrollTop = rc.y + rc.h - wrap.clientHeight;
   }
 
   // ------------------------------------------------------------------ sparklines (=SPARKLINE(range,"type","#colour"), as in Webix)
   function parseSparkline(raw) {
-    var m = /^=\s*SPARKLINE\s*\(\s*([^,)]+)\s*(?:,\s*"?([A-Za-z]+)"?\s*)?(?:,\s*"?(#[0-9a-fA-F]{3,6})"?\s*)?\)/i.exec(raw || '');
+    var m = /^=\s*SPARKLINE\s*\(\s*([^,)]+)\s*(?:,\s*"?([A-Za-z]+)"?\s*)?(?:,\s*"?(#[0-9a-fA-F]{3,6})"?\s*)?(?:,\s*"?(#[0-9a-fA-F]{3,6})"?\s*)?\)/i.exec(raw || '');
     if (!m) return null;
-    return { range: m[1], type: (m[2] || 'line').toLowerCase(), color: m[3] || '#6666FF' };
+    var t = (m[2] || 'line'), tl = t.toLowerCase();
+    t = { splinearea: 'splineArea' }[tl] || tl;
+    return { range: m[1], type: t, color: m[3] || '#6666FF', neg: m[4] || '#FF6666' };
   }
   function rangeNumbers(g) { var out = []; for (var r = g.r1; r <= g.r2; r++) for (var c = g.c1; c <= g.c2; c++) { var v = cellValue(r, c); if (typeof v === 'number') out.push(v); } return out; }
   function sparklineSvg(raw, td) {
@@ -358,12 +505,16 @@
     var min = Math.min.apply(null, vals.concat(0)), max = Math.max.apply(null, vals), span = (max - min) || 1, col = p.color;
     var svg = '<svg width="' + W + '" height="' + H + '" style="display:block">';
     if (p.type === 'bar' || p.type === 'column') {
-      var bw = W / vals.length;
-      vals.forEach(function (v, i) { var y = H - (v - min) / span * H; svg += '<rect x="' + (i * bw + 1) + '" y="' + y + '" width="' + Math.max(1, bw - 2) + '" height="' + (H - y) + '" fill="' + col + '"/>'; });
-    } else if (p.type === 'pie') {
-      var tot = vals.reduce(function (a, b) { return a + Math.abs(b); }, 0) || 1, ang = -Math.PI / 2, cx = H / 2, cy = H / 2, rad = H / 2 - 1;
-      var pal = [col, '#e1251b', '#00a650', '#ff9900', '#7030a0', '#00b0f0'];
+      var bw = W / vals.length, lo = Math.min(0, min), hi = Math.max(0, max), sp2 = (hi - lo) || 1, zero = H - (0 - lo) / sp2 * H;
+      vals.forEach(function (v, i) { var y = H - (v - lo) / sp2 * H; svg += '<rect x="' + (i * bw + 1) + '" y="' + Math.min(y, zero) + '" width="' + Math.max(1, bw - 2) + '" height="' + Math.max(1, Math.abs(zero - y)) + '" fill="' + (v < 0 ? p.neg : col) + '"/>'; });
+    } else if (p.type === 'pie' || p.type === 'donut') {
+      var tot = vals.reduce(function (a, b) { return a + Math.abs(b); }, 0) || 1, ang = -Math.PI / 2, cx = W / 2, cy = H / 2, rad = H / 2 - 1;
+      var pal = ['#e06666', '#f6b26b', '#ffd966', '#93c47d', '#76a5af', '#6fa8dc', '#8e7cc3', '#c27ba0'];
       vals.forEach(function (v, i) { var a2 = ang + Math.abs(v) / tot * Math.PI * 2; var large = a2 - ang > Math.PI ? 1 : 0; svg += '<path d="M' + cx + ',' + cy + ' L' + (cx + rad * Math.cos(ang)) + ',' + (cy + rad * Math.sin(ang)) + ' A' + rad + ',' + rad + ' 0 ' + large + ' 1 ' + (cx + rad * Math.cos(a2)) + ',' + (cy + rad * Math.sin(a2)) + ' Z" fill="' + pal[i % pal.length] + '"/>'; ang = a2; });
+      if (p.type === 'donut') svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (rad * 0.5) + '" fill="#fff"/>';
+    } else if (p.type === 'radar') {
+      var rcx = W / 2, rcy = H / 2, rr = H / 2 - 1, pts2 = vals.map(function (v, i) { var a = -Math.PI / 2 + i * 2 * Math.PI / vals.length, k = (v - Math.min(0, min)) / ((max - Math.min(0, min)) || 1) * rr; return (rcx + k * Math.cos(a)) + ',' + (rcy + k * Math.sin(a)); });
+      svg += '<polygon points="' + pts2.join(' ') + '" fill="' + col + '" fill-opacity=".3" stroke="' + col + '" stroke-width="1.2"/>';
     } else {
       var pts = vals.map(function (v, i) { return (vals.length === 1 ? W / 2 : i * W / (vals.length - 1)) + ',' + (H - 1 - (v - min) / span * (H - 2)); });
       if (p.type === 'area' || p.type === 'splinearea') svg += '<polygon points="0,' + H + ' ' + pts.join(' ') + ' ' + W + ',' + H + '" fill="' + col + '" fill-opacity=".35"/>';
@@ -440,12 +591,6 @@
   }
   function pushAllToEngine() {
     hf.batch(function () { Object.keys(raws).forEach(function (k) { var p = k.split(','); try { hf.setCellContents(addr(+p[0], +p[1]), [[toEngine(raws[k])]]); } catch (e) { } }); });
-    Object.keys(raws).forEach(function (k) {
-      var v = raws[k], st = styles[k] || {};
-      if (st.fmt || v[0] === '=') return;
-      if (/^\s*-?[\d,]*\.?\d+\s*%\s*$/.test(v)) { st.fmt = 'percent'; styles[k] = st; }
-      else if (/^\s*-?\$\s*[\d,]*\.?\d+\s*$/.test(v)) { st.fmt = 'currency'; styles[k] = st; }
-    });
   }
   function ensureSize() {
     var maxR = ROWS - 1, maxC = COLS - 1;
@@ -504,6 +649,8 @@
     if (sel.r1 <= sel.r2) { sel.r1 = g.r1; sel.r2 = g.r2; } else { sel.r2 = g.r1; sel.r1 = g.r2; }
     if (sel.c1 <= sel.c2) { sel.c1 = g.c1; sel.c2 = g.c2; } else { sel.c2 = g.c1; sel.c1 = g.c2; }
     renderSelection();
+    closePop('dd');
+    if (!editing) showInputMessage();
   }
   var drag = null;
   grid.addEventListener('mousedown', function (e) {
@@ -513,7 +660,7 @@
     var lnk = e.target.closest('a.ss-link');
     if (lnk && !editing) { e.preventDefault(); window.open(lnk.getAttribute('href'), '_blank', 'noopener'); }
     var fb = e.target.closest('.ss-filter-btn');
-    if (fb) { e.preventDefault(); e.stopPropagation(); if (!readOnly) openFilterMenu(+fb.getAttribute('data-fc'), fb); return; }
+    if (fb) { e.preventDefault(); e.stopPropagation(); if (!readOnly) { if (pops.filter) closePop('filter'); else openFilterMenu(+fb.getAttribute('data-fr'), +fb.getAttribute('data-fc'), fb); } return; }
     var rz = e.target.closest('.col-resizer, .row-resizer');
     if (rz) { startResize(e, rz); return; }
     var th = e.target.closest('th');
@@ -525,14 +672,10 @@
     commitEdit();
     if (e.shiftKey) setSelection(act.r, act.c, cell.r, cell.c, act.r, act.c);
     else setSelection(cell.r, cell.c, cell.r, cell.c);
-    // dropdown cells: clicking the arrow area opens the list
-    var st = styles[key(cell.r, cell.c)];
-    if (st && st.dd && !readOnly) { var td = tds[cell.r][cell.c], b = td.getBoundingClientRect(); if (e.clientX > b.right - 22) { e.preventDefault(); openDropdownList(cell.r, cell.c); return; } }
     drag = { mode: 'select' };
     focusKeys();
     e.preventDefault();
   });
-  grid.addEventListener('dblclick', function (e) { var cell = cellFromEvent(e); if (!cell || readOnly) return; setSelection(cell.r, cell.c, cell.r, cell.c); if ((styles[key(cell.r, cell.c)] || {}).dd) openDropdownList(cell.r, cell.c); else beginEdit(false); });
   document.addEventListener('mousemove', function (e) {
     if (!drag) return;
     var el2 = document.elementFromPoint(e.clientX, e.clientY);
@@ -544,11 +687,6 @@
   });
   document.addEventListener('mouseup', function () { if (drag && drag.mode === 'fill') doFill(); drag = null; });
   $('handle').addEventListener('mousedown', function (e) { if (readOnly) return; e.preventDefault(); e.stopPropagation(); commitEdit(); drag = { mode: 'fill', target: null }; });
-  grid.addEventListener('mouseover', function (e) {
-    var cell = cellFromEvent(e), tip = $('tooltip');
-    if (cell && comments[key(cell.r, cell.c)]) { tip.textContent = comments[key(cell.r, cell.c)]; tip.classList.remove('hidden'); var b = e.target.getBoundingClientRect(); tip.style.left = Math.min(b.right + 4, window.innerWidth - 270) + 'px'; tip.style.top = b.top + 'px'; }
-    else tip.classList.add('hidden');
-  });
   // right-click menus: the same items as the NESA (Webix) spreadsheet for cells, column headers and row headers
   grid.addEventListener('contextmenu', function (e) {
     if (readOnly) return;
@@ -569,14 +707,16 @@
   function startResize(e, rz) {
     e.preventDefault(); e.stopPropagation(); if (readOnly) return;
     var isCol = rz.classList.contains('col-resizer'), idx = +rz.getAttribute(isCol ? 'data-c' : 'data-r');
-    var start = isCol ? e.clientX : e.clientY, orig = isCol ? (colW[idx] || DEF_W) : (rowH[idx] || DEF_H), snap = snapshot();
+    var start = isCol ? e.clientX : e.clientY, orig = isCol ? (colW[idx] || DEF_W) : (rowH[idx] || DEF_H), snap = snapshot(), moved = false;
     function mv(ev) {
+      if (Math.abs((isCol ? ev.clientX : ev.clientY) - start) < 2 && !moved) return;
+      moved = true;
       var n = Math.max(isCol ? 24 : 18, orig + (isCol ? ev.clientX : ev.clientY) - start);
       if (isCol) { colW[idx] = n; grid.querySelector('colgroup').children[idx + 1].style.width = n + 'px'; var w = 40; for (var c = 0; c < COLS; c++) w += (colW[c] || DEF_W); grid.style.width = w + 'px'; }
       else { rowH[idx] = n; grid.tBodies[0].rows[idx].style.height = n + 'px'; }
       renderSelection(); renderCharts();
     }
-    function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); undoStack.push(snap); redoStack = []; endChange(false); }
+    function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); if (!moved) return; undoStack.push(snap); redoStack = []; endChange(false); }
     document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up);
   }
 
@@ -630,13 +770,15 @@
     editor.focus({ preventScroll: true });
     var n = editor.value.length; editor.setSelectionRange(n, n);
     point = null;
+    closePop('vmsg');
+    updateFormulaUI();
   }
+  // NESA's cell editor stays the size of the cell (long text scrolls inside it)
   function autoSizeEditor() {
     var rc = cellRect(editing ? editing.r : act.r, editing ? editing.c : act.c);
-    editor.style.width = rc.w + 'px';
-    editor.style.width = Math.max(rc.w, Math.min(600, editor.scrollWidth + 8)) + 'px';
-    editor.style.height = rc.h + 'px';
-    editor.style.height = Math.max(rc.h, editor.scrollHeight) + 'px';
+    editor.style.width = rc.w + 'px'; editor.style.height = rc.h + 'px';
+    editor.style.lineHeight = Math.max(16, rc.h - 4) + 'px';
+    edhl.style.lineHeight = editor.style.lineHeight;
   }
   function tidyFormula(val) {
     if (!val || val[0] !== '=') return val;
@@ -649,21 +791,20 @@
     var r = editing.r, c = editing.c, val = editing.input === fx ? fx.value : editor.value;
     editing = null; point = null; $('pointbox').classList.add('hidden');
     editor.classList.remove('editing'); editor.value = '';
+    updateFormulaUI();
     if (val !== getRaw(r, c)) {
       var before = getRaw(r, c);
       beginChange();
       if (val && val[0] === '=') val = tidyFormula(val);
       setRawNoRender(r, c, val);
-      // data validation: reject values that break the cell's rule (like Webix)
-      var vr = (styles[key(r, c)] || {}).vr;
-      if (vr && !isValidValue(r, c)) {
-        setRawNoRender(r, c, before); undoStack.pop();
-        renderCells();
-        validationError(vr, r, c);
-        if (move) moveActive(0, 0, false); else renderSelection();
+      endChange(false);
+      // data validation: NESA keeps the value and shows its Information / Warning / Stop message
+      var vr = normVr((styles[key(r, c)] || {}).vr);
+      if (vr && vr.type !== 'any' && val !== '' && !isValidValue(r, c)) {
+        validationAlert(vr, function () { setRawNoRender(r, c, before); undoStack.pop(); renderCells(); schedulePost(); }, function () { });
+        if (move) moveActive(move[0], move[1], false); else renderSelection();
         return true;
       }
-      endChange(false);
     }
     if (move) moveActive(move[0], move[1], false); else renderSelection();
     editor.focus({ preventScroll: true });
@@ -673,6 +814,7 @@
     if (!editing) return;
     editing = null; point = null; $('pointbox').classList.add('hidden');
     editor.classList.remove('editing'); editor.value = '';
+    updateFormulaUI();
     renderSelection(); editor.focus({ preventScroll: true });
   }
   function moveActive(dr, dc, extend) {
@@ -708,22 +850,24 @@
     point.end = point.start + ref.length;
     inp.setSelectionRange(point.end, point.end);
     (inp === editor ? fx : editor).value = inp.value;
-    var pb = $('pointbox'); pb.classList.remove('hidden'); place(pb, rangeRect(g));
     if (inp === editor) autoSizeEditor();
+    updateFormulaUI();   // the new reference is coloured on the grid, like NESA
   }
 
   editor.addEventListener('input', function () {
     if (!editing && editor.value) { var ch = editor.value; beginEdit(true, ch); return; }
-    if (editing) { fx.value = editor.value; autoSizeEditor(); point = null; $('pointbox').classList.add('hidden'); }
+    if (editing) { fx.value = editor.value; autoSizeEditor(); point = null; $('pointbox').classList.add('hidden'); updateFormulaUI(); }
   });
   fx.addEventListener('focus', function () {
     if (readOnly) { fx.blur(); return; }
     if (!editing) {
       if (isLocked(act.r, act.c)) { flash('This cell is locked.'); fx.blur(); return; }
       editing = { r: act.r, c: act.c, input: fx }; fx.value = getRaw(act.r, act.c);
+      closePop('vmsg');
     } else if (editing.input !== fx) { editing.input = fx; editor.classList.remove('editing'); }
+    updateFormulaUI();
   });
-  fx.addEventListener('input', function () { if (editing) { editor.value = fx.value; point = null; $('pointbox').classList.add('hidden'); } });
+  fx.addEventListener('input', function () { if (editing) { editor.value = fx.value; point = null; $('pointbox').classList.add('hidden'); updateFormulaUI(); } });
   fx.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') { e.preventDefault(); commitEdit([1, 0]); }
     else if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
@@ -840,7 +984,7 @@
     if (readOnly) return; commitEdit(); beginChange();
     var g = norm(sel);
     if (what === 'conds' || what === 'all') conds = conds.filter(function (rule) { var rg = parseRange(rule.range); return !rg || !overlaps(rg, g); });
-    if (what === 'filters' || what === 'all') filter = null;
+    if (what === 'filters' || what === 'all') { var fcs = filterCells(); Object.keys(fcs).forEach(function (k) { var p = k.split(','); if (inRange(g, +p[0], +p[1])) delete fcs[k]; }); if (!Object.keys(fcs).length) filter = null; }
     hf.batch(function () {
       forSel(function (r, c) {
         var k = key(r, c);
@@ -901,23 +1045,6 @@
     var fmt = st.fmt || 'common';
     applyStyle({ dec: Math.max(0, Math.min(10, cur + delta)), fmt: fmt === 'common' ? 'number' : fmt });
   }
-  function sortSelection(desc) {
-    if (readOnly) return; commitEdit();
-    var g = norm(sel);
-    if (g.r1 === g.r2) { flash('Select the rows (range) you want to sort first.'); return; }
-    beginChange();
-    var col = act.c, rows = [];
-    for (var r = g.r1; r <= g.r2; r++) { var row = { v: cellValue(r, col), src: r, cells: [] }; for (var c = g.c1; c <= g.c2; c++) row.cells.push({ raw: getRaw(r, c), st: styles[key(r, c)] }); rows.push(row); }
-    rows.sort(function (a, b) {
-      var x = a.v, y = b.v, ex = x == null || x === '', ey = y == null || y === '';
-      if (ex && ey) return 0; if (ex) return 1; if (ey) return -1;
-      var res = (typeof x === 'number' && typeof y === 'number') ? x - y : String(x).localeCompare(String(y), undefined, { numeric: true, sensitivity: 'base' });
-      return desc ? -res : res;
-    });
-    // like Excel, relative references in moved formulas follow their row
-    hf.batch(function () { rows.forEach(function (row, i) { row.cells.forEach(function (cell, j) { var r = g.r1 + i, c = g.c1 + j; setRawNoRender(r, c, shiftFormula(cell.raw, r - row.src, 0)); if (cell.st) styles[key(r, c)] = cell.st; else delete styles[key(r, c)]; }); }); });
-    endChange(false);
-  }
   function toggleLock() { var st = styles[key(act.r, act.c)] || {}; applyStyle({ lock: st.lock ? null : true }); }
   function toggleShowFormulas() { showFormulas = !showFormulas; renderCells(); schedulePost(); }
 
@@ -963,160 +1090,6 @@
     endChange(false);
   }
 
-  // ------------------------------------------------------------------ links
-  function linkDialog() {
-    if (readOnly) return; commitEdit();
-    var r = act.r, c = act.c, cur = parseLink(raws[key(r, c)]);
-    if (isLocked(r, c)) { flash('This cell is locked.'); return; }
-    dialog('Add link', '<label>Name</label><input id="lkn" placeholder="Text to show"><label>URL</label><input id="lku" placeholder="https://"><div class="btns">' + (cur ? '<button class="danger" id="lkd">Remove link</button>' : '') + '<span style="flex:1"></span><button class="sec" id="lkc">Cancel</button><button id="lks">Save</button></div>', function (d, close) {
-      var n = d.querySelector('#lkn'), u = d.querySelector('#lku');
-      n.value = cur ? cur.text : (getRaw(r, c)[0] === '=' ? '' : getRaw(r, c)); u.value = cur ? cur.url : '';
-      (cur ? u : (n.value ? u : n)).focus();
-      d.querySelector('#lkc').onclick = close;
-      if (cur) d.querySelector('#lkd').onclick = function () { close(); beginChange(); setRawNoRender(r, c, cur.text); endChange(false); };
-      d.querySelector('#lks').onclick = function () {
-        var url = u.value.trim(); if (!url) { u.focus(); return; }
-        if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = 'https://' + url;
-        var name = n.value.trim() || url;
-        close(); beginChange();
-        setRawNoRender(r, c, '=HYPERLINK("' + url.replace(/"/g, '""') + '","' + name.replace(/"/g, '""') + '")');
-        endChange(false);
-      };
-    });
-  }
-
-  // ------------------------------------------------------------------ data validation
-  var VAL_TYPES = [['integer', 'Whole number'], ['decimal', 'Decimal'], ['list', 'List'], ['date', 'Date'], ['length', 'Text length']];
-  var VAL_OPS = [['between', 'between'], ['notbetween', 'not between'], ['=', 'equal to'], ['!=', 'not equal to'], ['>', 'greater than'], ['<', 'less than'], ['>=', 'greater than or equal to'], ['<=', 'less than or equal to']];
-  function valNumber(s, type) {
-    if (s == null || s === '') return NaN;
-    if (type === 'date') { var p = parseA1(s); if (p) { var v = cellValue(p.r, p.c); return typeof v === 'number' ? v : NaN; } var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(s).trim()); if (m) return Math.round((Date.UTC(+m[3], +m[2] - 1, +m[1]) - Date.UTC(1899, 11, 30)) / 86400000); }
-    var ref = parseA1(String(s)); if (ref) { var rv = cellValue(ref.r, ref.c); return typeof rv === 'number' ? rv : NaN; }
-    return +s;
-  }
-  function listOptions(src) {
-    var g = parseRange(String(src || '').toUpperCase()), opts = [];
-    if (g && /^\$?[A-Z]+\$?\d+(:\$?[A-Z]+\$?\d+)?$/i.test(String(src).trim())) { for (var r = g.r1; r <= g.r2; r++) for (var c = g.c1; c <= g.c2; c++) { var t = displayText(r, c); if (t !== '') opts.push(t); } }
-    else opts = String(src || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-    return opts;
-  }
-  function isValidValue(r, c) {
-    var vr = (styles[key(r, c)] || {}).vr; if (!vr) return true;
-    var v = cellValue(r, c);
-    if (v == null || v === '') return vr.ignoreBlank !== false;
-    if (isError(v)) return false;
-    if (vr.type === 'list') return listOptions(vr.source).some(function (o) { return o.toLowerCase() === String(displayText(r, c)).toLowerCase(); });
-    var n;
-    if (vr.type === 'length') n = String(displayText(r, c)).length;
-    else { if (typeof v !== 'number') return false; n = v; if (vr.type === 'integer' && Math.floor(n) !== n) return false; }
-    var a = valNumber(vr.v1, vr.type), b = valNumber(vr.v2, vr.type);
-    switch (vr.op) {
-      case 'between': return n >= Math.min(a, b) && n <= Math.max(a, b);
-      case 'notbetween': return !(n >= Math.min(a, b) && n <= Math.max(a, b));
-      case '=': return n === a; case '!=': return n !== a;
-      case '>': return n > a; case '<': return n < a; case '>=': return n >= a; case '<=': return n <= a;
-    }
-    return true;
-  }
-  function describeRule(vr) {
-    var t = (VAL_TYPES.filter(function (x) { return x[0] === vr.type; })[0] || ['', ''])[1].toLowerCase();
-    if (vr.type === 'list') return 'a value from the list: ' + listOptions(vr.source).join(', ');
-    var op = (VAL_OPS.filter(function (x) { return x[0] === vr.op; })[0] || ['', ''])[1];
-    return (vr.type === 'length' ? 'text with a length ' : 'a ' + t + ' ') + op + ' ' + vr.v1 + (/between/.test(vr.op) ? ' and ' + vr.v2 : '');
-  }
-  function validationError(vr, r, c) {
-    dialog('Invalid value', '<p>The value you entered in ' + a1(r, c) + ' is not valid.</p><p class="muted">' + escapeHtml(vr.message || ('This cell only accepts ' + describeRule(vr) + '.')) + '</p><div class="btns"><button id="vok">OK</button></div>', function (d, close) {
-      var ok = d.querySelector('#vok'); ok.focus(); ok.onclick = close;
-    });
-  }
-  function validationDialog() {
-    if (readOnly) return; commitEdit();
-    var g = norm(sel), cur = (styles[key(act.r, act.c)] || {}).vr || { type: 'integer', op: 'between', v1: '', v2: '', ignoreBlank: true };
-    dialog('Data validation', '<p class="muted">Cells ' + rangeStr(g) + '</p>' +
-      '<label>Allow</label><select id="vt">' + VAL_TYPES.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + '</option>'; }).join('') + '</select>' +
-      '<div id="vnum"><label>Data</label><select id="vo">' + VAL_OPS.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + '</option>'; }).join('') + '</select>' +
-      '<div class="row2"><div><label id="vl1">Minimum</label><input id="v1"></div><div id="v2w"><label>Maximum</label><input id="v2"></div></div></div>' +
-      '<div id="vlist"><label>Source (a range such as H2:H5, or values separated by commas)</label><input id="vs"></div>' +
-      '<label class="chk"><input type="checkbox" id="vib"> Ignore blank</label>' +
-      '<label>Error message (optional)</label><input id="vm" placeholder="Shown when an invalid value is entered">' +
-      '<div class="btns"><span style="flex:1"></span><button class="sec" id="vc">Cancel</button><button id="vsv">Save</button></div>', function (d, close) {
-      var vt = d.querySelector('#vt'), vo = d.querySelector('#vo');
-      vt.value = cur.type; vo.value = cur.op || 'between';
-      d.querySelector('#v1').value = cur.v1 == null ? '' : cur.v1; d.querySelector('#v2').value = cur.v2 == null ? '' : cur.v2;
-      d.querySelector('#vs').value = cur.source || ''; d.querySelector('#vib').checked = cur.ignoreBlank !== false; d.querySelector('#vm').value = cur.message || '';
-      function sync() {
-        var list = vt.value === 'list', between = /between/.test(vo.value);
-        d.querySelector('#vnum').style.display = list ? 'none' : ''; d.querySelector('#vlist').style.display = list ? '' : 'none';
-        d.querySelector('#v2w').style.visibility = between ? '' : 'hidden'; d.querySelector('#vl1').textContent = between ? 'Minimum' : 'Value';
-      }
-      vt.onchange = sync; vo.onchange = sync; sync();
-      d.querySelector('#vc').onclick = close;
-      d.querySelector('#vsv').onclick = function () {
-        var rule = { type: vt.value, ignoreBlank: d.querySelector('#vib').checked };
-        if (rule.type === 'list') { rule.source = d.querySelector('#vs').value.trim(); if (!rule.source) { d.querySelector('#vs').focus(); return; } }
-        else { rule.op = vo.value; rule.v1 = d.querySelector('#v1').value.trim(); rule.v2 = d.querySelector('#v2').value.trim(); if (rule.v1 === '' || (/between/.test(rule.op) && rule.v2 === '')) { d.querySelector(rule.v1 === '' ? '#v1' : '#v2').focus(); return; } }
-        var msg = d.querySelector('#vm').value.trim(); if (msg) rule.message = msg;
-        close(); applyStyle({ vr: rule });
-      };
-    });
-  }
-  function removeValidation() { applyStyle({ vr: null }); }
-  function setHighlightInvalid(on) { highlightInvalid = on; renderCells(); schedulePost(); }
-
-  // ------------------------------------------------------------------ find and replace
-  var findState = { r: -1, c: -1 };
-  function findDialog() {
-    if (readOnly) return; commitEdit();
-    dialog('Find and Replace', '<label>Find</label><input id="fw"><label>Replace with</label><input id="rw">' +
-      '<label class="chk"><input type="checkbox" id="fcase"> Match case</label><label class="chk"><input type="checkbox" id="fwhole"> Match entire cell contents</label><label class="chk"><input type="checkbox" id="fform"> Search in formulas</label>' +
-      '<p class="muted" id="fmsg">&nbsp;</p><div class="btns"><button class="sec" id="frall">Replace all</button><button class="sec" id="fr">Replace</button><span style="flex:1"></span><button class="sec" id="fclose">Close</button><button id="fnext">Find next</button></div>', function (d, close) {
-      var fw = d.querySelector('#fw'), rw = d.querySelector('#rw'), msg = d.querySelector('#fmsg');
-      fw.focus();
-      function opts() { return { q: fw.value, cs: d.querySelector('#fcase').checked, whole: d.querySelector('#fwhole').checked, form: d.querySelector('#fform').checked }; }
-      function textOf(r, c, o) { var raw = getRaw(r, c); return o.form && raw[0] === '=' ? raw : displayText(r, c); }
-      function hit(r, c, o) {
-        var t = textOf(r, c, o), q = o.q; if (!q || t === '') return false;
-        if (!o.cs) { t = t.toLowerCase(); q = q.toLowerCase(); }
-        return o.whole ? t === q : t.indexOf(q) >= 0;
-      }
-      function next() {
-        var o = opts(); if (!o.q) { fw.focus(); return false; }
-        var start = (act.r * COLS + act.c), total = ROWS * COLS;
-        for (var k = 1; k <= total; k++) {
-          var idx = (start + k) % total, r = Math.floor(idx / COLS), c = idx % COLS;
-          if (isRowHidden(r) || hiddenCols[c]) continue;
-          if (hit(r, c, o)) { setSelection(r, c, r, c); scrollIntoViewCell(r, c); msg.textContent = 'Found in ' + a1(r, c); return true; }
-        }
-        msg.textContent = 'No matches found.'; return false;
-      }
-      function replaceIn(r, c, o) {
-        var raw = getRaw(r, c), isF = raw[0] === '=';
-        if (isF && !o.form) return false;
-        var src = isF ? raw : raw, re = new RegExp(o.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), o.cs ? 'g' : 'gi');
-        var out = o.whole ? (o.cs ? (src === o.q ? rw.value : src) : (src.toLowerCase() === o.q.toLowerCase() ? rw.value : src)) : src.replace(re, rw.value);
-        if (out === src || isLocked(r, c)) return false;
-        setRawNoRender(r, c, out); return true;
-      }
-      d.querySelector('#fnext').onclick = next;
-      fw.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); next(); } });
-      d.querySelector('#fr').onclick = function () {
-        var o = opts(); if (!o.q) return;
-        if (hit(act.r, act.c, o)) { beginChange(); var done = replaceIn(act.r, act.c, o); if (done) endChange(false); else undoStack.pop(); }
-        next();
-      };
-      d.querySelector('#frall').onclick = function () {
-        var o = opts(); if (!o.q) return;
-        beginChange(); var n = 0;
-        // find the matches first: values can't be read while the engine is batching changes
-        var hits = []; for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) if (hit(r, c, o)) hits.push([r, c]);
-        hf.batch(function () { hits.forEach(function (h) { if (replaceIn(h[0], h[1], o)) n++; }); });
-        if (n) endChange(false); else undoStack.pop();
-        msg.textContent = n ? 'Replaced ' + n + ' cell' + (n === 1 ? '' : 's') + '.' : 'No matches found.';
-      };
-      d.querySelector('#fclose').onclick = close;
-    });
-  }
-
   // ------------------------------------------------------------------ hide / show, resize, group rows and columns
   function isRowHidden(r) { return !!hiddenRows[r] || rowHiddenByFilter(r); }
   function setHidden(isRow, hide) {
@@ -1133,16 +1106,6 @@
     }
     endChange(true);
     if (hide) { var t = b + 1; var lim = isRow ? ROWS : COLS; while (t < lim && map[t]) t++; if (t >= lim) { t = a - 1; while (t > 0 && map[t]) t--; } if (isRow) setSelection(t, 0, t, COLS - 1, t, 0); else setSelection(0, t, ROWS - 1, t, 0, t); }
-  }
-  function resizeDialog(isRow) {
-    if (readOnly) return; commitEdit();
-    var g = norm(sel), idx = isRow ? g.r1 : g.c1, cur = isRow ? (rowH[idx] || DEF_H) : (colW[idx] || DEF_W);
-    dialog(isRow ? 'Resize row' : 'Resize column', '<label>' + (isRow ? 'Row height' : 'Column width') + ' (pixels)</label><input id="rsz" type="number" min="10" max="800"><div class="btns"><span style="flex:1"></span><button class="sec" id="rszc">Cancel</button><button id="rszs">Save</button></div>', function (d, close) {
-      var inp = d.querySelector('#rsz'); inp.value = cur; inp.focus(); inp.select();
-      function save() { var n = Math.round(Math.max(isRow ? 16 : 20, Math.min(800, +inp.value || cur))); close(); beginChange(); for (var i = (isRow ? g.r1 : g.c1); i <= (isRow ? g.r2 : g.c2); i++) { if (isRow) rowH[i] = n; else colW[i] = n; } endChange(true); }
-      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') save(); });
-      d.querySelector('#rszc').onclick = close; d.querySelector('#rszs').onclick = save;
-    });
   }
   function groupSel(isRow, on) {
     if (readOnly) return; commitEdit();
@@ -1172,12 +1135,17 @@
       ['Cut', null, function () { menuCopy(true); }], ['Copy', null, function () { menuCopy(false); }], ['Paste', null, menuPaste],
       ['Special paste', null, null, [['Values', null, function () { specialPaste('values'); }], ['Formulas', null, function () { specialPaste('formulas'); }], ['Styles', null, function () { specialPaste('styles'); }],
         ['Conditional formats', null, function () { specialPaste('conds'); }], ['Validation', null, function () { specialPaste('validation'); }], null, ['Paste transposed', null, function () { specialPaste('transpose'); }]]],
+    ].concat((function () {
+      // NESA only offers "Sort Range" when more than one cell is selected
+      var g = norm(sel); if (g.r1 === g.r2 && g.c1 === g.c2) return [];
+      return [['Sort Range', null, null, [['Ascending (A to Z)', null, function () { sortSelection(false); }], ['Descending (Z to A)', null, function () { sortSelection(true); }], ['Custom Sort', null, customSortDialog]]]];
+    })(), [
       ['Create/remove filters', null, toggleFilter], ['Named ranges', null, namedRangesDialog], ['Conditional format', null, condDialog], ['Lock/unlock cell', null, toggleLock],
       ['Add link', null, linkDialog], ['Add dropdown', null, dropdownDialog],
       ['Clear', null, null, clearEntries()],
       ['Validation', null, null, [['Add data validation', null, validationDialog], ['Remove data validation', null, removeValidation], ['Highlight invalid data', null, function () { setHighlightInvalid(true); }], ['Remove highlighting of invalid data', null, function () { setHighlightInvalid(false); }]]],
       ['Find and Replace', null, findDialog],
-    ];
+    ]);
   }
   function headerMenuEntries(isRow) {
     var w = isRow ? 'row' : 'column';
@@ -1222,7 +1190,7 @@
   function insertCols(at, n) { if (readOnly) return; commitEdit(); beginChange(); try { hf.addColumns(SHEET, [at, n]); } catch (e) { } shiftMaps(false, at, n); COLS += n; syncRawsFromEngine(); endChange(true); }
   function deleteRows(at, n) { if (readOnly) return; commitEdit(); beginChange(); try { hf.removeRows(SHEET, [at, n]); } catch (e) { } shiftMaps(true, at, -n); syncRawsFromEngine(); endChange(true); }
   function deleteCols(at, n) { if (readOnly) return; commitEdit(); beginChange(); try { hf.removeColumns(SHEET, [at, n]); } catch (e) { } shiftMaps(false, at, -n); syncRawsFromEngine(); endChange(true); }
-  function syncRawsFromEngine() { Object.keys(raws).forEach(function (k) { var p = k.split(','); try { if (hf.doesCellHaveFormula(addr(+p[0], +p[1]))) raws[k] = mapBooleans(hf.getCellFormula(addr(+p[0], +p[1])), false); } catch (e) { } }); syncNamed(); }
+  function syncRawsFromEngine() { Object.keys(raws).forEach(function (k) { var p = k.split(','); try { if (hf.doesCellHaveFormula(addr(+p[0], +p[1]))) raws[k] = hf.getCellFormula(addr(+p[0], +p[1])); } catch (e) { } }); syncNamed(); }
 
   // ------------------------------------------------------------------ menus / palettes
   // the same 8 x 10 colour board as the NESA (Webix) colour picker
@@ -1297,55 +1265,6 @@
   function openPalette(btn, onPick, current) {
     openPopup(btn, colorBoard(current, function (c) { closeMenu(); onPick(c); }), 'color-pop');
   }
-  function openDropdownList(r, c) {
-    var st = styles[key(r, c)] || {}; if (!st.dd) return;
-    if (isLocked(r, c)) { flash('This cell is locked.'); return; }
-    var opts = [], g = parseRange(st.dd);
-    if (g) { for (var rr = g.r1; rr <= g.r2; rr++) for (var cc = g.c1; cc <= g.c2; cc++) { var t = displayText(rr, cc); if (t !== '' && opts.indexOf(t) < 0) opts.push(t); } }
-    else opts = String(st.dd).split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-    var b = tds[r][c].getBoundingClientRect();
-    openMenu(b.left, b.bottom, opts.map(function (o) { return [escapeHtml(o), null, function () { beginChange(); setRawNoRender(r, c, o); endChange(false); }]; }).concat(opts.length ? [] : [['<em>(list is empty)</em>', null, function () { }]]));
-  }
-  function openFilterMenu(col, btn) {
-    var g = parseRange(filter.range), values = [];
-    for (var r = g.r1 + 1; r <= g.r2; r++) { var t = displayText(r, col); if (values.indexOf(t) < 0) values.push(t); }
-    values.sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); });
-    var allowed = filter.crit && filter.crit[col];
-    closeMenu();
-    menuEl = document.createElement('div'); menuEl.className = 'menu filter-menu';
-    menuEl.innerHTML = '<div class="fm-title">Filter ' + colName(col) + '</div><label class="fm-all"><input type="checkbox" checked> (Select all)</label><div class="fm-list"></div><div class="fm-btns"><button class="sec">Clear</button><button>OK</button></div>';
-    var list = menuEl.querySelector('.fm-list');
-    values.forEach(function (v) { var l = document.createElement('label'); l.innerHTML = '<input type="checkbox"> ' + (v === '' ? '<em>(blank)</em>' : escapeHtml(v)); var cb = l.querySelector('input'); cb.checked = !allowed || allowed.indexOf(v) >= 0; cb.value = v; list.appendChild(l); });
-    var all = menuEl.querySelector('.fm-all input');
-    all.checked = !allowed;
-    all.addEventListener('change', function () { list.querySelectorAll('input').forEach(function (x) { x.checked = all.checked; }); });
-    var btns = menuEl.querySelectorAll('.fm-btns button');
-    btns[0].addEventListener('click', function () { closeMenu(); beginChange(); if (filter.crit) delete filter.crit[col]; endChange(false); });
-    btns[1].addEventListener('click', function () {
-      var chosen = Array.prototype.filter.call(list.querySelectorAll('input'), function (x) { return x.checked; }).map(function (x) { return x.value; });
-      closeMenu(); beginChange(); filter.crit = filter.crit || {};
-      if (chosen.length === values.length) delete filter.crit[col]; else filter.crit[col] = chosen;
-      endChange(false);
-    });
-    document.body.appendChild(menuEl);
-    var b = btn.getBoundingClientRect(); positionMenu(b.left, b.bottom + 2);
-  }
-  function toggleFilter() {
-    if (readOnly) return; commitEdit(); beginChange();
-    if (filter) { filter = null; endChange(false); return; }
-    var g = norm(sel);
-    if (g.r1 === g.r2 && g.c1 === g.c2) {
-      // like Webix: use the block of data around the active cell
-      var r1 = g.r1, r2 = g.r1, c1 = g.c1, c2 = g.c1;
-      while (r2 + 1 < ROWS && getRaw(r2 + 1, g.c1) !== '') r2++;
-      while (c2 + 1 < COLS && getRaw(r1, c2 + 1) !== '') c2++;
-      while (c1 - 1 >= 0 && getRaw(r1, c1 - 1) !== '') c1--;
-      g = { r1: r1, c1: c1, r2: r2, c2: c2 };
-    }
-    filter = { range: rangeStr(g), crit: {} };
-    endChange(false);
-  }
-
   // ------------------------------------------------------------------ icons (drawn to look like the NESA / Webix SpreadSheet icon set)
   var ICON_PATHS = {
     undo: '<path d="M6.6 7.4A7.2 7.2 0 1 1 4.8 13"/><path d="M3.6 3.9 9.1 4.4 5.4 9.1Z" fill="currentColor" stroke="none"/>',
@@ -1441,7 +1360,7 @@
     openPopup(btn, row, 'align-pop');
   }
   var tb = {};
-  var FORMATS = [['common', 'Common', ''], ['currency', 'Currency', '$98.20'], ['number', 'Number', '2,120.02'], ['percent', 'Percent', '50%'], ['date', 'Date', '15/03/2023'], ['text', 'Text', '012345'], ['custom', 'Custom', '']];
+  var FORMATS = [['common', 'Common', ''], ['currency', 'Currency', '$98.20'], ['number', 'Number', '2,120.02'], ['percent', 'Percent', '50%'], ['date', 'Date', '03/15/2023'], ['text', 'Text', '012345'], ['custom', 'Custom', '']];
   var FONT_SIZES = [8, 9, 10, 11, 12, 14, 15, 16, 18, 20, 22, 24, 28, 36];
   var BORDER_KINDS = [['no', 'Clear borders'], ['left', 'Left border'], ['top', 'Top border'], ['right', 'Right border'], ['bottom', 'Bottom border'], ['all', 'All borders'], ['outer', 'Outer borders'], ['top-bottom', 'Top and bottom borders']];
   var LINE_TYPES = ['hair', 'dotted', 'dashDotDot', 'dashDot', 'dashed', 'thin', 'mediumDashDotDot', 'slantDashDot', 'mediumDashDot', 'mediumDashed', 'medium', 'thick', 'double'];
@@ -1575,172 +1494,6 @@
     tb.showF.classList.toggle('on', showFormulas);
     tb.undo.disabled = !undoStack.length; tb.redo.disabled = !redoStack.length;
   }
-  function flash(msg) { var s = $('status'); s.innerHTML = '<span style="color:#b81237">' + escapeHtml(msg) + '</span><span></span>'; clearTimeout(flash.t); flash.t = setTimeout(updateStatus, 3500); }
-
-  // ------------------------------------------------------------------ dialogs
-  function dialog(title, bodyHtml, onReady, wide) {
-    var bg = document.createElement('div'); bg.className = 'dlg-bg';
-    bg.innerHTML = '<div class="dlg' + (wide ? ' wide' : '') + '"><div class="dlg-head">' + title + '<span class="dlg-x">&times;</span></div><div class="dlg-body">' + bodyHtml + '</div></div>';
-    document.body.appendChild(bg);
-    function close() { bg.remove(); editor.focus({ preventScroll: true }); }
-    bg.querySelector('.dlg-x').onclick = close;
-    bg.addEventListener('mousedown', function (e) { if (e.target === bg) close(); });
-    onReady(bg.querySelector('.dlg-body'), close);
-  }
-  function commentDialog() {
-    if (readOnly) return; commitEdit();
-    var k = key(act.r, act.c);
-    dialog('Comment — ' + a1(act.r, act.c), '<textarea id="cm"></textarea><div class="btns"><button class="danger" id="cdel">Delete</button><span style="flex:1"></span><button class="sec" id="ccancel">Cancel</button><button id="csave">Save</button></div>', function (d, close) {
-      var ta = d.querySelector('#cm'); ta.value = comments[k] || ''; ta.focus();
-      d.querySelector('#ccancel').onclick = close;
-      d.querySelector('#cdel').onclick = function () { beginChange(); delete comments[k]; endChange(false); close(); };
-      d.querySelector('#csave').onclick = function () { beginChange(); if (ta.value.trim()) comments[k] = ta.value; else delete comments[k]; endChange(false); close(); };
-    });
-  }
-  function opOptions(sel) {
-    var h = '<option value="" hidden>Operator</option>', grp = null;
-    COND_OPS.forEach(function (o) {
-      if (o[1] === null) { if (grp) h += '</optgroup>'; h += '<optgroup label="' + o[0] + '">'; grp = o[0]; return; }
-      h += '<option value="' + o[1] + '"' + (o[1] === sel ? ' selected' : '') + '>' + o[0] + '</option>';
-    });
-    return h + '</optgroup>';
-  }
-  function condDialog() {
-    if (readOnly) return; commitEdit();
-    var g = norm(sel), range = rangeStr(g);
-    var existing = conds.filter(function (r) { var rg = parseRange(r.range); return rg && overlaps(rg, g); });
-    dialog('Conditional Format', '<p class="muted">Applies to <b>' + range + '</b></p><table class="cf-table"><thead><tr><th>Display</th><th>Condition</th><th>Value</th><th><span class="cf-add" title="Add condition"><i class="fas fa-plus-circle"></i></span></th></tr></thead><tbody></tbody></table><div class="btns"><span style="flex:1"></span><button class="sec" id="cfc">Cancel</button><button id="cfs">Save</button></div>', function (d, close) {
-      var tbody = d.querySelector('tbody');
-      function addRow(rule) {
-        rule = rule || {};
-        var tr = document.createElement('tr');
-        var styleName = typeof rule.style === 'string' ? rule.style : '';
-        tr.innerHTML = '<td><select class="cf-style"><option value="" hidden>Style</option>' + ['normal', 'neutral', 'bad', 'good'].map(function (s) { return '<option value="' + s + '" class="cf-' + s + '"' + (s === styleName ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></td>' +
-          '<td><select class="cf-op">' + opOptions(rule.op) + '</select></td><td class="cf-vals"><input class="cf-v1" placeholder="Value"><input class="cf-v2" placeholder="and" style="display:none"></td><td><span class="cf-del" title="Delete"><i class="fas fa-trash-alt"></i></span></td>';
-        var op = tr.querySelector('.cf-op'), v2 = tr.querySelector('.cf-v2');
-        tr.querySelector('.cf-v1').value = rule.v1 == null ? '' : rule.v1; v2.value = rule.v2 == null ? '' : rule.v2;
-        function sync() { v2.style.display = /between/.test(op.value) ? '' : 'none'; var s = tr.querySelector('.cf-style'); s.className = 'cf-style cf-' + s.value; }
-        op.onchange = sync; tr.querySelector('.cf-style').onchange = sync; sync();
-        tr.querySelector('.cf-del').onclick = function () { tr.remove(); };
-        tbody.appendChild(tr);
-      }
-      existing.forEach(addRow);
-      for (var i = existing.length; i < 3; i++) addRow();
-      d.querySelector('.cf-add').onclick = function () { addRow(); };
-      d.querySelector('#cfc').onclick = close;
-      d.querySelector('#cfs').onclick = function () {
-        beginChange();
-        conds = conds.filter(function (r) { return existing.indexOf(r) < 0; });
-        Array.prototype.forEach.call(tbody.rows, function (tr) {
-          var st = tr.querySelector('.cf-style').value, op = tr.querySelector('.cf-op').value;
-          if (!st || !op) return;
-          conds.push({ range: range, style: st, op: op, v1: tr.querySelector('.cf-v1').value, v2: tr.querySelector('.cf-v2').value });
-        });
-        endChange(false); close();
-      };
-    }, true);
-  }
-  function namedRangesDialog() {
-    if (readOnly) return; commitEdit();
-    var g = norm(sel);
-    dialog('Named ranges', '<div class="rules" id="nlist"></div><div class="row2"><div><label>Name</label><input id="nname" placeholder="e.g. RateTable"></div><div><label>Range</label><input id="nrange"></div></div><div class="btns"><span style="flex:1"></span><button class="sec" id="nclose">Close</button><button id="nadd">Add</button></div>', function (d, close) {
-      d.querySelector('#nrange').value = rangeStr(g);
-      function list() {
-        var box = d.querySelector('#nlist'); box.innerHTML = Object.keys(named).length ? '' : '<div><em>No named ranges yet</em></div>';
-        Object.keys(named).forEach(function (n) {
-          var row = document.createElement('div'); row.innerHTML = '<span><b>' + escapeHtml(n) + '</b> = ' + escapeHtml(named[n]) + '</span>';
-          var del = document.createElement('button'); del.className = 'danger'; del.textContent = 'Delete';
-          del.onclick = function () { beginChange(); delete named[n]; syncNamed(); endChange(false); list(); };
-          row.appendChild(del); box.appendChild(row);
-        });
-      }
-      list();
-      d.querySelector('#nclose').onclick = close;
-      d.querySelector('#nadd').onclick = function () {
-        var n = d.querySelector('#nname').value.trim(), rg = parseRange(d.querySelector('#nrange').value.toUpperCase());
-        if (!/^[A-Za-z_][A-Za-z0-9_.]*$/.test(n) || parseA1(n)) { alert('Names must start with a letter, contain no spaces and must not look like a cell reference.'); return; }
-        if (!rg) { alert('Enter a valid range, e.g. A1:B5'); return; }
-        beginChange(); named[n] = rangeStr(rg); syncNamed(); endChange(false); list(); d.querySelector('#nname').value = '';
-      };
-    });
-  }
-  function dropdownDialog() {
-    if (readOnly) return; commitEdit();
-    var g = norm(sel);
-    dialog('Add dropdown', '<p class="muted">Cells ' + rangeStr(g) + ' will show a dropdown list.</p><label>Range of values (e.g. H2:H5), or a comma-separated list</label><input id="ddr"><div class="btns"><span style="flex:1"></span><button class="sec" id="ddc">Cancel</button><button id="dds">Save</button></div>', function (d, close) {
-      d.querySelector('#ddr').value = (styles[key(act.r, act.c)] || {}).dd || '';
-      d.querySelector('#ddr').focus();
-      d.querySelector('#ddc').onclick = close;
-      d.querySelector('#dds').onclick = function () {
-        var v = d.querySelector('#ddr').value.trim(); if (!v) { close(); return; }
-        var rg = parseRange(v.toUpperCase());
-        close(); applyStyle({ dd: rg ? rangeStr(rg) : v });
-      };
-    });
-  }
-  function customFormatDialog() {
-    dialog('Custom format', '<label>Format pattern</label><input id="cfp" placeholder="e.g. $#,##0.00  or  0.0%  or  #,##0  or  0 &quot;kg&quot;"><p class="muted">0 = digit, # = optional digit, , = thousands separator, % = percent. Text before/after the number is shown as typed.</p><div class="btns"><span style="flex:1"></span><button class="sec" id="cfpc">Cancel</button><button id="cfps">Apply</button></div>', function (d, close) {
-      var inp = d.querySelector('#cfp'); inp.value = (styles[key(act.r, act.c)] || {}).pattern || '#,##0.00'; inp.focus();
-      d.querySelector('#cfpc').onclick = function () { close(); updateToolbarState(); };
-      d.querySelector('#cfps').onclick = function () { close(); applyStyle({ fmt: 'custom', pattern: inp.value, dec: null }); };
-    });
-  }
-  function sparklineDialog() {
-    if (readOnly) return; commitEdit();
-    var target = { r: act.r, c: act.c };
-    var cur = parseSparkline(raws[key(target.r, target.c)]) || { type: 'line', range: '', color: '#6666FF' };
-    dialog('Add sparkline', '<label>Type</label><select id="spt"><option value="line">Line</option><option value="area">Area</option><option value="bar">Bar</option><option value="pie">Pie</option></select><label>Range</label><input id="spr" placeholder="e.g. B2:F2"><label>Color</label><input id="spc" type="color"><div class="btns"><span style="flex:1"></span><button class="sec" id="spx">Cancel</button><button id="sps">Save</button></div>', function (d, close) {
-      d.querySelector('#spt').value = cur.type; d.querySelector('#spr').value = cur.range; d.querySelector('#spc').value = cur.color.length === 7 ? cur.color : '#6666ff';
-      d.querySelector('#spr').focus();
-      d.querySelector('#spx').onclick = close;
-      d.querySelector('#sps').onclick = function () {
-        var rg = parseRange(d.querySelector('#spr').value.toUpperCase()); if (!rg) { alert('Enter the range of numbers to graph, e.g. B2:F2'); return; }
-        close(); beginChange();
-        setRawNoRender(target.r, target.c, '=SPARKLINE(' + rangeStr(rg) + ',"' + d.querySelector('#spt').value + '","' + d.querySelector('#spc').value + '")');
-        endChange(false);
-      };
-    });
-  }
-  var FUNCS = [
-    ['SUM', 'SUM(number1, [number2], …) — adds numbers or a range'], ['AVERAGE', 'AVERAGE(range) — mean of the values'], ['MIN', 'MIN(range) — smallest value'], ['MAX', 'MAX(range) — largest value'],
-    ['COUNT', 'COUNT(range) — counts cells containing numbers'], ['COUNTA', 'COUNTA(range) — counts non-empty cells'], ['COUNTBLANK', 'COUNTBLANK(range) — counts empty cells'], ['COUNTIF', 'COUNTIF(range, criteria) — e.g. COUNTIF(B2:B9,">50")'],
-    ['COUNTIFS', 'COUNTIFS(range1, criteria1, range2, criteria2, …)'], ['SUMIF', 'SUMIF(range, criteria, [sum_range])'], ['SUMIFS', 'SUMIFS(sum_range, range1, criteria1, …)'], ['AVERAGEIF', 'AVERAGEIF(range, criteria, [average_range])'],
-    ['IF', 'IF(logical_test, value_if_true, value_if_false)'], ['IFS', 'IFS(test1, value1, test2, value2, …)'], ['AND', 'AND(logical1, logical2, …)'], ['OR', 'OR(logical1, logical2, …)'], ['NOT', 'NOT(logical)'],
-    ['VLOOKUP', 'VLOOKUP(lookup_value, table_array, col_index, [range_lookup]) — TRUE/omitted = approximate match on a sorted first column, FALSE = exact match'],
-    ['HLOOKUP', 'HLOOKUP(lookup_value, table_array, row_index, [range_lookup])'], ['XLOOKUP', 'XLOOKUP(lookup_value, lookup_array, return_array)'], ['LOOKUP', 'LOOKUP(lookup_value, lookup_vector, result_vector)'], ['INDEX', 'INDEX(range, row, [column])'], ['MATCH', 'MATCH(lookup_value, range, [match_type])'],
-    ['ROUND', 'ROUND(number, digits)'], ['ROUNDUP', 'ROUNDUP(number, digits)'], ['ROUNDDOWN', 'ROUNDDOWN(number, digits)'], ['INT', 'INT(number)'], ['ABS', 'ABS(number)'], ['SQRT', 'SQRT(number)'], ['POWER', 'POWER(number, power)'], ['MOD', 'MOD(number, divisor)'],
-    ['MEDIAN', 'MEDIAN(range)'], ['MODE', 'MODE(range)'], ['STDEV', 'STDEV(range) — sample standard deviation'], ['RANK', 'RANK(number, range, [order])'], ['LARGE', 'LARGE(range, k)'], ['SMALL', 'SMALL(range, k)'],
-    ['CONCATENATE', 'CONCATENATE(text1, text2, …) — or use &'], ['LEFT', 'LEFT(text, n)'], ['RIGHT', 'RIGHT(text, n)'], ['MID', 'MID(text, start, n)'], ['LEN', 'LEN(text)'], ['UPPER', 'UPPER(text)'], ['LOWER', 'LOWER(text)'], ['PROPER', 'PROPER(text)'], ['TRIM', 'TRIM(text)'], ['TEXT', 'TEXT(value, format)'],
-    ['TODAY', 'TODAY() — current date'], ['NOW', 'NOW()'], ['DATE', 'DATE(year, month, day)'], ['YEAR', 'YEAR(date)'], ['MONTH', 'MONTH(date)'], ['DAY', 'DAY(date)'], ['DATEDIF', 'DATEDIF(start, end, unit)'], ['WEEKDAY', 'WEEKDAY(date)'],
-    ['PMT', 'PMT(rate, nper, pv)'], ['IFERROR', 'IFERROR(value, value_if_error)'], ['ISBLANK', 'ISBLANK(cell)'], ['ISNUMBER', 'ISNUMBER(value)'], ['SPARKLINE', 'SPARKLINE(range, "line|area|bar|pie", "#colour") — small graph inside a cell'],
-  ];
-  $('fxbtn').addEventListener('click', function () {
-    if (readOnly) return;
-    var target = { r: act.r, c: act.c };
-    dialog('Insert function', '<input id="fsearch" placeholder="Search functions"><div class="fnlist" id="flist" style="margin-top:8px"></div><div class="fnhelp" id="fhelp"></div><div class="btns"><span style="flex:1"></span><button class="sec" id="fcancel">Cancel</button><button id="fins">Insert</button></div>', function (d, close) {
-      var list = d.querySelector('#flist'), help = d.querySelector('#fhelp'), cur = null;
-      function draw(q) {
-        list.innerHTML = '';
-        FUNCS.filter(function (f) { return !q || f[0].indexOf(q.toUpperCase()) >= 0; }).forEach(function (f) {
-          var e = document.createElement('div'); e.textContent = f[0];
-          e.onclick = function () { cur = f[0]; help.textContent = f[1]; Array.prototype.forEach.call(list.children, function (x) { x.classList.toggle('on', x === e); }); };
-          e.ondblclick = insert; list.appendChild(e);
-        });
-      }
-      function insert() {
-        if (!cur) return; close();
-        setSelection(target.r, target.c, target.r, target.c);
-        if (!editing) beginEdit(false);
-        if (!editing) return;
-        var inp = editing.input, t = inp.value || '';
-        if (!t) t = '='; else if (t[0] !== '=') t = '=' + t;
-        inp.value = t + cur + '('; (inp === editor ? fx : editor).value = inp.value;
-        inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); if (inp === editor) autoSizeEditor();
-      }
-      draw(''); d.querySelector('#fsearch').oninput = function (e) { draw(e.target.value); }; d.querySelector('#fsearch').focus();
-      d.querySelector('#fcancel').onclick = close; d.querySelector('#fins').onclick = insert;
-    });
-  });
 
   // ------------------------------------------------------------------ graphs ("Add above cells", edited in a side panel like Webix)
   var PALETTE = ['#6666ff', '#e1251b', '#00a650', '#ff9900', '#7030a0', '#00b0f0', '#d5a6bd', '#666666'];
@@ -1903,7 +1656,7 @@
           if (st.b || cs.b) css.push('font-weight:700'); if (st.i) css.push('font-style:italic');
           if (st.u || st.s) css.push('text-decoration:' + (st.u ? 'underline ' : '') + (st.s ? 'line-through' : ''));
           if (cs.color || st.color) css.push('color:' + (cs.color || st.color)); if (cs.bg || st.bg) css.push('background:' + (cs.bg || st.bg));
-          css.push('text-align:' + (st.ha || (d.num ? 'right' : 'left')));
+          css.push('text-align:' + (st.ha || 'left'));
           ['bt', 'br', 'bb', 'bl'].forEach(function (b, i) { if (st[b]) css.push('border-' + ['top', 'right', 'bottom', 'left'][i] + ':' + borderCss(st)); });
           var span = m ? ' colspan="' + (m.c2 - m.c1 + 1) + '" rowspan="' + (m.r2 - m.r1 + 1) + '"' : '';
           h += '<td' + span + ' style="' + css.join(';') + '">' + (d.spark ? sparklineSvg(d.spark, null) : escapeHtml(d.text)) + '</td>';
@@ -1931,13 +1684,783 @@
     return res;
   }
 
+  // =====================================================================================
+  // NESA (Webix SpreadSheet) behaviour: messages, dialogs, formula colouring, function
+  // suggestions and hints, comments, dropdown lists, filters, data validation, sorting
+  // =====================================================================================
+  function flash(msg) {
+    var t = document.createElement('div'); t.className = 'wx-toast'; t.textContent = msg; document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 3000);
+  }
+  // Webix-style window: title bar with ×, body, buttons bottom-right
+  function dialog(title, bodyHtml, onReady, width) {
+    closePops();
+    var bg = document.createElement('div'); bg.className = 'dlg-bg';
+    bg.innerHTML = '<div class="dlg" style="width:' + (typeof width === 'number' ? width : 350) + 'px"><div class="dlg-head">' + title + '<span class="dlg-x">&times;</span></div><div class="dlg-body">' + bodyHtml + '</div></div>';
+    document.body.appendChild(bg);
+    function esc(e) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }
+    function close() { bg.remove(); document.removeEventListener('keydown', esc, true); editor.focus({ preventScroll: true }); }
+    document.addEventListener('keydown', esc, true);
+    bg.querySelector('.dlg-x').onclick = close;
+    onReady(bg.querySelector('.dlg-body'), close);
+    var f = bg.querySelector('input.wx-in, textarea, select'); if (f && !f.hasAttribute('data-nofocus')) f.focus();
+  }
+  function frow(label, ctl, lw, req, cls) {
+    return '<div class="frow' + (cls ? ' ' + cls : '') + '">' + (label !== null ? '<span class="fl" style="width:' + (lw || 140) + 'px">' + label + (req ? '<span class="req">*</span>' : '') + '</span>' : '') + '<div class="fc">' + ctl + '</div></div>';
+  }
+  function btns(list) { return '<div class="dlg-btns">' + list.map(function (b) { return '<button type="button" class="wx-btn ' + (b[2] || '') + '" id="' + b[0] + '">' + b[1] + '</button>'; }).join('') + '</div>'; }
+  function opts(list, cur) { return list.map(function (o) { return '<option value="' + o[0] + '"' + (String(o[0]) === String(cur) ? ' selected' : '') + '>' + o[1] + '</option>'; }).join(''); }
+  // small popups (comments, hints, lists) that close when something else is clicked
+  var pops = {};
+  function closePops(except) { Object.keys(pops).forEach(function (k) { if (k !== except && pops[k]) { if (pops[k]._onclose) pops[k]._onclose(); pops[k].remove(); delete pops[k]; } }); }
+  function closePop(name) { var p = pops[name]; if (p) { if (p._onclose) p._onclose(); p.remove(); delete pops[name]; } }
+  function openPop(name, cls, html) { closePop(name); var p = document.createElement('div'); p.className = 'wx-pop ' + cls; p.innerHTML = html || ''; document.body.appendChild(p); pops[name] = p; return p; }
+  document.addEventListener('mousedown', function (e) {
+    if (!e.target.isConnected) return;   // the click was on a popup item that has just closed itself
+    Object.keys(pops).forEach(function (k) { var p = pops[k]; if (p && !p.contains(e.target) && !(p._owner && p._owner.contains(e.target))) closePop(k); });
+  });
+  var measureCtx = document.createElement('canvas').getContext('2d');
+  function textWidth(s, font) { measureCtx.font = font || '16px Roboto, sans-serif'; return measureCtx.measureText(s).width; }
+
+  // ---------- formula colouring (NESA colours each reference in the edit bar and on the grid)
+  function formulaRefs(f) {
+    var out = [], inStr = false, i = 0;
+    while (i < f.length) {
+      var ch = f[i];
+      if (ch === '"') { inStr = !inStr; i++; continue; }
+      if (inStr || !/[A-Za-z$]/.test(ch) || /[A-Za-z0-9_.$]/.test(f[i - 1] || '')) { i++; continue; }
+      var rest = f.slice(i), m = /^(\$?[A-Za-z]{1,3}\$?\d+)(:\$?[A-Za-z]{1,3}\$?\d+)?/.exec(rest);
+      if (m && !/^[A-Za-z0-9_(]/.test(rest.slice(m[0].length))) {
+        var g = parseRange(m[0].replace(/\$/g, '').toUpperCase());
+        if (g) { out.push({ s: i, e: i + m[0].length, ref: m[0].replace(/\$/g, '').toUpperCase(), g: g }); i += m[0].length; continue; }
+      }
+      var id = /^[A-Za-z_$][A-Za-z0-9_.$]*/.exec(rest); i += id ? id[0].length : 1;
+    }
+    var colours = {}, n = 0;
+    out.forEach(function (t) { if (!colours[t.ref]) colours[t.ref] = (n++ % 7) + 1; t.col = colours[t.ref]; });
+    return out;
+  }
+  function hlHtml(text, refs) {
+    var h = '', p = 0;
+    refs.forEach(function (t) { h += escapeHtml(text.slice(p, t.s)) + '<span class="hlc' + t.col + '">' + escapeHtml(text.slice(t.s, t.e)) + '</span>'; p = t.e; });
+    return h + escapeHtml(text.slice(p)) + ' ';
+  }
+  var fxhl = $('fxhl'), edhl = $('edhl'), refsLayer = $('refs');
+  function updateFormulaUI() {
+    var inp = activeInput(), t = inp ? inp.value : '', on = !!(editing && t[0] === '=');
+    var refs = on ? formulaRefs(t) : [];
+    fx.parentNode.classList.toggle('hl-on', on); fxhl.classList.toggle('show', on);
+    fxhl.innerHTML = on ? hlHtml(t, refs) : ''; fxhl.scrollLeft = fx.scrollLeft;
+    var inCell = on && editor.classList.contains('editing');
+    editor.classList.toggle('hl-on', inCell); edhl.classList.toggle('show', inCell);
+    if (inCell) {
+      edhl.style.left = editor.style.left; edhl.style.top = editor.style.top; edhl.style.width = editor.style.width; edhl.style.height = editor.style.height;
+      edhl.innerHTML = hlHtml(editor.value, formulaRefs(editor.value)); edhl.scrollLeft = editor.scrollLeft; edhl.scrollTop = editor.scrollTop;
+    } else edhl.innerHTML = '';
+    var seen = {}, html = '';
+    refs.forEach(function (t) {
+      if (seen[t.ref]) return; seen[t.ref] = 1;
+      var g = { r1: t.g.r1, c1: t.g.c1, r2: Math.min(t.g.r2, ROWS - 1), c2: Math.min(t.g.c2, COLS - 1) };
+      if (g.r1 >= ROWS || g.c1 >= COLS) return;
+      var rc = rangeRect(g); html += '<div class="hlb' + t.col + '" style="left:' + rc.x + 'px;top:' + rc.y + 'px;width:' + rc.w + 'px;height:' + rc.h + 'px"></div>';
+    });
+    refsLayer.innerHTML = html;
+    updateFnPopups();
+  }
+  ['scroll', 'keyup', 'click', 'select'].forEach(function (ev) {
+    fx.addEventListener(ev, function () { fxhl.scrollLeft = fx.scrollLeft; if (ev !== 'scroll') updateFnPopups(); });
+    editor.addEventListener(ev, function () { edhl.scrollLeft = editor.scrollLeft; edhl.scrollTop = editor.scrollTop; if (ev !== 'scroll' && editing) updateFnPopups(); });
+  });
+
+  // ---------- function suggestions and argument hints (shown under the edit bar, like NESA)
+  function caretX(inp, pos) {
+    var r = fx.getBoundingClientRect();
+    var src = inp === fx ? fx.value : editor.value;
+    return r.left + 13 + textWidth(src.slice(0, pos)) - fx.scrollLeft;
+  }
+  function fnPrefix(t, pos) {
+    if (t[0] !== '=') return null;
+    var before = t.slice(0, pos);
+    if ((before.match(/"/g) || []).length % 2) return null;
+    var m = /(^=|[=(,+\-*\/^&<>:;\s])([A-Za-z][A-Za-z0-9.]*)$/.exec(before);
+    return m ? { start: pos - m[2].length, text: m[2] } : null;
+  }
+  function callAt(t, pos) {
+    var stack = [], inStr = false;
+    for (var i = 0; i < pos && i < t.length; i++) {
+      var ch = t[i];
+      if (ch === '"') { inStr = !inStr; continue; } if (inStr) continue;
+      if (ch === '(') { var m = /([A-Za-z][A-Za-z0-9.]*)$/.exec(t.slice(0, i)); stack.push({ name: m ? m[1].toUpperCase() : '', arg: 0, at: m ? i - m[1].length : i }); }
+      else if (ch === ')') stack.pop();
+      else if (ch === ',' && stack.length) stack[stack.length - 1].arg++;
+    }
+    for (var k = stack.length - 1; k >= 0; k--) if (stack[k].name) return NESA_FN_SET[stack[k].name] ? stack[k] : null;
+    return null;
+  }
+  function insertFunction(inp, start, end, name) {
+    var t = inp.value; inp.value = t.slice(0, start) + name + '(' + t.slice(end);
+    var p = start + name.length + 1; inp.focus(); inp.setSelectionRange(p, p);
+    (inp === editor ? fx : editor).value = inp.value; point = null; $('pointbox').classList.add('hidden');
+    if (inp === editor) autoSizeEditor();
+    updateFormulaUI();
+  }
+  function updateFnPopups() {
+    var inp = activeInput();
+    if (!editing || !inp || inp.value[0] !== '=' || document.activeElement !== inp) { closePop('suggest'); closePop('hint'); return; }
+    var pos = inp.selectionStart, t = inp.value, fr = fx.getBoundingClientRect();
+    var pre = inp.selectionStart === inp.selectionEnd ? fnPrefix(t, pos) : null;
+    var list = pre ? NESA_FUNCS.filter(function (n) { return n.indexOf(pre.text.toUpperCase()) === 0; }) : [];
+    if (pre && list.length && !(list.length === 1 && list[0] === pre.text.toUpperCase() && t[pos] === '(')) {
+      closePop('hint');
+      var p = pops.suggest && pops.suggest._key === pre.text.toUpperCase() ? pops.suggest : null;
+      if (!p) {
+        p = openPop('suggest', 'wx-list fn-suggest', list.map(function (n) { return '<div class="wi" data-n="' + n + '">' + n + '</div>'; }).join(''));
+        p._key = pre.text.toUpperCase(); p._owner = inp;
+        p.addEventListener('mousedown', function (e) {
+          e.preventDefault(); var it = e.target.closest('.wi'); if (!it) return;
+          var cur = activeInput(), pr = fnPrefix(cur.value, cur.selectionStart); closePop('suggest');
+          if (pr) insertFunction(cur, pr.start, cur.selectionStart, it.getAttribute('data-n'));
+        });
+      }
+      p.style.left = Math.max(2, Math.min(caretX(inp, pre.start), window.innerWidth - 354)) + 'px'; p.style.top = fr.bottom + 'px';
+      return;
+    }
+    closePop('suggest');
+    var call = callAt(t, pos);
+    if (!call) { closePop('hint'); return; }
+    var args = FN_ARGS[call.name] || [];
+    var html = '<p><span class="fh-name">' + call.name + '</span><span class="fh-cat">' + FN_CAT_LABEL[fnCategory(call.name)] + '</span></p>' +
+      args.map(function (a, i) { return '<p' + (i === call.arg ? ' class="on"' : '') + '><span class="fh-p">' + a[0] + ': </span><span class="fh-desc">' + (a[1] ? 'Required. ' : 'Optional. ') + a[2] + '</span></p>'; }).join('');
+    var h = pops.hint || openPop('hint', 'fn-hint');
+    h._owner = inp;
+    if (h._html !== html) { h.innerHTML = html; h._html = html; }
+    h.style.left = Math.max(2, Math.min(caretX(inp, call.at), window.innerWidth - 354)) + 'px'; h.style.top = fr.bottom + 'px';
+  }
+
+  // ---------- f(x): category + search + list of NESA's functions
+  $('fxbtn').addEventListener('mousedown', function (e) { e.preventDefault(); });
+  $('fxbtn').addEventListener('click', function () {
+    if (readOnly) return;
+    if (pops.fx) { closePop('fx'); return; }
+    var btn = $('fxbtn'), b = btn.getBoundingClientRect();
+    var p = openPop('fx', 'fx-pop', frow('Category', '<select class="wx-in" id="fxcat"><option value=""></option>' + ['common', 'date', 'text', 'number', 'financial', 'array'].map(function (k) { return '<option value="' + k + '">' + FN_CAT_LABEL[k] + '</option>'; }).join('') + '</select>', 74) +
+      frow('Search', '<input class="wx-in" id="fxq" autocomplete="off">', 74) + '<div class="wx-list" id="fxlist"></div>');
+    p._owner = btn; btn.classList.add('open'); p._onclose = function () { btn.classList.remove('open'); };
+    p.style.left = b.left + 'px'; p.style.top = b.bottom + 'px';
+    var cat = p.querySelector('#fxcat'), q = p.querySelector('#fxq'), list = p.querySelector('#fxlist');
+    function draw() {
+      var s = q.value.trim().toUpperCase();
+      list.innerHTML = NESA_FUNCS.filter(function (n) { return (!cat.value || fnCategory(n) === cat.value) && (!s || n.indexOf(s) >= 0); }).map(function (n) { return '<div class="wi">' + n + '</div>'; }).join('');
+    }
+    cat.onchange = draw; q.oninput = draw; draw(); q.focus();
+    list.addEventListener('mousedown', function (e) {
+      e.preventDefault(); var it = e.target.closest('.wi'); if (!it) return;
+      var name = it.textContent; closePop('fx');
+      if (!editing) { if (isLocked(act.r, act.c)) { flash('This cell is locked.'); return; } beginEdit(true, '='); }
+      var inp = activeInput(); if (!inp) return;
+      if (inp.value[0] !== '=') inp.value = '=' + inp.value;
+      var pos = inp === document.activeElement ? inp.selectionStart : inp.value.length;
+      insertFunction(inp, pos, pos, name);
+    });
+  });
+
+  // ---------- comments: a note box beside the cell (typed straight in), shown on hover
+  function commentDialog() {
+    if (readOnly) return; commitEdit();
+    var r = act.r, c = act.c, k = key(r, c), td = tds[r][c], b = td.getBoundingClientRect();
+    var p = openPop('comment', 'cm-pop', '<textarea spellcheck="false"></textarea>');
+    var ta = p.querySelector('textarea'); ta.value = comments[k] || '';
+    p.style.left = b.right + 'px'; p.style.top = b.top + 'px';
+    p._onclose = function () {
+      var v = ta.value; if (v === (comments[k] || '')) return;
+      beginChange(); if (v.trim()) comments[k] = v; else delete comments[k]; endChange(false);
+    };
+    setTimeout(function () { ta.focus(); }, 0);
+  }
+  var hoverCm = null;
+  grid.addEventListener('mouseover', function (e) {
+    var cell = cellFromEvent(e);
+    var k = cell && key(cell.r, cell.c);
+    if (cell && comments[k] && !pops.comment) {
+      if (hoverCm === k) return; hoverCm = k;
+      var b = tds[cell.r][cell.c].getBoundingClientRect();
+      var p = openPop('cmview', 'cm-pop view', '<textarea readonly></textarea>'); p.querySelector('textarea').value = comments[k];
+      p.style.left = b.right + 'px'; p.style.top = b.top + 'px'; p.style.pointerEvents = 'none';
+    } else if (!cell || !comments[k]) { hoverCm = null; closePop('cmview'); }
+  });
+  grid.addEventListener('mouseleave', function () { hoverCm = null; closePop('cmview'); });
+
+  // ---------- input message of a validated cell: shown under the cell while it is selected
+  function showInputMessage() {
+    closePop('vmsg');
+    var vr = normVr((styles[key(act.r, act.c)] || {}).vr);
+    if (!vr || !vr.input || editing) return;
+    var g = norm(sel); if (g.r1 !== g.r2 || g.c1 !== g.c2) { var m = mergeAt(act.r, act.c); if (!m) return; }
+    var b = tds[act.r][act.c].getBoundingClientRect();
+    var p = openPop('vmsg', 'cm-pop msg', '<textarea readonly></textarea>'); p.querySelector('textarea').value = vr.input;
+    p.style.left = b.left + 'px'; p.style.top = b.bottom + 'px';
+  }
+
+  // ---------- dropdown cells: double-click opens the list (sorted, like NESA)
+  function dropdownOptions(st) {
+    var opts = [], g = parseRange(st.dd);
+    if (g && /^\$?[A-Z]+\$?\d+(:\$?[A-Z]+\$?\d+)?$/i.test(String(st.dd).trim())) { for (var rr = g.r1; rr <= g.r2; rr++) for (var cc = g.c1; cc <= g.c2; cc++) { var t = displayText(rr, cc); if (t !== '' && opts.indexOf(t) < 0) opts.push(t); } }
+    else opts = String(st.dd).split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    opts.sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }); });
+    if (st.ddEmpty) opts.unshift('');
+    return opts;
+  }
+  function openDropdownList(r, c) {
+    var st = styles[key(r, c)] || {}; if (!st.dd || readOnly) return;
+    if (isLocked(r, c)) { flash('This cell is locked.'); return; }
+    var b = tds[r][c].getBoundingClientRect(), list = dropdownOptions(st);
+    if (!b.width || !b.height) return;   // hidden row / column
+    var p = openPop('dd', 'wx-list dd-list', list.map(function (o, i) { return '<div class="wi" data-i="' + i + '">' + (o === '' ? '&nbsp;' : escapeHtml(o)) + '</div>'; }).join(''));
+    p.style.left = b.left + 'px'; p.style.top = b.bottom + 'px'; p.style.width = Math.max(b.width, 80) + 'px';
+    p.addEventListener('mousedown', function (e) {
+      e.preventDefault(); var it = e.target.closest('.wi'); if (!it) return;
+      var v = list[+it.getAttribute('data-i')]; closePop('dd');
+      if (v !== getRaw(r, c)) { beginChange(); setRawNoRender(r, c, v); endChange(false); }
+      editor.focus({ preventScroll: true });
+    });
+  }
+  function dropdownDialog() {
+    if (readOnly) return; commitEdit();
+    var st = styles[key(act.r, act.c)] || {};
+    dialog('Add dropdown', frow('Range', '<input class="wx-in" id="ddr" autocomplete="off">', 110) + frow('Empty option', '<input type="checkbox" id="dde">', 110) + btns([['ddc', 'Cancel'], ['dds', 'Save', 'sec']]), function (d, close) {
+      d.querySelector('#ddr').value = st.dd || ''; d.querySelector('#dde').checked = !!st.ddEmpty;
+      d.querySelector('#ddc').onclick = close;
+      d.querySelector('#dds').onclick = function () {
+        var v = d.querySelector('#ddr').value.trim(), rg = parseRange(v.replace(/^.*!/, '').toUpperCase());
+        if (!v) { close(); applyStyle({ dd: null, ddEmpty: null }); return; }
+        close(); applyStyle({ dd: rg ? rangeStr(rg) : v, ddEmpty: d.querySelector('#dde').checked || null });
+      };
+    }, 280);
+  }
+
+  // ---------- links
+  function linkDialog() {
+    if (readOnly) return; commitEdit();
+    var r = act.r, c = act.c, cur = parseLink(raws[key(r, c)]);
+    if (isLocked(r, c)) { flash('This cell is locked.'); return; }
+    dialog('Add Link', '<div class="frow"><div class="fc"><input class="wx-in" id="lkn" placeholder="Text" autocomplete="off"></div></div><div class="frow"><div class="fc"><input class="wx-in" id="lku" placeholder="URL" autocomplete="off"></div></div>' + btns([['lkc', 'Cancel'], ['lks', 'Save', 'sec']]), function (d, close) {
+      var n = d.querySelector('#lkn'), u = d.querySelector('#lku');
+      n.value = cur ? cur.text : (getRaw(r, c)[0] === '=' ? '' : getRaw(r, c)); u.value = cur ? cur.url : '';
+      d.querySelector('#lkc').onclick = close;
+      d.querySelector('#lks').onclick = function () {
+        var url = u.value.trim();
+        if (!url) { close(); if (cur) { beginChange(); setRawNoRender(r, c, cur.text); endChange(false); } return; }
+        if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = 'http://' + url;
+        var name = n.value.trim() || url;
+        close(); beginChange();
+        setRawNoRender(r, c, '=HYPERLINK("' + url.replace(/"/g, '""') + '","' + name.replace(/"/g, '""') + '")');
+        endChange(false);
+      };
+    }, 308);
+  }
+
+  // ---------- data validation (same types, conditions and error handling as NESA)
+  var VAL_TYPES = [['any', 'Any'], ['date', 'Date'], ['number', 'Number'], ['text', 'Text'], ['textLength', 'Text length'], ['range', 'Range']];
+  var C_NUM = [['greater', 'greater'], ['less', 'less'], ['greaterOrEqual', 'greater or equal'], ['lessOrEqual', 'less or equal'], ['equal', 'equal'], ['notEqual', 'not equal']];
+  var C_TEXT = [['contains', 'contains'], ['notContains', 'not contains'], ['equal', 'equal'], ['notEqual', 'not equal'], ['beginsWith', 'begins with'], ['notBeginsWith', 'not begins with'], ['endsWith', 'ends with'], ['notEndsWith', 'not ends with']];
+  var C_BETWEEN = [['between', 'between'], ['notBetween', 'not between']];
+  function valConds(type) {
+    if (type === 'number') return C_NUM.concat([['contains', 'contains'], ['notContains', 'not contains']], C_BETWEEN);
+    if (type === 'date') return C_NUM.concat(C_BETWEEN);
+    if (type === 'text') return C_TEXT;
+    if (type === 'textLength') return C_NUM;
+    return [];
+  }
+  // older saved rules (whole number / list / …) are read as the NESA kinds
+  function normVr(vr) {
+    if (!vr) return null;
+    if (vr.handle || /^(any|date|number|text|textLength|range)$/.test(vr.type)) return vr;
+    var opMap = { '>': 'greater', '<': 'less', '>=': 'greaterOrEqual', '<=': 'lessOrEqual', '=': 'equal', '!=': 'notEqual', between: 'between', notbetween: 'notBetween' };
+    var t = { integer: 'number', decimal: 'number', list: 'range', date: 'date', length: 'textLength' }[vr.type] || 'any';
+    return { type: t, integer: vr.type === 'integer', ignoreEmpty: vr.ignoreBlank !== false, op: opMap[vr.op] || 'equal', v1: t === 'range' ? vr.source : vr.v1, v2: vr.v2, input: '', handle: 'stop', title: '', message: vr.message || '' };
+  }
+  function valNum(s, type) {
+    if (s == null || s === '') return NaN;
+    var ref = parseA1(String(s)); if (ref) { var rv = cellValue(ref.r, ref.c); return typeof rv === 'number' ? rv : NaN; }
+    if (type === 'date') { var d = mdyToSerial(String(s)); if (d != null) return d; }
+    return +s;
+  }
+  function textOp(op, s, t) {
+    s = String(s).toLowerCase(); t = String(t == null ? '' : t).toLowerCase();
+    switch (op) {
+      case 'contains': return s.indexOf(t) >= 0; case 'notContains': return s.indexOf(t) < 0;
+      case 'equal': return s === t; case 'notEqual': return s !== t;
+      case 'beginsWith': return s.indexOf(t) === 0; case 'notBeginsWith': return s.indexOf(t) !== 0;
+      case 'endsWith': return t !== '' && s.slice(-t.length) === t; case 'notEndsWith': return !(t !== '' && s.slice(-t.length) === t);
+    }
+    return true;
+  }
+  function numOp(op, n, a, b) {
+    switch (op) {
+      case 'greater': return n > a; case 'less': return n < a; case 'greaterOrEqual': return n >= a; case 'lessOrEqual': return n <= a;
+      case 'equal': return n === a; case 'notEqual': return n !== a;
+      case 'between': return n >= Math.min(a, b) && n <= Math.max(a, b); case 'notBetween': return !(n >= Math.min(a, b) && n <= Math.max(a, b));
+    }
+    return true;
+  }
+  function listOptions(src) {
+    var g = parseRange(String(src || '').replace(/^.*!/, '').toUpperCase()), out = [];
+    if (g && /^\$?[A-Z]+\$?\d+(:\$?[A-Z]+\$?\d+)?$/i.test(String(src).replace(/^.*!/, '').trim())) { for (var r = g.r1; r <= g.r2; r++) for (var c = g.c1; c <= g.c2; c++) { var t = displayText(r, c); if (t !== '') out.push(t); } }
+    else out = String(src || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    return out;
+  }
+  function isValidValue(r, c) {
+    var vr = normVr((styles[key(r, c)] || {}).vr); if (!vr || vr.type === 'any') return true;
+    var v = cellValue(r, c), txt = displayText(r, c);
+    if (v == null || v === '') return vr.ignoreEmpty !== false;
+    if (isError(v)) return false;
+    switch (vr.type) {
+      case 'number':
+        if (vr.op === 'contains' || vr.op === 'notContains') return typeof v === 'number' && textOp(vr.op, txt, vr.v1);
+        if (typeof v !== 'number' || (vr.integer && !Number.isInteger(v))) return false;
+        return numOp(vr.op, v, valNum(vr.v1), valNum(vr.v2));
+      case 'date': return typeof v === 'number' && numOp(vr.op, Math.floor(v), valNum(vr.v1, 'date'), valNum(vr.v2, 'date'));
+      case 'text': return textOp(vr.op, txt, vr.v1);
+      case 'textLength': return numOp(vr.op, String(txt).length, valNum(vr.v1), valNum(vr.v2));
+      case 'range': return listOptions(vr.v1).some(function (o) { return o.toLowerCase() === String(txt).toLowerCase(); });
+    }
+    return true;
+  }
+  // Webix alert: Information (Save), Warning (Restore / Save), Stop (Restore)
+  function validationAlert(vr, onRestore, onKeep) {
+    var bg = document.createElement('div'); bg.className = 'wx-alert-bg';
+    var a = document.createElement('div'); a.className = 'wx-alert ' + (vr.handle || 'stop');
+    var buttons = vr.handle === 'information' ? [['Save', 'pri', onKeep]] : vr.handle === 'warning' ? [['Restore', '', onRestore], ['Save', 'pri', onKeep]] : [['Restore', 'pri', onRestore]];
+    a.innerHTML = '<div class="t">' + escapeHtml(vr.title || '') + '</div><div class="m">' + escapeHtml(vr.message || 'The value is not valid.') + '</div><div class="b"></div>';
+    buttons.forEach(function (bt) { var b = document.createElement('button'); b.type = 'button'; b.className = 'wx-btn ' + bt[1]; b.textContent = bt[0]; b.onclick = function () { bg.remove(); a.remove(); bt[2](); editor.focus({ preventScroll: true }); }; a.querySelector('.b').appendChild(b); });
+    document.body.append(bg, a); a.querySelector('button:last-child').focus();
+  }
+  function validationDialog() {
+    if (readOnly) return; commitEdit();
+    var cur = normVr((styles[key(act.r, act.c)] || {}).vr) || { type: 'any', handle: 'information' };
+    var lw = 150;
+    dialog('Add data validation',
+      frow('Type', '<select class="wx-in" id="vt">' + opts(VAL_TYPES, cur.type) + '</select>', lw) +
+      frow('Integers only', '<input type="checkbox" id="vint">', lw, false, 'v-int') +
+      frow('Ignore empty', '<input type="checkbox" id="vie">', lw, false, 'v-adv') +
+      frow('Condition', '<select class="wx-in" id="vop"></select>', lw, true, 'v-cond') +
+      frow('Value', '<div class="vals2" style="width:100%"><input class="wx-in" id="v1" autocomplete="off"><input class="wx-in" id="v2" autocomplete="off"></div>', lw, true, 'v-val') +
+      frow('Input message', '<textarea class="wx-ta" id="vin"></textarea>', lw) +
+      frow('Error handle', '<select class="wx-in" id="vh">' + opts([['information', 'Information'], ['warning', 'Warning'], ['stop', 'Stop']], cur.handle || 'information') + '</select>', lw, false, 'v-adv') +
+      frow('Error title', '<input class="wx-in" id="vtt" autocomplete="off">', lw, false, 'v-adv') +
+      frow('Error message', '<textarea class="wx-ta" id="vm"></textarea>', lw, false, 'v-adv') +
+      btns([['vc', 'Cancel'], ['vs', 'Save', 'sec']]), function (d, close) {
+        var vt = d.querySelector('#vt'), vop = d.querySelector('#vop');
+        d.querySelector('#vint').checked = !!cur.integer; d.querySelector('#vie').checked = !!cur.ignoreEmpty;
+        d.querySelector('#v1').value = cur.v1 == null ? '' : cur.v1; d.querySelector('#v2').value = cur.v2 == null ? '' : cur.v2;
+        d.querySelector('#vin').value = cur.input || ''; d.querySelector('#vtt').value = cur.title || ''; d.querySelector('#vm').value = cur.message || '';
+        function show(cls, on) { Array.prototype.forEach.call(d.querySelectorAll('.' + cls), function (x) { x.style.display = on ? '' : 'none'; }); }
+        function sync(first) {
+          var t = vt.value, keep = first ? cur.op : vop.value;
+          var list = valConds(t); vop.innerHTML = '<option value="" hidden></option>' + opts(list, keep);
+          if (!list.some(function (o) { return o[0] === keep; })) vop.value = '';
+          show('v-adv', t !== 'any'); show('v-int', t === 'number'); show('v-cond', list.length > 0); show('v-val', t !== 'any');
+          var two = /etween/.test(vop.value); d.querySelector('#v2').style.display = two ? '' : 'none';
+          d.querySelector('#v1').placeholder = t === 'number' || t === 'textLength' ? '123' : t === 'date' ? 'mm/dd/yyyy' : t === 'range' ? 'A1:A10' : '';
+          d.querySelector('#v2').placeholder = d.querySelector('#v1').placeholder;
+        }
+        vt.onchange = function () { sync(false); }; vop.onchange = function () { sync(false); }; sync(true);
+        d.querySelector('#vc').onclick = close;
+        d.querySelector('#vs').onclick = function () {
+          var t = vt.value;
+          if (t === 'any') { var msg = d.querySelector('#vin').value; close(); applyStyle({ vr: msg ? { type: 'any', input: msg } : null }); return; }
+          var rule = { type: t, integer: t === 'number' && d.querySelector('#vint').checked, ignoreEmpty: d.querySelector('#vie').checked, op: vop.value,
+            v1: d.querySelector('#v1').value.trim(), v2: d.querySelector('#v2').value.trim(), input: d.querySelector('#vin').value,
+            handle: d.querySelector('#vh').value, title: d.querySelector('#vtt').value, message: d.querySelector('#vm').value };
+          if (t !== 'range' && !rule.op) { vop.focus(); vop.style.borderBottomColor = '#ff5c4c'; return; }
+          if (!rule.v1) { d.querySelector('#v1').focus(); d.querySelector('#v1').style.borderBottomColor = '#ff5c4c'; return; }
+          if (t === 'range') delete rule.op;
+          close(); applyStyle({ vr: rule });
+        };
+      }, 450);
+  }
+  function removeValidation() { applyStyle({ vr: null }); }
+  function setHighlightInvalid(on) { highlightInvalid = on; renderCells(); schedulePost(); }
+
+  // ---------- Find and Replace
+  function findDialog() {
+    if (readOnly) return; commitEdit();
+    var lw = 110, body =
+      '<div style="display:flex;gap:24px"><div style="flex:1">' + frow('Find what:', '<input class="wx-in" id="fw" autocomplete="off">', lw) + frow('Replace with:', '<input class="wx-in" id="rw" autocomplete="off">', lw) + '</div>' +
+      '<div style="flex:1">' + frow('Within:', '<select class="wx-in" id="fwi"><option value="sheet">Sheet</option></select>', 140) + frow('Look in', '<select class="wx-in" id="flk"><option value="formulas">Formulas</option><option value="values">Values</option></select>', 140) +
+      frow('Match case', '<input type="checkbox" id="fcase">', 140) + frow('Match entire cell cont…', '<input type="checkbox" id="fwhole">', 140) + '</div></div>' +
+      '<div style="margin-top:10px;height:120px;overflow:auto;border-bottom:1px solid #edeff0"><table class="wx-table"><thead><tr><th>Sheet</th><th>Cell</th><th>Value</th><th>Formula</th></tr></thead><tbody id="fres"></tbody></table></div>' +
+      btns([['fclose', 'Cancel'], ['frall', 'Replace all', 'sec'], ['fr', 'Replace', 'sec'], ['fall', 'Find all', 'sec'], ['fnext', 'Find next', 'sec']]);
+    dialog('Find and Replace', body, function (d, close) {
+      var fw = d.querySelector('#fw'), rw = d.querySelector('#rw'), res = d.querySelector('#fres');
+      function o() { return { q: fw.value, cs: d.querySelector('#fcase').checked, whole: d.querySelector('#fwhole').checked, form: d.querySelector('#flk').value === 'formulas' }; }
+      function textOf(r, c, x) { var raw = getRaw(r, c); return x.form && raw !== '' ? raw : displayText(r, c); }
+      function hit(r, c, x) { var t = textOf(r, c, x), q = x.q; if (!q || t === '') return false; if (!x.cs) { t = t.toLowerCase(); q = q.toLowerCase(); } return x.whole ? t === q : t.indexOf(q) >= 0; }
+      function next() {
+        var x = o(); if (!x.q) { fw.focus(); return false; }
+        var start = act.r * COLS + act.c, total = ROWS * COLS;
+        for (var k = 1; k <= total; k++) { var idx = (start + k) % total, r = Math.floor(idx / COLS), c = idx % COLS; if (isRowHidden(r) || hiddenCols[c]) continue; if (hit(r, c, x)) { setSelection(r, c, r, c); scrollIntoViewCell(r, c); return true; } }
+        flash('Nothing was found'); return false;
+      }
+      function findAll() {
+        var x = o(); res.innerHTML = ''; if (!x.q) return;
+        for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) if (hit(r, c, x)) {
+          var tr = document.createElement('tr'); var raw = getRaw(r, c);
+          tr.innerHTML = '<td>Sheet1</td><td>' + a1(r, c) + '</td><td>' + escapeHtml(displayText(r, c)) + '</td><td>' + (raw[0] === '=' ? escapeHtml(raw) : '') + '</td>';
+          (function (rr, cc) { tr.onclick = function () { Array.prototype.forEach.call(res.rows, function (x2) { x2.classList.remove('on'); }); tr.classList.add('on'); setSelection(rr, cc, rr, cc); scrollIntoViewCell(rr, cc); }; })(r, c);
+          res.appendChild(tr);
+        }
+        if (!res.rows.length) flash('Nothing was found');
+      }
+      function replaceIn(r, c, x) {
+        var raw = getRaw(r, c); if (isLocked(r, c)) return false;
+        var re = new RegExp(x.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), x.cs ? 'g' : 'gi');
+        var out = x.whole ? rw.value : raw.replace(re, rw.value);
+        if (out === raw) return false; setRawNoRender(r, c, out); return true;
+      }
+      d.querySelector('#fnext').onclick = next; d.querySelector('#fall').onclick = findAll;
+      fw.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); next(); } });
+      d.querySelector('#fr').onclick = function () { var x = o(); if (!x.q) return; if (hit(act.r, act.c, x)) { beginChange(); if (replaceIn(act.r, act.c, x)) endChange(false); else undoStack.pop(); } next(); };
+      d.querySelector('#frall').onclick = function () {
+        var x = o(); if (!x.q) return; beginChange();
+        var hits = []; for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) if (hit(r, c, x)) hits.push([r, c]);
+        var n = 0; hf.batch(function () { hits.forEach(function (h) { if (replaceIn(h[0], h[1], x)) n++; }); });
+        if (n) endChange(false); else undoStack.pop();
+        flash(n ? n + ' cell' + (n === 1 ? ' was' : 's were') + ' replaced' : 'Nothing was found');
+      };
+      d.querySelector('#fclose').onclick = close;
+    }, 700);
+  }
+
+  // ---------- Resize row / column
+  function resizeDialog(isRow) {
+    if (readOnly) return; commitEdit();
+    var g = norm(sel), idx = isRow ? g.r1 : g.c1, cur = isRow ? (rowH[idx] || DEF_H) : (colW[idx] || DEF_W);
+    dialog(isRow ? 'Resize row' : 'Resize column', frow(isRow ? 'Row height' : 'Column width', '<input class="wx-in" id="rsz" autocomplete="off">', 130) + btns([['rszc', 'Cancel'], ['rszs', 'Save', 'sec']]), function (d, close) {
+      var inp = d.querySelector('#rsz'); inp.value = cur; inp.select();
+      function save() { var n = Math.round(Math.max(isRow ? 16 : 20, Math.min(800, +inp.value || cur))); close(); beginChange(); for (var i = (isRow ? g.r1 : g.c1); i <= (isRow ? g.r2 : g.c2); i++) { if (isRow) rowH[i] = n; else colW[i] = n; } endChange(true); }
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') save(); });
+      d.querySelector('#rszc').onclick = close; d.querySelector('#rszs').onclick = save;
+    }, 320);
+  }
+
+  // ---------- double-click a header border: fit the column width / row height to the contents (NESA)
+  function autofit(isCol, idx) {
+    if (readOnly) return; commitEdit();
+    if (isCol) {
+      var w = 0;
+      for (var r = 0; r < ROWS; r++) {
+        if (mergeAt(r, idx) && (mergeAt(r, idx).c1 !== mergeAt(r, idx).c2)) continue;
+        var t = displayText(r, idx); if (t === '') continue;
+        var st = styles[key(r, idx)] || {};
+        w = Math.max(w, textWidth(t, (st.b ? '700 ' : '') + (st.i ? 'italic ' : '') + (st.fs || parseInt(getComputedStyle(grid).fontSize, 10) || 16) + 'px Roboto, sans-serif') + 35 + (st.dd ? 16 : 0) + (st.indent ? st.indent * 14 : 0));
+      }
+      beginChange(); colW[idx] = Math.max(40, Math.ceil(w || DEF_W)); endChange(true);
+    } else {
+      var h = DEF_H, probe = document.createElement('div');
+      probe.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;white-space:pre-wrap;word-break:break-word;line-height:1.25;font-family:Roboto,sans-serif';
+      document.body.appendChild(probe);
+      for (var c = 0; c < COLS; c++) {
+        var s2 = styles[key(idx, c)] || {}, tx = displayText(idx, c); if (!tx || !s2.wrap) continue;
+        probe.style.width = ((colW[c] || DEF_W) - 24) + 'px'; probe.style.fontSize = (s2.fs || 16) + 'px'; probe.textContent = tx;
+        h = Math.max(h, probe.offsetHeight + 12);
+      }
+      probe.remove(); beginChange(); rowH[idx] = h; endChange(true);
+    }
+  }
+  grid.addEventListener('dblclick', function (e) {
+    var rz = e.target.closest('.col-resizer, .row-resizer');
+    if (rz) { e.preventDefault(); e.stopPropagation(); var isCol = rz.classList.contains('col-resizer'); autofit(isCol, +rz.getAttribute(isCol ? 'data-c' : 'data-r')); return; }
+    var cell = cellFromEvent(e); if (!cell || readOnly) return;
+    setSelection(cell.r, cell.c, cell.r, cell.c);
+    if ((styles[key(cell.r, cell.c)] || {}).dd) openDropdownList(cell.r, cell.c); else beginEdit(false);
+  });
+
+  // ---------- Named ranges
+  function namedRangesDialog() {
+    if (readOnly) return; commitEdit();
+    var g = norm(sel);
+    var body = '<div style="display:flex;gap:16px"><div style="flex:0 0 400px;height:170px;overflow:auto;border-bottom:1px solid #edeff0"><table class="wx-table"><thead><tr><th style="width:105px">Name</th><th style="width:130px">Range</th><th>Scope</th><th style="width:28px"></th><th style="width:28px"></th></tr></thead><tbody id="nlist"></tbody></table></div>' +
+      '<div style="flex:1">' + frow('Name', '<input class="wx-in" id="nname" autocomplete="off">', 80) + frow('Range', '<input class="wx-in" id="nrange" autocomplete="off">', 80) + frow('Scope', '<select class="wx-in" id="nscope"><option value="book">Book</option><option value="sheet">Sheet1</option></select>', 80) + '</div></div>' +
+      btns([['nclose', 'Cancel'], ['nsave', 'Save', 'sec']]);
+    dialog('Named ranges', body, function (d, close) {
+      var editingName = null;
+      d.querySelector('#nrange').value = 'Sheet1!' + rangeStr(g);
+      function list() {
+        var tb2 = d.querySelector('#nlist'); tb2.innerHTML = '';
+        Object.keys(named).forEach(function (n) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td>' + escapeHtml(n) + '</td><td>Sheet1!' + escapeHtml(named[n]) + '</td><td>Book</td><td class="ed" style="cursor:pointer;color:#94a1b3"><i class="fas fa-pen"></i></td><td class="del" style="cursor:pointer;color:#94a1b3"><i class="fas fa-trash"></i></td>';
+          tr.querySelector('.ed').onclick = function () { editingName = n; d.querySelector('#nname').value = n; d.querySelector('#nrange').value = 'Sheet1!' + named[n]; };
+          tr.querySelector('.del').onclick = function () { beginChange(); delete named[n]; syncNamed(); endChange(false); list(); };
+          tb2.appendChild(tr);
+        });
+      }
+      list();
+      d.querySelector('#nclose').onclick = close;
+      d.querySelector('#nsave').onclick = function () {
+        var n = d.querySelector('#nname').value.trim(), rg = parseRange(d.querySelector('#nrange').value.replace(/^.*!/, '').toUpperCase());
+        if (!/^[A-Za-z_][A-Za-z0-9_.]*$/.test(n) || parseA1(n)) { d.querySelector('#nname').style.borderBottomColor = '#ff5c4c'; d.querySelector('#nname').focus(); return; }
+        if (!rg) { d.querySelector('#nrange').style.borderBottomColor = '#ff5c4c'; d.querySelector('#nrange').focus(); return; }
+        beginChange(); if (editingName && editingName !== n) delete named[editingName]; named[n] = rangeStr(rg); syncNamed(); endChange(false); close();
+      };
+    }, 700);
+  }
+
+  // ---------- Conditional Format (Display / Condition / Value rows)
+  function condDialog() {
+    if (readOnly) return; commitEdit();
+    var g = norm(sel), range = rangeStr(g);
+    var existing = conds.filter(function (r) { var rg = parseRange(r.range); return rg && overlaps(rg, g); });
+    var OPS = [['Common', null], ['greater', '>'], ['less', '<'], ['greater or equal', '>='], ['less or equal', '<='], ['equal', '='], ['not equal', '!='], ['between', 'between'], ['not between', 'notbetween'],
+      ['Text', null], ['contains', 'contains'], ['not contains', 'notcontains'], ['begins with', 'begins'], ['not begins with', 'notbegins'], ['ends with', 'ends'], ['not ends with', 'notends']];
+    function opHtml(cur) { var h = '<option value="" hidden>Operator</option>', open = false; OPS.forEach(function (o) { if (o[1] === null) { h += (open ? '</optgroup>' : '') + '<optgroup label="' + o[0] + '">'; open = true; } else h += '<option value="' + o[1] + '"' + (o[1] === cur ? ' selected' : '') + '>' + o[0] + '</option>'; }); return h + '</optgroup>'; }
+    var body = '<div class="cf-grid"><div class="h">Display</div><div class="h">Condition</div><div class="h">Value</div><div class="h cf-ic" id="cfadd" title="Add"><i class="fas fa-plus-circle"></i></div><div class="cf-rows" id="cfrows"></div></div>' + btns([['cfc', 'Cancel'], ['cfs', 'Save', 'sec']]);
+    dialog('Conditional Format', body, function (d, close) {
+      var rowsEl = d.querySelector('#cfrows');
+      function addRow(rule) {
+        rule = rule || {};
+        var st = typeof rule.style === 'string' ? rule.style : '';
+        var wrap2 = document.createElement('div'); wrap2.style.display = 'contents';
+        wrap2.innerHTML = '<select class="wx-in cf-st"><option value="" hidden>Style</option>' + ['normal', 'neutral', 'bad', 'good'].map(function (s) { return '<option value="' + s + '"' + (s === st ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>' +
+          '<select class="wx-in cf-op">' + opHtml(rule.op) + '</select><div class="vals2"><input class="wx-in cf-v1" autocomplete="off"><input class="wx-in cf-v2" autocomplete="off"></div><div class="cf-ic cf-del" title="Delete"><i class="fas fa-trash"></i></div>';
+        var s = wrap2.querySelector('.cf-st'), op = wrap2.querySelector('.cf-op'), v2 = wrap2.querySelector('.cf-v2');
+        wrap2.querySelector('.cf-v1').value = rule.v1 == null ? '' : rule.v1; v2.value = rule.v2 == null ? '' : rule.v2;
+        function sync() { v2.style.display = /between/.test(op.value) ? '' : 'none'; s.className = 'wx-in cf-st st-' + s.value; }
+        s.onchange = sync; op.onchange = sync; sync();
+        wrap2.querySelector('.cf-del').onclick = function () { wrap2.remove(); };
+        rowsEl.appendChild(wrap2);
+      }
+      existing.forEach(addRow); for (var i = existing.length; i < 3; i++) addRow();
+      d.querySelector('#cfadd').onclick = function () { addRow(); };
+      d.querySelector('#cfc').onclick = close;
+      d.querySelector('#cfs').onclick = function () {
+        beginChange();
+        conds = conds.filter(function (r) { return existing.indexOf(r) < 0; });
+        Array.prototype.forEach.call(rowsEl.children, function (w) {
+          var st = w.querySelector('.cf-st').value, op = w.querySelector('.cf-op').value; if (!st || !op) return;
+          conds.push({ range: range, style: st, op: op, v1: w.querySelector('.cf-v1').value, v2: w.querySelector('.cf-v2').value });
+        });
+        endChange(false); close();
+      };
+    }, 610);
+  }
+
+  // ---------- Set format (Currency / Number / Percent / Date / Custom)
+  function customFormatDialog() {
+    if (readOnly) return; commitEdit();
+    var st0 = styles[key(act.r, act.c)] || {}, f = { fmt: /^(currency|number|percent|date|custom)$/.test(st0.fmt) ? st0.fmt : 'currency', dec: st0.dec, group: st0.group, cur: st0.cur || '$', neg: st0.neg || 1, datePattern: st0.datePattern || 'date', pattern: st0.pattern || '' };
+    var cell = cellValue(act.r, act.c);
+    var body = '<div style="display:flex;min-height:300px"><div class="wx-side" id="sfl">' + [['currency', 'Currency'], ['number', 'Number'], ['percent', 'Percent'], ['date', 'Date'], ['custom', 'Custom']].map(function (x) { return '<div class="wi" data-f="' + x[0] + '">' + x[1] + '</div>'; }).join('') + '</div><div style="flex:1;padding-left:20px" id="sfp"></div></div>' + btns([['sfc', 'Cancel'], ['sfs', 'Save', 'sec']]);
+    dialog('Set format', body, function (d, close) {
+      var panel = d.querySelector('#sfp');
+      function sample() { return f.fmt === 'date' ? (typeof cell === 'number' ? cell : 45000.5) : (typeof cell === 'number' ? cell : 1234.567); }
+      function preview() { var st = { fmt: f.fmt, dec: f.dec, group: f.group, cur: f.cur, neg: f.neg, datePattern: f.datePattern, pattern: f.pattern }; var v = sample(); return '<span style="color:' + (negRed(v, st) ? '#ff0000' : 'inherit') + '">' + escapeHtml(fmtNumber(v, st)) + '</span>'; }
+      function draw() {
+        Array.prototype.forEach.call(d.querySelectorAll('#sfl .wi'), function (x) { x.classList.toggle('on', x.getAttribute('data-f') === f.fmt); });
+        var defDec = f.fmt === 'percent' ? 0 : 2, dec = f.dec == null ? defDec : f.dec, h = '<div class="fmt-prev" id="sfprev"></div>';
+        if (/currency|number|percent/.test(f.fmt)) {
+          h += frow('Decimal places', '<span class="wx-counter"><button type="button" id="dm">−</button><input id="dv" value="' + dec + '"><button type="button" id="dp">+</button></span>', 120);
+          if (f.fmt !== 'percent') h += frow('Group separator', '<input type="checkbox" id="gs"' + (f.group !== false ? ' checked' : '') + '>', 120);
+          if (f.fmt === 'currency') h += frow('Currency', '<select class="wx-in" id="cu">' + opts([['$', '$'], ['€', '€'], ['¥', '¥'], ['R$', 'R$'], ['rub.', 'rub.']], f.cur) + '</select>', 120);
+          h += '<div class="frow" style="align-items:flex-start"><span class="fl" style="width:120px;padding-top:6px">Negative number</span><div class="fc"><div class="neg-list" id="nl" style="width:100%"></div></div></div>';
+        } else if (f.fmt === 'date') {
+          h += '<div class="frow" style="align-items:flex-start"><span class="fl" style="width:120px;padding-top:6px">Date format</span><div class="fc"><div class="neg-list" id="dfl" style="width:100%">' + [['date', 'mm/dd/yyyy'], ['time', 'hh:mm AM/PM'], ['datetime', 'mm/dd/yyyy hh:mm AM/PM'], ['long', 'dd mmmm yyyy']].map(function (x) { return '<div class="wi" data-p="' + x[0] + '" style="text-align:left">' + x[1] + '</div>'; }).join('') + '</div></div></div>';
+        } else {
+          h += '<div style="font-weight:500;margin-top:4px">Format pattern</div><input class="wx-in" id="cp" autocomplete="off"><div style="margin-top:10px"><span class="wx-link" id="cphelp">How to create a format</span></div>';
+        }
+        panel.innerHTML = h;
+        function upd() { d.querySelector('#sfprev').innerHTML = preview(); }
+        var dv = panel.querySelector('#dv');
+        if (dv) {
+          function setDec(n) { f.dec = Math.max(0, Math.min(10, n)); dv.value = f.dec; upd(); drawNeg(); }
+          panel.querySelector('#dm').onclick = function () { setDec((+dv.value || 0) - 1); };
+          panel.querySelector('#dp').onclick = function () { setDec((+dv.value || 0) + 1); };
+          dv.onchange = function () { setDec(+dv.value || 0); };
+          var gs = panel.querySelector('#gs'); if (gs) gs.onchange = function () { f.group = gs.checked; upd(); drawNeg(); };
+          var cu = panel.querySelector('#cu'); if (cu) cu.onchange = function () { f.cur = cu.value; upd(); drawNeg(); };
+          var drawNeg = function () {
+            var nl = panel.querySelector('#nl'); nl.innerHTML = '';
+            [1, 2, 3, 4].forEach(function (n) {
+              var st = { fmt: f.fmt, dec: f.dec, group: f.group, cur: f.cur, neg: n };
+              var it = document.createElement('div'); it.className = 'wi' + (f.neg === n ? ' on' : ''); it.textContent = fmtNumber(-1234.567, st); if (n > 1) it.style.color = '#ff0000';
+              it.onclick = function () { f.neg = n; drawNeg(); upd(); }; nl.appendChild(it);
+            });
+          };
+          drawNeg();
+        }
+        var dfl = panel.querySelector('#dfl');
+        if (dfl) Array.prototype.forEach.call(dfl.children, function (it) { it.classList.toggle('on', it.getAttribute('data-p') === f.datePattern); it.onclick = function () { f.datePattern = it.getAttribute('data-p'); draw(); }; });
+        var cp = panel.querySelector('#cp');
+        if (cp) { cp.value = f.pattern || (f.datePattern ? 'mm/dd/yyyy' : '#,##0.00'); f.pattern = cp.value; cp.oninput = function () { f.pattern = cp.value; upd(); }; panel.querySelector('#cphelp').onclick = function () { flash('0 = digit, # = optional digit, , = thousands, . = decimals, % = percent; mm/dd/yyyy for dates'); }; }
+        upd();
+      }
+      Array.prototype.forEach.call(d.querySelectorAll('#sfl .wi'), function (x) { x.onclick = function () { f.fmt = x.getAttribute('data-f'); if (f.fmt !== 'custom') f.pattern = ''; draw(); }; });
+      draw();
+      d.querySelector('#sfc').onclick = function () { close(); updateToolbarState(); };
+      d.querySelector('#sfs').onclick = function () {
+        close();
+        var patch = { fmt: f.fmt, dec: f.fmt === 'date' || f.fmt === 'custom' ? null : (f.dec == null ? null : f.dec), group: f.fmt === 'currency' || f.fmt === 'number' ? (f.group === false ? false : null) : null,
+          cur: f.fmt === 'currency' && f.cur !== '$' ? f.cur : null, neg: /currency|number|percent/.test(f.fmt) && f.neg > 1 ? f.neg : null,
+          datePattern: f.fmt === 'date' && f.datePattern !== 'date' ? f.datePattern : null, pattern: f.fmt === 'custom' ? f.pattern : null };
+        applyStyle(patch);
+      };
+    }, 400);
+  }
+
+  // ---------- sparkline ("Graph › Add to cell")
+  function sparklineDialog() {
+    if (readOnly) return; commitEdit();
+    var target = { r: act.r, c: act.c };
+    var cur = parseSparkline(raws[key(target.r, target.c)]) || { type: 'line', range: '', color: '#6666FF', neg: '#FF6666' };
+    var lw = 90;
+    var body = frow('Type', '<select class="wx-in" id="spt">' + opts([['line', 'Line'], ['spline', 'Spline'], ['splineArea', 'Spline Area'], ['area', 'Area'], ['bar', 'Bar'], ['radar', 'Radar'], ['pie', 'Pie'], ['donut', 'Donut']], cur.type) + '</select>', lw) +
+      frow('Range', '<input class="wx-in" id="spr" autocomplete="off">', lw) +
+      frow('Color', '<input class="wx-in" id="spc"><span class="wx-swatch" id="spcs"></span>', lw, false, 'sp-col') +
+      frow('Positive', '<input class="wx-in" id="spp"><span class="wx-swatch" id="spps"></span>', lw, false, 'sp-bar') +
+      frow('Negative', '<input class="wx-in" id="spn"><span class="wx-swatch" id="spns"></span>', lw, false, 'sp-bar') +
+      frow('Horizontal', '<input type="checkbox" id="sph">', lw, false, 'sp-bar') +
+      '<div id="spprev" style="height:60px;display:flex;align-items:center;justify-content:center"></div>' + btns([['spx', 'Cancel'], ['sps', 'Save', 'sec']]);
+    dialog('Add sparkline', body, function (d, close) {
+      var t = d.querySelector('#spt'), rg = d.querySelector('#spr');
+      d.querySelector('#spc').value = cur.color; d.querySelector('#spp').value = cur.color; d.querySelector('#spn').value = cur.neg || '#FF6666'; rg.value = cur.range;
+      function swatch(inp, sw) { sw.style.background = inp.value; sw.onclick = function () { var b = sw.getBoundingClientRect(); var p = openPop('spcol', 'menu popup', ''); p.appendChild(colorBoard(inp.value, function (c) { inp.value = c.toUpperCase(); closePop('spcol'); sync(); })); p.style.left = (b.left - 200) + 'px'; p.style.top = b.bottom + 'px'; p._owner = sw; }; inp.oninput = function () { sync(); }; }
+      function formula() { var g = parseRange(rg.value.toUpperCase()); if (!g) return null; var bar = t.value === 'bar'; return '=SPARKLINE(' + rangeStr(g) + ',"' + t.value + '","' + (bar ? d.querySelector('#spp').value : d.querySelector('#spc').value) + '"' + (bar ? ',"' + d.querySelector('#spn').value + '"' : '') + ')'; }
+      function sync() {
+        var bar = t.value === 'bar', pie = /pie|donut/.test(t.value);
+        Array.prototype.forEach.call(d.querySelectorAll('.sp-bar'), function (x) { x.style.display = bar ? '' : 'none'; });
+        Array.prototype.forEach.call(d.querySelectorAll('.sp-col'), function (x) { x.style.display = bar || pie ? 'none' : ''; });
+        ['spc', 'spp', 'spn'].forEach(function (id) { d.querySelector('#' + id + 's').style.background = d.querySelector('#' + id).value; });
+        var f2 = formula(); d.querySelector('#spprev').innerHTML = f2 ? sparklineSvg(f2, { offsetWidth: 220, offsetHeight: 56 }) : '';
+      }
+      swatch(d.querySelector('#spc'), d.querySelector('#spcs')); swatch(d.querySelector('#spp'), d.querySelector('#spps')); swatch(d.querySelector('#spn'), d.querySelector('#spns'));
+      t.onchange = sync; rg.oninput = sync; sync();
+      d.querySelector('#spx').onclick = close;
+      d.querySelector('#sps').onclick = function () {
+        var f2 = formula(); if (!f2) { rg.style.borderBottomColor = '#ff5c4c'; rg.focus(); return; }
+        close(); beginChange(); setRawNoRender(target.r, target.c, f2); endChange(false);
+      };
+    }, 308);
+  }
+
+  // ---------- filters: a filter on each chosen header cell (NESA puts it only on the selected cells)
+  var F_NUM = [['greater', 'greater'], ['less', 'less'], ['greaterOrEqual', 'greater or equal'], ['lessOrEqual', 'less or equal'], ['equal', 'equal'], ['notEqual', 'not equal'], ['contains', 'contains'], ['notContains', 'not contains']];
+  function filterCells() {
+    if (!filter) return {};
+    if (!filter.cells && filter.range) {   // older saves: one filter range with value lists
+      var g = parseRange(filter.range), cells = {};
+      if (g) for (var c = g.c1; c <= g.c2; c++) { var cr = filter.crit && filter.crit[c]; cells[key(g.r1, c)] = Array.isArray(cr) ? { values: cr } : {}; }
+      filter = { cells: cells };
+    }
+    return filter.cells || {};
+  }
+  function filterDataRows(fr, fc) { var r = fr + 1, out = []; while (r < ROWS && getRaw(r, fc) !== '') { out.push(r); r++; } return out; }
+  function filterPasses(f, r, c) {
+    var v = cellValue(r, c), txt = displayText(r, c);
+    if (f.values && f.values.indexOf(txt) < 0) return false;
+    if (f.op && f.v != null && f.v !== '') {
+      if (/^(greater|less|greaterOrEqual|lessOrEqual)$/.test(f.op) || ((f.op === 'equal' || f.op === 'notEqual') && typeof v === 'number' && !isNaN(+f.v))) return typeof v === 'number' && numOp(f.op, v, +f.v);
+      return textOp(f.op, txt, f.v);
+    }
+    return true;
+  }
+  function rowHiddenByFilter(r) {
+    var cells = filterCells();
+    return Object.keys(cells).some(function (k) {
+      var p = k.split(','), fr = +p[0], fc = +p[1], f = cells[k];
+      if (r <= fr || (!f.values && !(f.op && f.v))) return false;
+      if (filterDataRows(fr, fc).indexOf(r) < 0) return false;
+      return !filterPasses(f, r, fc);
+    });
+  }
+  function toggleFilter() {
+    if (readOnly) return; commitEdit(); beginChange();
+    if (Object.keys(filterCells()).length) { filter = null; endChange(false); return; }
+    var g = norm(sel), cells = {};
+    for (var c = g.c1; c <= Math.min(g.c2, COLS - 1); c++) cells[key(g.r1, c)] = {};
+    filter = { cells: cells };
+    endChange(false);
+  }
+  function openFilterMenu(fr, fc, btn) {
+    var f = filterCells()[key(fr, fc)] || {}, rows = filterDataRows(fr, fc), vals = [], allNum = rows.length > 0;
+    rows.forEach(function (r) { var t = displayText(r, fc); if (vals.indexOf(t) < 0) vals.push(t); if (typeof cellValue(r, fc) !== 'number') allNum = false; });
+    vals.sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }); });
+    var conds2 = allNum ? F_NUM : C_TEXT, op = f.op || conds2[0][0];
+    var html = '<div class="flt-cond"><select class="wx-in" id="fop">' + opts(conds2, op) + '</select><input id="fv" autocomplete="off"></div>' +
+      (vals.length ? '<button type="button" class="wx-btn toggle" id="ftog"></button><div class="flt-list" id="flist">' + vals.map(function (v, i) { return '<label><input type="checkbox" data-i="' + i + '"' + (!f.values || f.values.indexOf(v) >= 0 ? ' checked' : '') + '>' + (v === '' ? '&nbsp;' : escapeHtml(v)) + '</label>'; }).join('') + '</div>' : '') +
+      btns([['fcan', 'Cancel'], ['fapp', 'Apply', 'sec']]);
+    var p = openPop('filter', 'flt-pop', html); p._owner = btn;
+    var b = tds[fr][fc].getBoundingClientRect();
+    p.style.left = Math.min(b.right - 20, window.innerWidth - 320) + 'px'; p.style.top = Math.max(2, b.top - 20) + 'px';
+    p.querySelector('#fv').value = f.v == null ? '' : f.v;
+    var tog = p.querySelector('#ftog');
+    function boxes() { return Array.prototype.slice.call(p.querySelectorAll('#flist input')); }
+    function syncTog() { if (!tog) return; var all = boxes().every(function (x) { return x.checked; }); tog.textContent = all ? 'Unselect all' : 'Select all'; tog.classList.toggle('on', all); }
+    if (tog) { tog.onclick = function () { var all = boxes().every(function (x) { return x.checked; }); boxes().forEach(function (x) { x.checked = !all; }); syncTog(); }; p.querySelector('#flist').onchange = syncTog; syncTog(); }
+    p.querySelector('#fcan').onclick = function () { closePop('filter'); };
+    p.querySelector('#fapp').onclick = function () {
+      var nf = { op: p.querySelector('#fop').value, v: p.querySelector('#fv').value };
+      if (tog) { var on = boxes().filter(function (x) { return x.checked; }).map(function (x) { return vals[+x.getAttribute('data-i')]; }); if (on.length < vals.length) nf.values = on; }
+      if (!nf.v) { delete nf.v; }
+      closePop('filter'); beginChange(); filterCells()[key(fr, fc)] = nf; endChange(true);
+    };
+  }
+
+  // ---------- sorting a range, and the Custom Sort dialog
+  function sortRows(g, keys) {
+    var rows = [];
+    for (var r = g.r1; r <= g.r2; r++) { var row = { src: r, k: keys.map(function (k) { return cellValue(r, k.c); }), cells: [] }; for (var c = g.c1; c <= g.c2; c++) row.cells.push({ raw: getRaw(r, c), st: styles[key(r, c)] }); rows.push(row); }
+    rows.sort(function (a, b) {
+      for (var i = 0; i < keys.length; i++) {
+        var x = a.k[i], y = b.k[i], ex = x == null || x === '', ey = y == null || y === '';
+        if (ex && ey) continue; if (ex) return 1; if (ey) return -1;
+        var res = (typeof x === 'number' && typeof y === 'number') ? x - y : String(x).localeCompare(String(y), undefined, { numeric: true, sensitivity: 'base' });
+        if (res) return keys[i].desc ? -res : res;
+      }
+      return a.src - b.src;
+    });
+    hf.batch(function () { rows.forEach(function (row, i) { row.cells.forEach(function (cell, j) { var r = g.r1 + i, c = g.c1 + j; setRawNoRender(r, c, shiftFormula(cell.raw, r - row.src, 0)); if (cell.st) styles[key(r, c)] = cell.st; else delete styles[key(r, c)]; }); }); });
+  }
+  function sortSelection(desc) {
+    if (readOnly) return; commitEdit();
+    var g = norm(sel); if (g.r1 === g.r2) return;
+    beginChange(); sortRows(g, [{ c: g.c1 <= act.c && act.c <= g.c2 ? act.c : g.c1, desc: desc }]); endChange(false);
+  }
+  function customSortDialog() {
+    if (readOnly) return; commitEdit();
+    var g = norm(sel);
+    var body = frow('Data has headers', '<input type="checkbox" id="csh">', 150) + '<div id="csrows"></div><div style="margin:6px 0 0"><button type="button" class="wx-btn sec" id="csadd">Add one more column</button></div>' + btns([['csc', 'Cancel'], ['css', 'Save', 'sec']]);
+    dialog('Custom Sort', body, function (d, close) {
+      var rowsEl = d.querySelector('#csrows'), hdr = d.querySelector('#csh');
+      function colOpts(cur) { var h = ''; for (var c = g.c1; c <= g.c2; c++) { var name = hdr.checked && displayText(g.r1, c) !== '' ? displayText(g.r1, c) : 'Column ' + colName(c); h += '<option value="' + c + '"' + (c === cur ? ' selected' : '') + '>' + escapeHtml(name) + '</option>'; } return h; }
+      var n = 0;
+      function addRow() {
+        var i = n++, row = document.createElement('div'); row.className = 'frow cs-row';
+        row.innerHTML = '<span class="fl" style="width:70px">' + (rowsEl.children.length ? 'Then by' : 'Sort by') + '</span><div class="fc"><select class="wx-in cs-col" style="flex:0 0 150px">' + colOpts(g.c1 + Math.min(rowsEl.children.length, g.c2 - g.c1)) + '</select>' +
+          '<label style="font-weight:400;display:flex;gap:4px;align-items:center"><input type="radio" name="csd' + i + '" value="asc" checked>A &gt; Z</label><label style="font-weight:400;display:flex;gap:4px;align-items:center"><input type="radio" name="csd' + i + '" value="desc">Z &gt; A</label><span class="cf-ic cs-del" style="color:#94a1b3;cursor:pointer;margin-left:auto"><i class="fas fa-trash"></i></span></div>';
+        row.querySelector('.cs-del').onclick = function () { if (rowsEl.children.length > 1) row.remove(); };
+        rowsEl.appendChild(row);
+      }
+      addRow();
+      hdr.onchange = function () { Array.prototype.forEach.call(rowsEl.querySelectorAll('.cs-col'), function (s) { var v = +s.value; s.innerHTML = colOpts(v); }); };
+      d.querySelector('#csadd').onclick = function () { if (rowsEl.children.length < g.c2 - g.c1 + 1) addRow(); };
+      d.querySelector('#csc').onclick = close;
+      d.querySelector('#css').onclick = function () {
+        var keys = Array.prototype.map.call(rowsEl.children, function (row) { return { c: +row.querySelector('.cs-col').value, desc: row.querySelector('input[type=radio]:checked').value === 'desc' }; });
+        var rg = { r1: g.r1 + (hdr.checked ? 1 : 0), c1: g.c1, r2: g.r2, c2: g.c2 };
+        close(); if (rg.r1 > rg.r2) return;
+        beginChange(); sortRows(rg, keys); endChange(false);
+      };
+    }, 440);
+  }
+
   // ------------------------------------------------------------------ host messages
   function applyConfig(d) {
     readOnly = !!d.readOnly;
     $('ss').classList.toggle('readonly', readOnly);
     fx.readOnly = readOnly;
     if (readOnly) { cancelEdit(); closeChartPanel(); closeMenu(); }
-    document.documentElement.style.setProperty('--cell-font', Math.round(15 * (d.fontScale || 1)) + 'px');
+    document.documentElement.style.setProperty('--cell-font', Math.round(16 * (d.fontScale || 1)) + 'px');
     if (tds.length) buildGrid();
   }
   window.addEventListener('message', function (e) {
@@ -1965,5 +2488,6 @@
   buildGrid();
   setSelection(0, 0, 0, 0);
   post('loaded');
-  window.__sheet = { serialize: serialize, load: load, getRaw: getRaw, cellValue: cellValue, exportSnapshot: exportSnapshot }; // debugging aid
+  window.__sheet = { serialize: serialize, load: load, getRaw: getRaw, cellValue: cellValue, exportSnapshot: exportSnapshot, select: setSelection,   // debugging aid
+    open: { validation: validationDialog, dropdown: dropdownDialog, link: linkDialog, named: namedRangesDialog, cond: condDialog, find: findDialog, format: customFormatDialog, sparkline: sparklineDialog, sort: customSortDialog, resize: resizeDialog, comment: commentDialog, filter: toggleFilter } };
 })();
