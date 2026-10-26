@@ -7,7 +7,7 @@
  */
 (function () {
   'use strict';
-  var ROWS = 60, COLS = 26, DEF_W = 120, DEF_H = 36, MAX_UNDO = 80;   // NESA (Webix) default column width / row height
+  var ROWS = 50, COLS = 20, DEF_W = 120, DEF_H = 36, MAX_UNDO = 80;   // NESA (Webix): 50 rows x 20 columns (A–T), 120 x 36 cells
   var embedId = decodeURIComponent((/[#&]id=([^&]+)/.exec(location.hash) || [])[1] || '');
   var $ = function (id) { return document.getElementById(id); };
   var grid = $('grid'), wrap = $('gridwrap'), editor = $('editor'), fx = $('fx'), namebox = $('namebox');
@@ -655,6 +655,13 @@
   var drag = null;
   grid.addEventListener('mousedown', function (e) {
     if (e.button !== 0) return;
+    if (dlgOpen) {
+      // NESA: while a dialog is open, dragging over the grid fills its range box (Add dropdown, sparkline, validation range)
+      e.preventDefault();
+      var a = document.activeElement, pc = cellFromEvent(e);
+      if (a && a.hasAttribute && a.hasAttribute('data-pick') && pc) { drag = { mode: 'pick', input: a, r1: pc.r, c1: pc.c, r2: pc.r, c2: pc.c }; showBlock(drag); }
+      return;
+    }
     var tog = e.target.closest('.grp-tog');
     if (tog) { e.preventDefault(); e.stopPropagation(); if (!readOnly) toggleGroup(tog.getAttribute('data-gk'), +tog.getAttribute('data-gi')); return; }
     var lnk = e.target.closest('a.ss-link');
@@ -668,28 +675,56 @@
     if (th && th.hasAttribute('data-r')) { commitEdit(); var r = +th.getAttribute('data-r'); setSelection(r, 0, r, COLS - 1, r, 0); focusKeys(); e.preventDefault(); return; }
     if (th && th.classList.contains('corner')) { commitEdit(); setSelection(0, 0, ROWS - 1, COLS - 1, 0, 0); focusKeys(); e.preventDefault(); return; }
     var cell = cellFromEvent(e); if (!cell) return;
-    if (editing && canPoint()) { e.preventDefault(); startPoint(cell); drag = { mode: 'point' }; return; }
+    if (editing && canPoint()) {
+      // NESA: the dragged range shows as a light block; the reference is written when the mouse is released
+      e.preventDefault();
+      var inp = activeInput(), pos = inp.selectionStart;
+      if (!(point && pos === point.end)) point = { start: pos, end: pos };
+      drag = { mode: 'point', r1: cell.r, c1: cell.c, r2: cell.r, c2: cell.c }; showBlock(drag);
+      return;
+    }
     commitEdit();
     if (e.shiftKey) setSelection(act.r, act.c, cell.r, cell.c, act.r, act.c);
     else setSelection(cell.r, cell.c, cell.r, cell.c);
     drag = { mode: 'select' };
+    $('sheet').classList.add('dragging'); showBlock(norm(sel));
     focusKeys();
     e.preventDefault();
   });
+  // light block shown while a range is being dragged (Webix "block selection")
+  function showBlock(g) {
+    g = norm(g); var b = $('blockbox'); b.classList.remove('hidden'); place(b, rangeRect(g));
+    if (drag && drag.mode !== 'select') {
+      Array.prototype.forEach.call(grid.tHead.rows[0].cells, function (th, i) { th.classList.toggle('hsel', i > 0 && i - 1 >= g.c1 && i - 1 <= g.c2); });
+      for (var r = 0; r < ROWS; r++) grid.tBodies[0].rows[r].cells[0].classList.toggle('hsel', r >= g.r1 && r <= g.r2);
+      namebox.value = rangeStr(g);
+    }
+  }
+  function hideBlock() { $('blockbox').classList.add('hidden'); $('sheet').classList.remove('dragging'); }
   document.addEventListener('mousemove', function (e) {
     if (!drag) return;
     var el2 = document.elementFromPoint(e.clientX, e.clientY);
     var td = el2 && el2.closest && el2.closest('td[data-r]'); if (!td) return;
     var r = +td.getAttribute('data-r'), c = +td.getAttribute('data-c');
-    if (drag.mode === 'select') setSelection(act.r, act.c, r, c, act.r, act.c);
-    else if (drag.mode === 'point') extendPoint(r, c);
+    if (drag.mode === 'select') { setSelection(act.r, act.c, r, c, act.r, act.c); showBlock(norm(sel)); }
+    else if (drag.mode === 'point' || drag.mode === 'pick') { drag.r2 = r; drag.c2 = c; showBlock(drag); }
     else if (drag.mode === 'fill') showFillPreview(r, c);
   });
-  document.addEventListener('mouseup', function () { if (drag && drag.mode === 'fill') doFill(); drag = null; });
+  document.addEventListener('mouseup', function () {
+    if (!drag) return;
+    var d = drag; drag = null; hideBlock();
+    if (d.mode === 'fill') { drag = d; doFill(); drag = null; }
+    else if (d.mode === 'point') { point.r1 = d.r1; point.c1 = d.c1; point.r2 = d.r2; point.c2 = d.c2; writePoint(); }
+    else if (d.mode === 'pick') {
+      var ref = rangeStr(norm(d)), inp = d.input;
+      inp.value = (inp.getAttribute('data-pick') || '') + ref; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.focus();
+      renderSelection();
+    }
+  });
   $('handle').addEventListener('mousedown', function (e) { if (readOnly) return; e.preventDefault(); e.stopPropagation(); commitEdit(); drag = { mode: 'fill', target: null }; });
   // right-click menus: the same items as the NESA (Webix) spreadsheet for cells, column headers and row headers
   grid.addEventListener('contextmenu', function (e) {
-    if (readOnly) return;
+    if (readOnly || dlgOpen) { e.preventDefault(); return; }
     var th = e.target.closest('th');
     if (th && (th.hasAttribute('data-c') || th.hasAttribute('data-r'))) {
       e.preventDefault(); commitEdit();
@@ -1331,7 +1366,7 @@
     var b = document.createElement('button'); b.type = 'button'; b.className = 'tbtn ' + (cls || ''); b.innerHTML = html;
     withTip(b, title);
     b.addEventListener('mousedown', function (e) { e.preventDefault(); });
-    b.addEventListener('click', function (e) { if (readOnly) return; if (b.classList.contains('open') && menuEl) { closeMenu(); return; } onClick(b, e); });
+    b.addEventListener('click', function (e) { if (readOnly || dlgOpen) return; if (b.classList.contains('open') && menuEl) { closeMenu(); return; } onClick(b, e); });
     return b;
   }
   function group(label, rows) {
@@ -1693,13 +1728,14 @@
     setTimeout(function () { t.remove(); }, 3000);
   }
   // Webix-style window: title bar with ×, body, buttons bottom-right
+  var dlgOpen = false;
   function dialog(title, bodyHtml, onReady, width) {
     closePops();
     var bg = document.createElement('div'); bg.className = 'dlg-bg';
     bg.innerHTML = '<div class="dlg" style="width:' + (typeof width === 'number' ? width : 350) + 'px"><div class="dlg-head">' + title + '<span class="dlg-x">&times;</span></div><div class="dlg-body">' + bodyHtml + '</div></div>';
-    document.body.appendChild(bg);
+    document.body.appendChild(bg); dlgOpen = true;
     function esc(e) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }
-    function close() { bg.remove(); document.removeEventListener('keydown', esc, true); editor.focus({ preventScroll: true }); }
+    function close() { bg.remove(); dlgOpen = false; document.removeEventListener('keydown', esc, true); editor.focus({ preventScroll: true }); }
     document.addEventListener('keydown', esc, true);
     bg.querySelector('.dlg-x').onclick = close;
     onReady(bg.querySelector('.dlg-body'), close);
@@ -1757,16 +1793,21 @@
       edhl.style.left = editor.style.left; edhl.style.top = editor.style.top; edhl.style.width = editor.style.width; edhl.style.height = editor.style.height;
       edhl.innerHTML = hlHtml(editor.value, formulaRefs(editor.value)); edhl.scrollLeft = editor.scrollLeft; edhl.scrollTop = editor.scrollTop;
     } else edhl.innerHTML = '';
-    var seen = {}, html = '';
+    // each referenced cell is tinted (NESA colours the cells, so the grid lines still show)
+    hlCells.forEach(function (td) { td.className = td.className.replace(/\s*hlb\d/g, ''); }); hlCells = [];
+    var seen = {}, count = 0;
     refs.forEach(function (t) {
       if (seen[t.ref]) return; seen[t.ref] = 1;
-      var g = { r1: t.g.r1, c1: t.g.c1, r2: Math.min(t.g.r2, ROWS - 1), c2: Math.min(t.g.c2, COLS - 1) };
-      if (g.r1 >= ROWS || g.c1 >= COLS) return;
-      var rc = rangeRect(g); html += '<div class="hlb' + t.col + '" style="left:' + rc.x + 'px;top:' + rc.y + 'px;width:' + rc.w + 'px;height:' + rc.h + 'px"></div>';
+      for (var r = t.g.r1; r <= Math.min(t.g.r2, ROWS - 1); r++) for (var c = t.g.c1; c <= Math.min(t.g.c2, COLS - 1); c++) {
+        if (++count > 4000) return;
+        var td = tds[r] && tds[r][c]; if (!td || /hlb\d/.test(td.className)) continue;
+        td.classList.add('hlb' + t.col); hlCells.push(td);
+      }
     });
-    refsLayer.innerHTML = html;
+    refsLayer.innerHTML = '';
     updateFnPopups();
   }
+  var hlCells = [];
   ['scroll', 'keyup', 'click', 'select'].forEach(function (ev) {
     fx.addEventListener(ev, function () { fxhl.scrollLeft = fx.scrollLeft; if (ev !== 'scroll') updateFnPopups(); });
     editor.addEventListener(ev, function () { edhl.scrollLeft = editor.scrollLeft; edhl.scrollTop = editor.scrollTop; if (ev !== 'scroll' && editing) updateFnPopups(); });
@@ -1927,11 +1968,11 @@
   function dropdownDialog() {
     if (readOnly) return; commitEdit();
     var st = styles[key(act.r, act.c)] || {};
-    dialog('Add dropdown', frow('Range', '<input class="wx-in" id="ddr" autocomplete="off">', 110) + frow('Empty option', '<input type="checkbox" id="dde">', 110) + btns([['ddc', 'Cancel'], ['dds', 'Save', 'sec']]), function (d, close) {
+    dialog('Add dropdown', frow('Range', '<input class="wx-in" id="ddr" autocomplete="off" data-pick="">', 110) + frow('Empty option', '<input type="checkbox" id="dde">', 110) + btns([['ddc', 'Cancel'], ['dds', 'Save', 'sec']]), function (d, close) {
       d.querySelector('#ddr').value = st.dd || ''; d.querySelector('#dde').checked = !!st.ddEmpty;
       d.querySelector('#ddc').onclick = close;
       d.querySelector('#dds').onclick = function () {
-        var v = d.querySelector('#ddr').value.trim(), rg = parseRange(v.replace(/^.*!/, '').toUpperCase());
+        var v = d.querySelector('#ddr').value.trim().replace(/^=/, ''), rg = parseRange(v.replace(/^.*!/, '').toUpperCase());
         if (!v) { close(); applyStyle({ dd: null, ddEmpty: null }); return; }
         close(); applyStyle({ dd: rg ? rangeStr(rg) : v, ddEmpty: d.querySelector('#dde').checked || null });
       };
@@ -2004,6 +2045,7 @@
     return true;
   }
   function listOptions(src) {
+    src = String(src || '').replace(/^\s*=/, '');
     var g = parseRange(String(src || '').replace(/^.*!/, '').toUpperCase()), out = [];
     if (g && /^\$?[A-Z]+\$?\d+(:\$?[A-Z]+\$?\d+)?$/i.test(String(src).replace(/^.*!/, '').trim())) { for (var r = g.r1; r <= g.r2; r++) for (var c = g.c1; c <= g.c2; c++) { var t = displayText(r, c); if (t !== '') out.push(t); } }
     else out = String(src || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
@@ -2063,6 +2105,7 @@
           var two = /etween/.test(vop.value); d.querySelector('#v2').style.display = two ? '' : 'none';
           d.querySelector('#v1').placeholder = t === 'number' || t === 'textLength' ? '123' : t === 'date' ? 'mm/dd/yyyy' : t === 'range' ? 'A1:A10' : '';
           d.querySelector('#v2').placeholder = d.querySelector('#v1').placeholder;
+          if (t === 'range') d.querySelector('#v1').setAttribute('data-pick', '='); else d.querySelector('#v1').removeAttribute('data-pick');   // NESA writes =A1:A5
         }
         vt.onchange = function () { sync(false); }; vop.onchange = function () { sync(false); }; sync(true);
         d.querySelector('#vc').onclick = close;
@@ -2315,7 +2358,7 @@
     var cur = parseSparkline(raws[key(target.r, target.c)]) || { type: 'line', range: '', color: '#6666FF', neg: '#FF6666' };
     var lw = 90;
     var body = frow('Type', '<select class="wx-in" id="spt">' + opts([['line', 'Line'], ['spline', 'Spline'], ['splineArea', 'Spline Area'], ['area', 'Area'], ['bar', 'Bar'], ['radar', 'Radar'], ['pie', 'Pie'], ['donut', 'Donut']], cur.type) + '</select>', lw) +
-      frow('Range', '<input class="wx-in" id="spr" autocomplete="off">', lw) +
+      frow('Range', '<input class="wx-in" id="spr" autocomplete="off" data-pick="">', lw) +
       frow('Color', '<input class="wx-in" id="spc"><span class="wx-swatch" id="spcs"></span>', lw, false, 'sp-col') +
       frow('Positive', '<input class="wx-in" id="spp"><span class="wx-swatch" id="spps"></span>', lw, false, 'sp-bar') +
       frow('Negative', '<input class="wx-in" id="spn"><span class="wx-swatch" id="spns"></span>', lw, false, 'sp-bar') +

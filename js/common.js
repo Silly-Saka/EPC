@@ -120,10 +120,17 @@
     function toggle() {
       var isOpen = !dropdown.classList.contains('hidden');
       closeDropdowns();
-      if (!isOpen) { dropdown.classList.remove('hidden'); top.classList.add('expanded'); setChevron(top, true); openDropdown = { root: root, top: top, dropdown: dropdown }; }
+      if (!isOpen) { dropdown.classList.remove('hidden'); top.classList.add('expanded'); setChevron(top, true); dropdown.style.setProperty('--tb-w', top.offsetWidth + 'px'); openDropdown = { root: root, top: top, dropdown: dropdown }; }
     }
     top.addEventListener('click', toggle);
     top.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    // like NESA: the menu opens when the mouse moves onto the button and closes when it leaves
+    root.addEventListener('mouseenter', function () { if (dropdown.classList.contains('hidden')) toggle(); });
+    root.addEventListener('mouseleave', function () {
+      var a = document.activeElement;
+      if (a && dropdown.contains(a) && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) return;   // e.g. a colour picker is open
+      if (!dropdown.classList.contains('hidden')) closeDropdowns();
+    });
     return root;
   }
   window.makeDropdownButton = makeDropdownButton;

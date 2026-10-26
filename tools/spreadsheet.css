@@ -413,3 +413,14 @@ textarea.wx-ta:focus { border-color: #1ca1c1; }
 .wx-in.ph, select.wx-in.ph { color: #94a1b3; }
 .flt-pop .flt-cond select.wx-in { width: 160px; flex: 0 0 160px; height: 32px; border: 1px solid #ccd7e6; border-radius: 2px; padding-left: 12px; }
 .flt-pop .flt-cond input { min-width: 0; width: 100%; }
+/* referenced cells while a formula is typed (cell by cell, so the grid lines still show) */
+.ss-grid td.hlb1 { background-color: rgb(187, 235, 213) !important; } .ss-grid td.hlb2 { background-color: rgb(255, 190, 183) !important; }
+.ss-grid td.hlb3 { background-color: rgb(212, 217, 225) !important; } .ss-grid td.hlb4 { background-color: rgb(255, 219, 153) !important; }
+.ss-grid td.hlb5 { background-color: rgb(202, 242, 250) !important; } .ss-grid td.hlb6 { background-color: rgb(250, 225, 238) !important; }
+.ss-grid td.hlb7 { background-color: rgb(211, 192, 229) !important; }
+/* while dragging a range: a light block, no outline (Webix block selection) */
+.ss-block { position: absolute; background: #1ca1c1; opacity: .1; pointer-events: none; z-index: 2; }
+.ss-sheet.dragging .ss-sel, .ss-sheet.dragging .ss-active, .ss-sheet.dragging .ss-handle { visibility: hidden; }
+/* dialogs don't block the grid: ranges can be dragged into their range boxes */
+.dlg-bg { pointer-events: none; }
+.dlg-bg .dlg { pointer-events: auto; }

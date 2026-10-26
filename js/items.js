@@ -832,7 +832,7 @@
   });
   function embedItem(kind, item, ctx) {
     var id = 'embed-' + item.key.replace(/\W/g, '_');
-    var src = 'tools/' + kind + '.html?v=20261026';   // version tag so browsers fetch the updated tool
+    var src = 'tools/' + kind + '.html?v=20261027';   // version tag so browsers fetch the updated tool
     var seed = null;
     if (kind === 'spreadsheet') {
       var ex = ITEMS.extractInitial(item.question);
@@ -902,7 +902,7 @@
         } };
       });
       ex.frame = el('<iframe title="export" style="position:fixed;left:-3000px;top:0;width:1200px;height:800px;border:0" tabindex="-1" aria-hidden="true"></iframe>');
-      ex.frame.src = 'tools/' + kind + '.html?v=20261026#id=' + id;
+      ex.frame.src = 'tools/' + kind + '.html?v=20261027#id=' + id;
       document.body.appendChild(ex.frame);
     }
     var job = ex.queue.then(function () {
