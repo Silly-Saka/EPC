@@ -322,17 +322,10 @@
       groupEl.appendChild(one);
     } else {
       groupEl.classList.add('group-twocol');
-      var left = el('<div class="col-left"></div>'), right = el('<div class="col-right"></div>'), divider = el('<div class="col-divider" title="Drag to resize"></div>');
+      var left = el('<div class="col-left"></div>'), right = el('<div class="col-right"></div>'), divider = el('<div class="col-divider"></div>');
       left.appendChild(title); left.appendChild(stim);
       right.appendChild(items); right.appendChild(actions);
       groupEl.append(left, divider, right);
-      divider.addEventListener('mousedown', function (e) {
-        var startX = e.clientX, startW = left.offsetWidth, total = groupEl.offsetWidth;
-        function mv(ev) { var w = Math.min(total - 250, Math.max(200, startW + ev.clientX - startX)); left.style.flexBasis = w + 'px'; }
-        function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); document.body.style.userSelect = ''; }
-        document.body.style.userSelect = 'none';
-        document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up); e.preventDefault();
-      });
     }
     ITEMS.enhanceContent(groupEl);
     groupEl.addEventListener('mouseup', onHighlightMouseUp);
