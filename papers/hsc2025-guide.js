@@ -120,6 +120,7 @@ WHERE    Customers.CustID = Sales.CustID
 ORDER BY SaleDate ASC</pre>
 <p>(The official guideline prints the last line as &ldquo;ORDERBY SaleDate ASC&rdquo;; the standard keyword is ORDER BY.)</p>
 <p>Expected result: Headphones, 15-01-2025, 450, Li; then Smartphone, 16-01-2025, 1600, Smith.</p>
+<p><em>Note: the dates are stored as DD-MM-YYYY text, so &lt; and ORDER BY compare them character by character (day first). This gives the right result here only because every sale is in January 2025; for example, &lsquo;16-02-2025&rsquo; &lt; &lsquo;17-01-2025&rsquo; would be true. Dates stored as YYYY-MM-DD compare and sort in true date order.</em></p>
 <p><strong>Marker feedback:</strong> Better responses used the four SQL keywords correctly, joined the tables with a correct join condition linking related fields, recognised the criteria in the scenario and matched the date format in the stimulus (days, months and years separated by &lsquo;-&rsquo;, not &lsquo;/&rsquo;). Students need to improve their understanding of SQL structure.</p>` }
   ],
 

@@ -479,7 +479,8 @@ registerExam({
 B11 =AVERAGE(B2:B8)
 B12 =LOOKUP(MAX(B2:B8),B2:B8,A2:A8)
 C2  =IF(B2&gt;$B$11,"Busy Day")</pre>
-<p>Similar formulas for C2 to C8 (absolute reference $B$11 is required for this mark)</p>` }
+<p>Similar formulas for C2 to C8 (absolute reference $B$11 is required for this mark)</p>
+<p><em>Note: LOOKUP expects the lookup range to be sorted in ascending order. B2:B8 is not sorted, so the published B12 formula can return the wrong day (e.g. Sunday instead of Friday). A reliable formula is <code>=INDEX(A2:A8,MATCH(MAX(B2:B8),B2:B8,0))</code> (or <code>=XLOOKUP(MAX(B2:B8),B2:B8,A2:A8)</code>). Adding <code>,""</code> to the IF in C2 (<code>=IF(B2&gt;$B$11,"Busy Day","")</code>) stops FALSE appearing on other days.</em></p>` }
       ]
     },
     {
@@ -667,11 +668,11 @@ C2  =IF(B2&gt;$B$11,"Busy Day")</pre>
 <li><strong>Payment</strong> (PaymentID (PK), SessionID (SK), ReceiptNumber, PaymentTime, AmountPaid, PaymentMethod, LocationID (SK))</li>
 <li><strong>PaymentLocation</strong> (LocationID (PK), Location)</li>
 <li>ParkingSession 1 — m Payment; PaymentLocation 1 — m Payment</li>
-</ul>` },
+</ul>
+<p><em>Note: the published sample labels SessionID and LocationID in Payment as “SK”; they are foreign keys (FK) linking to ParkingSession and PaymentLocation.</em></p>` },
         { type: 'sql', part: 'b', marks: 4,
           sqlAnswer: { orderBy: [[2, 'desc']], queries: [
-            `SELECT ParkingSession.RegistrationPlate, COUNT(ParkingSession.SessionID) AS NumberOfVisits, SUM(Payment.AmountPaid) AS TotalSpend FROM ParkingSession LEFT JOIN Payment ON ParkingSession.SessionID = Payment.SessionID GROUP BY ParkingSession.RegistrationPlate ORDER BY TotalSpend DESC`,
-            `SELECT ParkingSession.RegistrationPlate, COUNT(ParkingSession.SessionID) AS NumberOfVisits, SUM(Payment.AmountPaid) AS TotalSpend FROM ParkingSession, Payment WHERE ParkingSession.SessionID = Payment.SessionID GROUP BY ParkingSession.RegistrationPlate ORDER BY TotalSpend DESC`] },
+            `SELECT ParkingSession.RegistrationPlate, COUNT(ParkingSession.SessionID) AS NumberOfVisits, SUM(Payment.AmountPaid) AS TotalSpend FROM ParkingSession LEFT JOIN Payment ON ParkingSession.SessionID = Payment.SessionID GROUP BY ParkingSession.RegistrationPlate ORDER BY TotalSpend DESC`] },
           question: `<p>Write an SQL statement to return the registration plate, number of times each vehicle has been in the carpark along with their total spend. The results should be sorted in descending order by total spend.</p>`,
           setup: `CREATE TABLE ParkingSession (SessionID INTEGER PRIMARY KEY, RegistrationPlate TEXT, EntryTime TEXT, ExitTime TEXT);
 INSERT INTO ParkingSession VALUES (101,'YXE950','2026-07-12 12:45:00','2026-07-12 15:04:00');
@@ -713,7 +714,8 @@ SUM(Payment.AmountPaid) AS TotalSpend
 FROM ParkingSession, Payment
 WHERE ParkingSession.SessionID = Payment.SessionID
 GROUP BY ParkingSession.RegistrationPlate
-ORDER BY TotalSpend DESC</pre>` },
+ORDER BY TotalSpend DESC</pre>
+<p><em>Note: the second (inner join) version only counts sessions that have a payment, so it leaves out vehicles that never paid and under-counts visits (e.g. SHA619 shows 1 visit instead of 2). Only the LEFT JOIN version fully answers “number of times each vehicle has been in the carpark”.</em></p>` },
         { type: 'text', part: 'c', marks: 4, wordLimit: 100,
           question: `<p>The shopping centre wishes to extend the system so that staff and customers can book a parking space in advance using an online form.</p>
 <p>Analyse this new requirement, including how the system could ensure that a parking space is available at the time of each booking and what modifications would be required to the relational database.</p>`,

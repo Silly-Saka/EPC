@@ -8,7 +8,7 @@
   var highlighter = null; // 'yellow' | 'blue' | 'red' | 'none' | null
 
   // ---------------------------------------------------------------- loading
-  var PV = '?v=20261029';   // version tag so browsers fetch updated papers
+  var PV = '?v=20261030';   // version tag so browsers fetch updated papers
   loadScript('papers/' + examId + '.js' + PV).then(function () {
     return loadScript('papers/' + examId + '-guide.js' + PV).catch(function () { /* optional */ });
   }).then(function () {

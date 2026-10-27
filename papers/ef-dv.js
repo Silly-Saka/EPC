@@ -12,7 +12,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>How does data visualisation improve decision-making?</p>`,
-          options: [`By providing extensive analysis to stakeholders.`, `By presenting information in a visual format to quickly grasp essential details.`, `By identifying the least performing sales periods.`, `By making patterns and relationships more apparent.`],
+          options: [`By providing extensive analysis to stakeholders.`, `By presenting information in a visual format to quickly grasp essential details.`, `By identifying the least performing sales periods.`, `By removing the need to check the underlying data.`],
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — By presenting information in a visual format to quickly grasp essential details.</p><p>Data visualisation presents complex data in a visual format, allowing stakeholders to quickly identify key trends, insights, and anomalies. For example, a graph tracking a sales campaign's progress over months can pinpoint peak performance periods or unexpected dips, aiding decision-making.</p>` }
       ] },
@@ -222,9 +222,9 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What does a positive correlation indicate in a dataset?</p>`,
-          options: [`As one variable decreases, the other also decreases.`, `As one variable increases, the other decreases.`, `As one variable increases, there other also increases.`, `There is no relationship between the two variables.`],
+          options: [`As one variable decreases, the other also decreases.`, `As one variable increases, the other decreases.`, `As one variable increases, the other also increases.`, `There is no relationship between the two variables.`],
           answer: 3,
-          guide: `<p><strong>Answer: C</strong> — As one variable increases, there other also increases.</p><p>In statistics, a positive correlation means that as one variable increases (or decreases), the other variable also increases (or decreases). This denotes a direct relationship between both the variables.</p>` }
+          guide: `<p><strong>Answer: C</strong> — As one variable increases, the other also increases.</p><p>In statistics, a positive correlation means that as one variable increases (or decreases), the other variable also increases (or decreases). This denotes a direct relationship between both the variables.</p>` }
       ] },
     { number: '28', marks: 1, layout: 0, section: 'Identifying Trends & Patterns',
       items: [
@@ -402,7 +402,7 @@ registerExam({
           question: `<p>What is the purpose of using headlines and annotations in data visualisations?</p>`,
           options: [`They are used to inflate the data.`, `They help viewers quickly understand the visualisation’s purpose and interpret its key insights.`, `They are used to make the visualisation look visually appealing.`, `They are used to hide other less significant data.`],
           answer: 2,
-          guide: `<p><strong>Answer: B</strong> — They help viewers quickly understand the visualisation’s purpose and interpret its key insights.</p><p>Headlines and annotations provide concise summaries and</p>` }
+          guide: `<p><strong>Answer: B</strong> — They help viewers quickly understand the visualisation’s purpose and interpret its key insights.</p><p>Headlines and annotations provide concise summaries and context that direct viewers to the key insights, so the purpose of the visualisation is clear at a glance.</p>` }
       ] },
     { number: '50', marks: 1, layout: 0, section: 'Telling a Story with Data',
       items: [
@@ -433,7 +433,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is part of the process of data cleaning in data organisation?</p>`,
-          options: [`Arrange the data logically in rows and columns.`, `Ensure uniform formats for dates, currencies, etc.`, `Standardise units.`, `Use consistent naming conventions for labels.`],
+          options: [`Arrange the data logically in rows and columns.`, `Create charts to present the data.`, `Standardise units.`, `Publish the dataset online for others to use.`],
           answer: 3,
           guide: `<p><strong>Answer: C</strong> — Standardise units.</p><p>Data cleaning involves removing duplicates, errors, or irrelevant information, addressing missing values, and standardising units among other things.</p>` }
       ] },
@@ -491,7 +491,7 @@ registerExam({
           question: `<p>Which of the following is NOT a characteristic of a credible data source?</p>`,
           options: [`The data comes from a recognised and reputable organisation or author.`, `The data contains several errors but is from a reputable source.`, `The data is up-to-date and relevant.`, `The source's intent is aligned with objective reporting.`],
           answer: 2,
-          guide: `<p><strong>Answer: B</strong> — The data contains several errors but is from a reputable source.</p><p>A characteristic of credible data sources is that the data is free from errors, well-documented, and verified. So an</p>` }
+          guide: `<p><strong>Answer: B</strong> — The data contains several errors but is from a reputable source.</p><p>A characteristic of credible data sources is that the data is free from errors, well-documented, and verified. So data containing several errors is not credible, even if it comes from a reputable source.</p>` }
       ] },
     { number: '61', marks: 1, layout: 0, section: 'Researching & Sourcing Data',
       items: [
@@ -666,7 +666,7 @@ registerExam({
     { number: '82', marks: 1, layout: 0, section: 'Designing Visualisations for UX',
       items: [
         { type: 'mcq',
-          question: `<p>Wich type of visualization would be most effective for executives in a business setting?</p>`,
+          question: `<p>Which type of visualization would be most effective for executives in a business setting?</p>`,
           options: [`Detailed, raw data in interactive charts`, `High-level summaries through dashboards highlighting key performance indicators`, `Monthly sales data in a tabular format`, `A heat map displaying temperature variations across a city`],
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — High-level summaries through dashboards highlighting key performance indicators</p><p>Executives often prefer high-level summaries through dashboards that highlight key performance indicators for quick decision making.</p>` }
@@ -1209,7 +1209,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What ethical responsibilities come with data ownership in projects like the OLAP Project?</p>`,
-          options: [`Ensuring appropriate authentication measures.`, `Controlling who can benefit from the data.`, `Ensuring the data is stored securely.`, `Establishing clear usage policies.`],
+          options: [`Ensuring appropriate authentication measures.`, `Controlling who can benefit from the data.`, `Selling the data to third parties for profit.`, `Sharing one login with the whole team.`],
           answer: 1,
           guide: `<p><strong>Answer: A</strong> — Ensuring appropriate authentication measures.</p><p>In the OLAP Project, it is mentioned that it is ethically responsible to have appropriate authentication measures to ensure that only authorized users can access relevant information.</p>` }
       ] },
@@ -1864,9 +1864,9 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What were the causes of bias in Amazon's AI-driven recruitment system?</p>`,
-          options: [`The system had technical faults.`, `The training data was inherently biased and did not adequately represent female applicants.`, `There was no human oversight in place.`, `All of the above.`],
+          options: [`The system had technical faults.`, `The training data was inherently biased and did not adequately represent female applicants.`, `There was no human oversight in place.`, `Both B and C.`],
           answer: 4,
-          guide: `<p><strong>Answer: D</strong> — All of the above.</p><p>The bias in Amazon's AI-driven recruitment system was caused by all of those factors. The training data was inherently biased due to historic gender inequalities in the tech industry and also did not adequately represent female applicants. Also, there was lack of effective human oversight to detect these issues before the model was deployed.</p>` }
+          guide: `<p><strong>Answer: D</strong> — Both B and C.</p><p>The bias in Amazon's AI-driven recruitment system was caused by biased training data and a lack of human oversight (there is no evidence it was a technical fault). The training data was inherently biased due to historic gender inequalities in the tech industry and also did not adequately represent female applicants. Also, there was lack of effective human oversight to detect these issues before the model was deployed.</p>` }
       ] },
     { number: '231', marks: 1, layout: 0, section: 'Case Studies: Challenges in Sourcing & Securing Data',
       items: [
@@ -1904,9 +1904,9 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What type of cyber attack were the hackers attempting during the Linux Hack Attempt in 2024?</p>`,
-          options: [`Exploitation of unpatched vulnerabilities`, `Inserting a backdoor into the Linux kernel`, `Supply chain attack`, `Phishing attack`],
+          options: [`Exploitation of unpatched vulnerabilities`, `Inserting a backdoor into widely used Linux software (XZ Utils)`, `Ransomware attack`, `Phishing attack`],
           answer: 2,
-          guide: `<p><strong>Answer: B</strong> — Inserting a backdoor into the Linux kernel</p><p>The cybercriminals' objective during the Linux Hack Attempt in 2024 was to insert a backdoor into the Linux kernel, which would have granted unauthorized access to sensitive data and control over vast computing resources.</p>` }
+          guide: `<p><strong>Answer: B</strong> — Inserting a backdoor into widely used Linux software (XZ Utils)</p><p>In the 2024 Linux hack attempt, an attacker spent years gaining trust as a contributor and slipped a backdoor into XZ Utils, a compression library used by many Linux systems (a supply-chain attack). It was found just before wide release. The backdoor which would have granted unauthorized access to sensitive data and control over vast computing resources.</p>` }
       ] },
     { number: '236', marks: 1, layout: 0, section: 'Case Studies: Challenges in Sourcing & Securing Data',
       items: [
@@ -1919,7 +1919,7 @@ registerExam({
     { number: '237', marks: 1, layout: 0, section: 'Case Studies: Challenges in Sourcing & Securing Data',
       items: [
         { type: 'mcq',
-          question: `<p>What were the issues that arised during the data collection in the COVID-19 pandemic?</p>`,
+          question: `<p>What were the issues that arose during the data collection in the COVID-19 pandemic?</p>`,
           options: [`Lower number of testing kits which led to underreporting of the cases`, `Certain countries included suspected cases while some counted only confirmed cases`, `Delay and incomplete updates in the data`, `All of the above`],
           answer: 4,
           guide: `<p><strong>Answer: D</strong> — All of the above</p><p>During the COVID-19 pandemic, several challenges were faced in data collection, including inconsistency in reporting standards, underreporting because of limited testing kits, lagging and incomplete updates in data, and the influence of politics on data transparency.</p>` }
@@ -2473,7 +2473,7 @@ registerExam({
           question: `<p>Why is tailoring the communication of data insights to the audience important?</p>`,
           options: [`Because all audiences appreciate technical details.`, `Because one single approach can effectively communicate to all audiences.`, `Because all audiences have high data literacy.`, `Because different audiences have varying levels of data literacy, interests, and decision-making power.`],
           answer: 4,
-          guide: `<p><strong>Answer: D</strong> — Because different audiences have varying levels of data literacy, interests, and decision-making power.</p><p>Tailoring the communication ensures maximum clarity, engagement, and impact as different audiences require different levels of detail and</p>` }
+          guide: `<p><strong>Answer: D</strong> — Because different audiences have varying levels of data literacy, interests, and decision-making power.</p><p>Tailoring the communication ensures maximum clarity, engagement, and impact as different audiences require different levels of detail and complexity.</p>` }
       ] },
     { number: '306', marks: 1, layout: 0, section: 'Developing a Cohesive Data Story',
       items: [
@@ -2513,7 +2513,7 @@ registerExam({
           question: `<p>What are some best practices for effective communication of data insights?</p>`,
           options: [`Understand the audience and adapt your message accordingly.`, `Choose the right medium for presenting the findings.`, `Focus on key takeaways and prioritize the most critical insights.`, `All of the above.`],
           answer: 4,
-          guide: `<p><strong>Answer: D</strong> — All of the above.</p><p>All the mentioned practices, such as understanding the audience, choosing the right medium, and focusing on key takeaways play pivotal roles in effectively communicating data insights. Hence, the</p>` }
+          guide: `<p><strong>Answer: D</strong> — All of the above.</p><p>All the mentioned practices, such as understanding the audience, choosing the right medium, and focusing on key takeaways play pivotal roles in effectively communicating data insights. Hence, the answer is "All of the above".</p>` }
       ] },
     { number: '311', marks: 1, layout: 0, section: 'Developing a Cohesive Data Story',
       items: [
@@ -2665,7 +2665,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>How does AI enhance the data visualisation process?</p>`,
-          options: [`AI assists in manually cleaning the data and identifying trends.`, `AI reduces the time required for the data visualisation process by streamlining steps, such as pattern detection and visual recommendations.`, `AI trains the data and identifies anomalies.`, `AI helps in selecting the most appropriate visual representation of the data.`],
+          options: [`AI assists in manually cleaning the data and identifying trends.`, `AI reduces the time required for the data visualisation process by streamlining steps, such as pattern detection and visual recommendations.`, `AI trains the data and identifies anomalies.`, `AI removes the need for any human to check the visualisation.`],
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — AI reduces the time required for the data visualisation process by streamlining steps, such as pattern detection and visual recommendations.</p><p>AI and automation streamline the data visualisation process by automatically detecting patterns, forecasting trends using historical data, and even recommending or generating the most appropriate visual representation. These activities, which were previously done manually and time-consuming, are now performed independently by AI at far greater speed and scalability.</p>` }
       ] },
@@ -2681,7 +2681,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What role does Natural Language Processing (NLP) play in enhancing user engagement and personalization in data-related tools and visualizations?</p>`,
-          options: [`NLP allows users to communicate with data-related tools using their daily language.`, `NLP helps users to interact with tools similar to how they would with Siri or Alexa.`, `NLP programs the data tools to complete set tasks automatically.`, `NLP enables data tools to comprehend and respond to sign language.`],
+          options: [`NLP converts all data into charts without any user input.`, `NLP helps users to interact with tools similar to how they would with Siri or Alexa.`, `NLP programs the data tools to complete set tasks automatically.`, `NLP enables data tools to comprehend and respond to sign language.`],
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — NLP helps users to interact with tools similar to how they would with Siri or Alexa.</p><p>By making interfaces more responsive and conversational, users are able to better engage with them. The system can learn user preferences over time, adapt and offer suggestions, enhancing the overall user experience. This creates a user experience similar to interacting with virtual assistants like Siri or Alexa.</p>` }
       ] },
@@ -2731,7 +2731,7 @@ registerExam({
           question: `<p>What are some benefits of integrating Natural Language Processing (NLP) in data visualisation and analytics?</p>`,
           options: [`Allows more users to explore, understand and act on data without technical barriers, speeding up insights`, `Makes data queries more time-consuming and complicated`, `Creates a requirement for every user to learn complex coding languages to access data`, `Increases reliance on IT or data science teams for routine inquiries`],
           answer: 1,
-          guide: `<p><strong>Answer: A</strong> — Allows more users to explore, understand and act on data without technical barriers, speeding up insights</p><p>NLP removes technical barriers, making data more accessible and inclusive. It allows users to ask questions in everyday language and receive immediate</p>` }
+          guide: `<p><strong>Answer: A</strong> — Allows more users to explore, understand and act on data without technical barriers, speeding up insights</p><p>NLP removes technical barriers, making data more accessible and inclusive. It allows users to ask questions in everyday language and receive immediate answers, speeding up insights.</p>` }
       ] },
     { number: '338', marks: 1, layout: 0, section: 'The Future of Data Visualisation',
       items: [
@@ -2778,7 +2778,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What advantage does Augmented Reality (AR) offer in data storytelling over traditional data visualisations?</p>`,
-          options: [`AR offers kinesthetic learning`, `AR enhances engagement with immersive experiences`, `AR supports spatial reasoning`, `AR promotes team-based analysis`],
+          options: [`AR removes the need for any visual design`, `AR enhances engagement with immersive experiences`, `AR works without any hardware`, `AR makes the underlying data more accurate`],
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — AR enhances engagement with immersive experiences</p><p>Augmented Reality allows users to step inside the data by placing it in the real world around them, offering immersive experiences that increase focus and retention of information. This is not possible with traditional data visualisations that are confined to flat, two-dimensional screens.</p>` }
       ] },

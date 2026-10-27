@@ -191,8 +191,7 @@ ORDER BY total_sales DESC;</pre><p>GROUP BY makes one row per region and SUM add
           question: `<p>Join the <strong>customers</strong> table with sales_data to show each order with its sales representative. Show the order_id, customer_name, region, product, quantity, price and sales_rep.</p>`,
           setup: SALES_DB,
           sqlAnswer: { queries: [
-            `SELECT s.order_id, s.customer_name, s.region, s.product, s.quantity, s.price, c.sales_rep FROM sales_data AS s JOIN customers AS c ON s.customer_name = c.customer_name AND s.region = c.region`,
-            `SELECT s.*, c.sales_rep FROM sales_data AS s JOIN customers AS c ON s.customer_name = c.customer_name`] },
+            `SELECT s.order_id, s.customer_name, s.region, s.product, s.quantity, s.price, c.sales_rep FROM sales_data AS s JOIN customers AS c ON s.customer_name = c.customer_name AND s.region = c.region`] },
           guide: `<p><strong>Sample answer:</strong></p><pre class="hoa-code">SELECT s.order_id, s.customer_name, s.region, s.product,
        s.quantity, s.price, c.sales_rep
 FROM sales_data AS s

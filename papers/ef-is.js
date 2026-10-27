@@ -257,7 +257,7 @@ registerExam({
           question: `<p>What type of decisions are handled by a Decision Support System (DSS) especially well?</p>`,
           options: [`Unstructured decisions`, `Semi-structured decisions`, `Structured decisions`, `Free-form decisions`],
           answer: 3,
-          guide: `<p><strong>Answer: C</strong> — Structured decisions</p><p>Structured decisions are well-suited for DSS thanks to their routine, repetitive, and rule-based nature. These decisions follow consistent patterns, involve clearly defined procedures and easily fit into the data and logic-based system of DSS.</p>` }
+          guide: `<p><strong>Answer: C</strong> — Structured decisions</p><p>Structured decisions are well-suited for DSS thanks to their routine, repetitive, and rule-based nature. These decisions follow consistent patterns, involve clearly defined procedures and easily fit into the data and logic-based system of DSS.</p><p><em>Note: this is the ec.eforge answer. Many textbooks describe a DSS as most useful for <strong>semi-structured</strong> decisions, because fully structured decisions are usually automated by transaction processing systems or rules. Be ready to explain either view.</em></p>` }
       ] },
     { number: '32', marks: 1, layout: 0, section: 'Types of Decisions in DSS: Structured',
       items: [
@@ -570,7 +570,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is the difference between Forward Chaining and Backward Chaining in process control?</p>`,
-          options: [`Forward Chaining uses a data-driven response while Backward Chaining uses goal-driven reasoning.`, `Backward Chaining is used to infer new facts or trigger actions, while Forward Chaining is used for troubleshooting.`, `Forward Chaining starts with known facts and applies rules to infer new facts, while Backward Chaining starts with a goal and works backwards to support that goal.`, `Forward Chaining works in reverse, while Backward Chaining begins with sensor data and follows rule-based logic.`],
+          options: [`Forward Chaining uses a data-driven response while Backward Chaining uses goal-driven reasoning.`, `Backward Chaining is used to infer new facts or trigger actions, while Forward Chaining is used for troubleshooting.`, `Forward Chaining starts with a goal and works backwards to support it, while Backward Chaining starts with known facts and applies rules to infer new facts.`, `Forward Chaining works in reverse, while Backward Chaining begins with sensor data and follows rule-based logic.`],
           answer: 1,
           guide: `<p><strong>Answer: A</strong> — Forward Chaining uses a data-driven response while Backward Chaining uses goal-driven reasoning.</p><p>Forward Chaining is a reasoning process that starts with known facts (like data from sensors in a dairy plant) and applies rules to infer new actions. On the other hand, Backward Chaining starts with a goal (like finding the reason for milk's insufficient pasteurisation) and works backwards through available data to find the support of the goal.</p>` }
       ] },
@@ -594,9 +594,9 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is the purpose of forward chaining in a dairy processing plant?</p>`,
-          options: [`To alert operators if the temperature rises too quickly or a cleaning cycle is missed`, `To help trace the root cause of an error by working in reverse`, `To determie why a batch of milk was under-pasteurised`, `To assist in conditional planning`],
+          options: [`To alert operators if the temperature rises too quickly or a cleaning cycle is missed`, `To help trace the root cause of an error by working in reverse`, `To determine why a batch of milk was under-pasteurised`, `To assist in conditional planning`],
           answer: 1,
-          guide: `<p><strong>Answer: A</strong> — To alert operators if the temperature rises too quickly or a cleaning cycle is missed</p><p>In a dairy processing plant, forward chaining begins with sensor data and follows rule-based logic to make immediate decisions. Its functions include monitoring milk temperature to ensure it stays within the safe pasteurization range, and triggering alerts to operators if the pressure rises too quickly or a cleaning cycle is missed.</p>` }
+          guide: `<p><strong>Answer: A</strong> — To alert operators if the temperature rises too quickly or a cleaning cycle is missed</p><p>In a dairy processing plant, forward chaining begins with sensor data and follows rule-based logic to make immediate decisions. Its functions include monitoring milk temperature to ensure it stays within the safe pasteurization range, and triggering alerts to operators if the temperature rises too quickly or a cleaning cycle is missed.</p>` }
       ] },
     { number: '74', marks: 1, layout: 0, section: 'Process Control & Planning',
       items: [
@@ -1006,7 +1006,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is the role of the expert system in the IoT-based farming case study involving Peloris and Telstra?</p>`,
-          options: [`It adjusts watering schedules based on weather forecasts.`, `It oversees the installation of the equipments.`, `It processes manual data input from farmers.`, `It maintains the funtionality of Telstra's network.`],
+          options: [`It adjusts watering schedules based on weather forecasts.`, `It oversees the installation of the equipments.`, `It processes manual data input from farmers.`, `It maintains the functionality of Telstra's network.`],
           answer: 1,
           guide: `<p><strong>Answer: A</strong> — It adjusts watering schedules based on weather forecasts.</p><p>The expert system's role in the Peloris and Telstra case study is to constantly process information and make intelligent recommendations or automated decisions like adjusting watering schedules based on weather forecasts.</p>` }
       ] },
@@ -1176,9 +1176,9 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is the key use of 'Branching' in hypothetical reasoning systems?</p>`,
-          options: [`Branching is used to integrate new real-world information without altering the base knowledge.`, `Each branch from the branch represents different possible futures or assumed worlds, forming separate paths of reasoning.`, `Branching is the implementation of the rollback mechanism that discards false assumptions and irrelevant conclusions.`, `Branching is used to prevent the corruption of permanent knowledge by carefully separating it from temporary assumptions.`],
+          options: [`Branching is used to integrate new real-world information without altering the base knowledge.`, `Each branch represents different possible futures or assumed worlds, forming separate paths of reasoning.`, `Branching is the implementation of the rollback mechanism that discards false assumptions and irrelevant conclusions.`, `Branching is used to prevent the corruption of permanent knowledge by carefully separating it from temporary assumptions.`],
           answer: 2,
-          guide: `<p><strong>Answer: B</strong> — Each branch from the branch represents different possible futures or assumed worlds, forming separate paths of reasoning.</p><p>In hypothetical reasoning system, branching refers to every hypothetical assumption leading to a distinct path of reasoning. Each branch signifies a different possible future or a different assumed world, allowing for simultaneous exploration of multiple potential outcomes.</p>` }
+          guide: `<p><strong>Answer: B</strong> — Each branch represents different possible futures or assumed worlds, forming separate paths of reasoning.</p><p>In hypothetical reasoning system, branching refers to every hypothetical assumption leading to a distinct path of reasoning. Each branch signifies a different possible future or a different assumed world, allowing for simultaneous exploration of multiple potential outcomes.</p>` }
       ] },
     { number: '146', marks: 1, layout: 0, section: 'Inference Techniques: Truth Maintenance & Hypothetical Reasoning',
       items: [
@@ -1217,7 +1217,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is one advantage of heuristic-based inference in expert systems compared to exhaustive reasoning?</p>`,
-          options: [`It provides more accurate results`, `It allows for more thorough checking of all possibilities`, `It speeds up the decision-making process by focusing on the most probable results first`, `It requires less computational resources`],
+          options: [`It provides more accurate results`, `It allows for more thorough checking of all possibilities`, `It speeds up the decision-making process by focusing on the most probable results first`, `It guarantees the best possible solution every time`],
           answer: 3,
           guide: `<p><strong>Answer: C</strong> — It speeds up the decision-making process by focusing on the most probable results first</p><p>Heuristic-based inference in expert systems prioritize the most likely solutions, making the decision-making process faster compared to exhaustive reasoning, which checks every single possible outcome.</p>` }
       ] },

@@ -214,8 +214,7 @@ registerExam({
       number: '11', marks: 2, layout: 0,
       items: [
         { type: 'multi',
-          question: `<p>Which of the following is TRUE about passive data collection?</p>
-<p>Select all that apply.</p>`,
+          question: `<p>Which of the following is TRUE about passive data collection?</p>`,
           options: [
             `It never requires consent or privacy notices because no forms are filled out.`,
             `It can raise privacy and ethical issues and must comply with policies/legislation.`,
@@ -241,8 +240,7 @@ registerExam({
       items: [
         { type: 'multi',
           question: `<p>A new government app, powered by artificial intelligence, is designed to help people plan their trips on public transport.</p>
-<p>Which of the following features would be needed to ensure that everyone can access and benefit from the app?</p>
-<p>Select all that apply.</p>`,
+<p>Which of the following features would be needed to ensure that everyone can access and benefit from the app?</p>`,
           options: [
             `Different language options`,
             `A high-contrast option for the user interface`,
@@ -311,7 +309,8 @@ registerExam({
 <p><strong>Sample answer:</strong></p>
 <p>Blockchain technology incorporates data verification in online voting systems in a number of ways.</p>
 <p>One benefit is the voting data is encrypted and therefore not able to be tampered with. Once a person submits their vote electronically, it is then encrypted and stored on the blockchain, making it impossible to change without affecting the entire system.</p>
-<p>Blockchain technology also uses cryptographic algorithms to ensure that data is accurate and secure. Transactions are verified and confirmed by multiple participants in the network, which makes it difficult to falsify or alter data. This creates a verifiable and transparent record of transactions that can be used to track and verify data.</p>` }
+<p>Blockchain technology also uses cryptographic algorithms to ensure that data is accurate and secure. Transactions are verified and confirmed by multiple participants in the network, which makes it difficult to falsify or alter data. This creates a verifiable and transparent record of transactions that can be used to track and verify data.</p>
+<p><em>Note: the CSSA sample answer attributes tamper-resistance to encryption. Strictly, it comes from hashing: each block stores the cryptographic hash of the previous block, so changing a recorded vote changes its hash and breaks the chain, and the change is rejected by the other nodes (consensus) holding copies of the ledger. Encryption keeps votes confidential but does not by itself stop them being altered.</em></p>` }
       ]
     },
     {
@@ -598,7 +597,8 @@ H3: =VLOOKUP(G3,$B$15:$C$19,2)</pre>
 <li>Returning customer – No, items in cart – Yes, cart value less than $100 → 10%</li>
 <li>Returning customer – No, items in cart – No, browsing more than 5 minutes → 10%</li>
 <li>Returning customer – No, items in cart – No, browsing less than 5 minutes → No discount</li>
-</ul>` }
+</ul>
+<p><em>Note: the sample tree leaves the boundaries out. By the stimulus, a cart of exactly &#36;100 gets 10% (“otherwise”) and browsing for exactly 5 minutes gets no discount, so the lower branches should read “&#36;100 or less” and “5 minutes or less”.</em></p>` }
       ]
     },
     {
@@ -708,7 +708,8 @@ H3: =VLOOKUP(G3,$B$15:$C$19,2)</pre>
 <p>Enterprises use statistical models to track and forecast share performance by looking at price, volume and simple market indicators. Models such as basic regression help analysts estimate likely directions and test relationships. On big datasets, this gives clearer, more objective signals for risk management and planning such as what-if scenarios. The strengths are transparency and stability, and it can be easier to explain decisions to non-technical stakeholders. However, models can be wrong, especially if fed low-quality data, and may over-simplify complex market behaviour. Ethical issues also arise, as heavy reliance on automated signals can create an information bubble, and poor data governance risks leaking sensitive trading information. As seen in the stimulus, statistical modelling is actively used to determine buyer patterns and stock decisions for a company. Having this accurate data allows companies to save money by not overstocking on products and staying ahead of buying patterns when appropriate by making accurate predictions on buyer habits.</p>
 <p>Neural networks are a type of machine learning. They learn patterns in medical images (e.g. chest X-rays, skin lesions) to flag likely abnormalities for a clinician to review first. Trained on thousands of labelled images, they can recognise subtle features faster than a human on a busy shift, reducing time to treatment and helping hospitals prioritise scarce resources. On big data, they continue to improve as more examples are seen. Benefits include earlier detection, more consistent triage, and support for rural or understaffed clinics. As seen in the stimulus this reinforcement learning/training allows accuracy to be increased. Limits still remain, however. Models can reflect bias if training images under-represent certain groups e.g. genders/race. Explainability is weaker than simpler methods as neural networks internal decision making is still mostly unknown to its creators. Data privacy must be protected from collection through storage and sharing.</p>
 <p>Both approaches turn big data into usable predictions by allowing volume, velocity and variety to be analysed in ways that were previously not possible or required excessive resources to accomplish. To a large extent, the best outcomes come from combining the two processed together with sound governance, including, clean data pipelines, validation on fresh cases, human oversight, and clear escalation when predictions are uncertain.</p>
-<p>When combined machine learning acts as the tool for handling large sometime messy datasets, spotting complex, non-linear patterns and producing fast predictions at scale. Statistical modelling explains what those patterns mean. It clarifies relationships, quantifies uncertainty and tests assumptions. In practice, ML helps enterprises act now (who to flag, what to recommend), while statistical models help them understand why and how much. Used together, organisations both predict and explain.</p>` }
+<p>When combined machine learning acts as the tool for handling large sometime messy datasets, spotting complex, non-linear patterns and producing fast predictions at scale. Statistical modelling explains what those patterns mean. It clarifies relationships, quantifies uncertainty and tests assumptions. In practice, ML helps enterprises act now (who to flag, what to recommend), while statistical models help them understand why and how much. Used together, organisations both predict and explain.</p>
+<p><em>Note: two points in the CSSA sample answer (and the stimulus slide titled “Expert Systems”) are inaccurate. Machine learning is not a type of expert system: an expert system reasons with rules written by human experts (knowledge base + inference engine), whereas machine learning learns its model from data. Also, neural networks trained on thousands of labelled images use supervised learning, not reinforcement learning (which learns from rewards for actions).</em></p>` }
       ]
     }
   ],

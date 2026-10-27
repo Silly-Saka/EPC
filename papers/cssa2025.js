@@ -351,7 +351,7 @@ INSERT INTO Patient VALUES ('JMO001','Jim','Moss','2006-08-31');`,
 FROM Patient
 WHERE PatientDOB &gt;= 01/01/2007
 ORDER BY PatientDOB asc</pre>
-<p><em>Note: in this practice database the dates are stored as text in YYYY-MM-DD form, so to run the query here use <code>WHERE PatientDOB &gt;= '2007-01-01'</code>. Expected result: Ally MacDonald (2007), Hayley Foxglove (2009), Colin Bird (2019).</em></p>` }
+<p><em>Note: a date in SQL must be a quoted literal (unquoted, 01/01/2007 is read as the arithmetic 1 ÷ 1 ÷ 2007). In this practice database the dates are stored as text in YYYY-MM-DD form, so to run the query here use <code>WHERE PatientDOB &gt;= '2007-01-01'</code>. Expected result: Ally MacDonald (2007), Hayley Foxglove (2009), Colin Bird (2019).</em></p>` }
       ]
     },
     {

@@ -405,7 +405,8 @@ INSERT INTO FlatFile VALUES ('Bird','Dory','07/05/21','Male','Li','Mei','09/07/2
 <pre class="hoa-code"><strong>SELECT</strong> Owner.FirstName, Owner.Surname, Owner.Email, Pet.Petname, Pet.DOB
 <strong>FROM</strong> Owner, Pet
 <strong>WHERE</strong> Pet.Type = ‘Dog’
-<strong>ORDER BY</strong> Pet.Name ASC</pre>` },
+<strong>ORDER BY</strong> Pet.Name ASC</pre>
+<p><em>Note: the published sample has no join condition between Owner and Pet, so it would pair every owner with every dog (a Cartesian product), and it mixes field names (Pet.Petname vs Pet.Name). A correct answer needs a join, e.g. <code>WHERE Owner.OwnerID = Pet.OwnerID AND Pet.Type = 'Dog'</code>, or joins through the checkup table if using the 19(a) schema.</em></p>` },
         { type: 'html', part: 'c', marks: 3,
           question: `<p>Below is a partially completed Data Dictionary for the GreenPaws Veterinary Clinic relational database. Identify missing content for cells labelled A, B, C, D, E and F.</p>
 <table class="hoa-table-normal"><thead><tr><th>Field Name</th><th>Data Type</th><th>Data Format</th><th>Field Size</th><th>Description</th><th>Example</th></tr></thead><tbody>
@@ -430,7 +431,8 @@ INSERT INTO FlatFile VALUES ('Bird','Dory','07/05/21','Male','Li','Mei','09/07/2
 <tr><td>Treatment Type</td><td>Text</td><td>XXX…XXX</td><td>25</td><td>Treatment type</td><td>Surgery</td></tr>
 <tr><td>Account paid</td><td><strong>Boolean</strong></td><td>XXX</td><td>3</td><td>Yes or No</td><td>Yes</td></tr>
 </tbody></table>
-<p>A = TEXT, B = TEXT, C = DATE, D = 8, E = Boolean, F = 3</p>` }
+<p>A = TEXT, B = TEXT, C = DATE, D = 8, E = Boolean, F = 3</p>
+<p><em>Note: the question has six cells (A–F), although the published criteria refer to “all five”.</em></p>` }
       ]
     },
     {

@@ -45,7 +45,8 @@ registerExam({
       items: [
         { type: 'mcq', question: `<p>Which is <em>not</em> part of the ‘Internet of Things’?</p>`,
           options: [`Smart-watch`, `Washing machine`, `Streaming services`, `Smart TV`],
-          answer: 1, guide: `<p>Answer: A</p>` }
+          answer: 3, guide: `<p>Answer: C</p>
+<p><em>Note: the official PEM key gives A, but a smart-watch is a typical IoT device. The option that is not an IoT ‘thing’ is C (Streaming services – a software service, not a connected physical device), so this site marks C as correct.</em></p>` }
       ]
     },
     {
@@ -109,7 +110,8 @@ registerExam({
       items: [
         { type: 'mcq', question: `<p>A lossless file format</p>`,
           options: [`jpeg`, `flac`, `bmp`, `mp3`],
-          answer: 2, guide: `<p>Answer: B</p>` }
+          answer: 2, guide: `<p>Answer: B</p>
+<p><em>Note: bmp (C) is normally uncompressed and so also loses no data; B (flac, a lossless compressed format) is the intended answer.</em></p>` }
       ]
     },
     {
@@ -232,7 +234,8 @@ registerExam({
 <tr><td>Naming <em>one</em> correct file format</td><td>1</td></tr>
 </tbody></table>
 <p><strong>Sample answer:</strong></p>
-<p>docx, pdf, opendoc.</p>` },
+<p>docx, pdf, opendoc.</p>
+<p><em>Note: the official sample lists document formats, which are not uncompressed multimedia formats (docx is itself zip-compressed). Better answers: WAV/AIFF (audio), BMP/TIFF (image) or uncompressed AVI (video).</em></p>` },
         { type: 'text', part: 'e', marks: 2, wordLimit: 50,
           question: `<p>What is meant by the term <em>profiling</em> and <em>auto-profiling</em>?</p>`,
           guide: `<table class="hoa-table-normal"><thead><tr><th>Criteria</th><th>Marks</th></tr></thead><tbody>

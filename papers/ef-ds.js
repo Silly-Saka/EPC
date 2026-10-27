@@ -133,7 +133,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is considered as an active form of data collection?</p>`,
-          options: [`Gathering weather-related data continuously with a sensor.`, `Tracking user behavior on a website through cookies.`, `Users logging their daily workouts in a fitness app.`, `Measuring the height of students.`],
+          options: [`Gathering weather-related data continuously with a sensor.`, `Tracking user behavior on a website through cookies.`, `Users logging their daily workouts in a fitness app.`, `Recording website page views automatically in server logs.`],
           answer: 3,
           guide: `<p><strong>Answer: C</strong> — Users logging their daily workouts in a fitness app.</p><p>Active data collection requires direct participation. A fitness app asking users to log their daily workouts is considered active because it requires direct input from the user.</p>` }
       ] },
@@ -183,7 +183,7 @@ registerExam({
           question: `<p>What type of data consists of measurable information like numbers and quantities?</p>`,
           options: [`Quantitative Data`, `Qualitative Data`, `Sensor-based Data`, `Passive Data`],
           answer: 1,
-          guide: `<p><strong>Answer: A</strong> — Quantitative Data</p><p>Quantitative data consists of measurable information like numbers and quantities which are known as continuous quantities.</p>` }
+          guide: `<p><strong>Answer: A</strong> — Quantitative Data</p><p>Quantitative data consists of measurable information like numbers and quantities which can be discrete (counted) or continuous (measured).</p>` }
       ] },
     { number: '23', marks: 1, layout: 0, section: 'Data Science Process',
       items: [
@@ -224,7 +224,7 @@ registerExam({
           question: `<p>What type of data is numerical and represents quantifiable characteristics?</p>`,
           options: [`Qualitative data`, `Quantitative data`, `Uncategorised data`, `Unquantifiable data`],
           answer: 2,
-          guide: `<p><strong>Answer: B</strong> — Quantitative data</p><p>Quantitative data is numerical and represents amounts, counts, or other quantifiable characteristics. ---</p>` }
+          guide: `<p><strong>Answer: B</strong> — Quantitative data</p><p>Quantitative data is numerical and represents amounts, counts, or other quantifiable characteristics.</p>` }
       ] },
     { number: '28', marks: 1, layout: 0, section: 'Quantitative vs Qualitative Data',
       items: [
@@ -1079,7 +1079,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>Which real-world application demonstrates the importance of data velocity due to the need for immediate processing and analysis?</p>`,
-          options: [`Weather forecasting systems`, `Smart city traffic monitoring`, `Online retail inventory management`, `Historical data archiving`],
+          options: [`Annual census reporting`, `Smart city traffic monitoring`, `Online retail inventory management`, `Historical data archiving`],
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — Smart city traffic monitoring</p><p>Smart city traffic monitoring requires real-time data analysis to manage traffic flow and avoid congestion, highlighting the importance of data velocity.</p>` }
       ] },
@@ -1235,7 +1235,7 @@ registerExam({
           question: `<p>What is one benefit and one challenge of handling large volumes of data in machine learning?</p>`,
           options: [`Benefit is increasing model accuracy, challenge is ensuring data quality.`, `Benefit is ensuring data quality, challenge is improving model accuracy.`, `Benefit is storing and processing data, challenge is getting immediate insights.`, `Benefit is getting immediate insights, challenge is storing and processing data.`],
           answer: 1,
-          guide: `<p><strong>Answer: A</strong> — Benefit is increasing model accuracy, challenge is ensuring data quality.</p><p>As more data is available, model accuracy improves. However, managing large volumes of data can present challenges in storing and processing data efficiently.</p>` }
+          guide: `<p><strong>Answer: A</strong> — Benefit is increasing model accuracy, challenge is ensuring data quality.</p><p>As more data is available, model accuracy improves. However, with large volumes of data it becomes harder to ensure the data is accurate, complete and consistent (data quality), and poor-quality data can undermine the model.</p>` }
       ] },
     { number: '153', marks: 1, layout: 0, section: 'Impact of Data Scale',
       items: [
@@ -1404,7 +1404,7 @@ registerExam({
           question: `<p>What are the main challenges associated with proof of work systems in blockchain and how are they being addressed?</p>`,
           options: [`High energy consumption and scalability issues; being addressed by increasing computational power and network capacity.`, `Low energy consumption and scalability issues; being addressed by decreasing computational power and network capacity.`, `Scalability issues and transaction speed; being addressed by innovations like Layer 2 solutions and switching to Proof of Stake.`, `Privacy issues and data loss; being addressed by improving encryption methods and backup systems.`],
           answer: 3,
-          guide: `<p><strong>Answer: C</strong> — Scalability issues and transaction speed; being addressed by innovations like Layer 2 solutions and switching to Proof of Stake.</p><p>The main challenges with proof of work systems in blockchain are high energy consumption and scalability issues. Innovations such as Layer 2 solutions and the shift from Proof of Work to Proof of Stake are being used to address these challenges.</p>` }
+          guide: `<p><strong>Answer: C</strong> — Scalability issues and transaction speed; being addressed by innovations like Layer 2 solutions and switching to Proof of Stake.</p><p>The main challenges with proof of work systems are limited scalability and slow transaction speed (as well as high energy use). Innovations such as Layer 2 solutions and the shift from Proof of Work to Proof of Stake are being used to address these challenges.</p>` }
       ] },
     { number: '174', marks: 1, layout: 0, section: 'Blockchain Technology',
       items: [
@@ -1510,7 +1510,7 @@ registerExam({
           question: `<p>What could be the risks of bias present in data for analysis and decision making?</p>`,
           options: [`Damages reputation.`, `Misinformed decisions.`, `Unfair outcomes.`, `All of the above.`],
           answer: 4,
-          guide: `<p><strong>Answer: D</strong> — All of the above.</p><p>Bias in data can lead to damages in reputation, misinformed transactions, and unfair results.</p>` }
+          guide: `<p><strong>Answer: D</strong> — All of the above.</p><p>Bias in data can lead to damages in reputation, misinformed decisions, and unfair results.</p>` }
       ] },
     { number: '187', marks: 1, layout: 0, section: 'Exploring Data Bias & Its Impact',
       items: [
@@ -1540,7 +1540,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is an effective method to reduce bias in a facial recognition system's training dataset?</p>`,
-          options: [`Implement bias detection tools in data processing and analysis`, `Include responses from various demographic groups for representative sampling`, `Add more training images representing underrepresented groups for data augmentation`, `Regularly audit the machine learning models`],
+          options: [`Implement bias detection tools in data processing and analysis`, `Remove demographic labels from the dataset so the model cannot see them`, `Add more training images representing underrepresented groups for data augmentation`, `Regularly audit the machine learning models`],
           answer: 3,
           guide: `<p><strong>Answer: C</strong> — Add more training images representing underrepresented groups for data augmentation</p><p>Adding more training images from underrepresented groups increases diversity in the dataset, thereby reducing biases, especially in facial recognition systems.</p>` }
       ] },
@@ -1789,7 +1789,7 @@ registerExam({
     { number: '221', marks: 1, layout: 0, section: 'Data Sources: Raw vs Processed Data',
       items: [
         { type: 'mcq',
-          question: `<p>What is one possible method of processing raw data with missing values?</p>`,
+          question: `<p>What is one possible method of processing raw data that fills in (rather than removes) missing values?</p>`,
           options: [`Replacing the missing values with a "N/A" placeholder`, `Removing all data points that entail the missing values`, `Imputing the missing values with derived or average values`, `Ignoring the missing values during analysis`],
           answer: 3,
           guide: `<p><strong>Answer: C</strong> — Imputing the missing values with derived or average values</p><p>The raw data set example shows a missing value being handled by imputing it with an average value, making it an example of data processing.</p>` }
@@ -1809,7 +1809,7 @@ registerExam({
           question: `<p>What are the main responsibilities of Data Protection Authorities (DPAs)?</p>`,
           options: [`Ensuring organizations follow data protection laws and handling complaints about data misuse.`, `Conducting investigations into data breaches and enforcing penalties for non-compliance with data laws.`, `Providing organizations and individuals with information and guidance on data protection regulations.`, `All of the above.`],
           answer: 4,
-          guide: `<p><strong>Answer: D</strong> — All of the above.</p><p>The main responsibilities of DPAs include monitoring compliance with data protection laws, responding to complaints about data misuse, investigating data breaches, enforcing penalties for non-compliance, and providing guidance and awareness to organizations and individuals. So, the</p>` }
+          guide: `<p><strong>Answer: D</strong> — All of the above.</p><p>The main responsibilities of DPAs include monitoring compliance with data protection laws, responding to complaints about data misuse, investigating data breaches, enforcing penalties for non-compliance, and providing guidance and awareness to organizations and individuals.</p>` }
       ] },
     { number: '224', marks: 1, layout: 0, section: 'Data Legislation & Protection',
       items: [
@@ -1904,7 +1904,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What does GDPR require from retail companies regarding customer's personal data, such as email addresses and payment methods?</p>`,
-          options: [`Companies must provide an opt-out option for marketing communications.`, `Companies should encrypt personal data.`, `Companies can freely use and store personal data without any restrictions.`, `Companies should ensure all customers are subscribed to marketing communications.`],
+          options: [`Companies may send marketing emails without consent if the customer bought something.`, `Companies should encrypt personal data.`, `Companies can freely use and store personal data without any restrictions.`, `Companies should ensure all customers are subscribed to marketing communications.`],
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — Companies should encrypt personal data.</p><p>GDPR's data security requirements stipulate that personal data, such as email addresses and payment methods, should be encrypted.</p>` }
       ] },
@@ -1943,7 +1943,7 @@ registerExam({
     { number: '240', marks: 1, layout: 0, section: 'Data Collection & Handling Legalities',
       items: [
         { type: 'mcq',
-          question: `<p>What are some of the legal obligations of a hospital concerning medical data according to health data regulations like HIPPA (in the U.S.) and GDPR (in the EU)?</p>`,
+          question: `<p>What are some of the legal obligations of a hospital concerning medical data according to health data regulations like HIPAA (in the U.S.) and GDPR (in the EU)?</p>`,
           options: [`Hospitals are obligated to share all patient medical records with pharmaceutical companies for research purposes.`, `Hospitals are obligated to keep the patient's medical history public for transparency.`, `Hospitals are obligated to store and protect medical data securely. They must also provide access to patients for their records, correct inaccuracies upon patient's request and notify individuals in case of a data breach.`, `Hospitals are obligated to only record minimum necessary treatment details about patients.`],
           answer: 3,
           guide: `<p><strong>Answer: C</strong> — Hospitals are obligated to store and protect medical data securely. They must also provide access to patients for their records, correct inaccuracies upon patient's request and notify individuals in case of a data breach.</p><p>According to health data regulations like HIPAA and GDPR, hospitals must securely store and protect all medical data. They must also allow patients to access their data, rectify inaccuracies, and inform them if the data is compromised.</p>` }
@@ -2350,7 +2350,7 @@ registerExam({
           question: `<p>What visualisation method could transportation planners utilise to identify areas in need of additional routes or services?</p>`,
           options: [`Network diagram overlaid with population density data.`, `Map showing the seasonal patterns of passenger counts.`, `Network diagram showing the busiest bus routes during peak hours.`, `Map showing the distribution of bus stops.`],
           answer: 1,
-          guide: `<p><strong>Answer: A</strong> — Network diagram overlaid with population density data.</p><p>A map overlaid with population density data can significantly help transportation planners identify areas underserved in terms of transportation routes and services. This will allow them to make informed decisions about where to add additional routes or services.</p>` }
+          guide: `<p><strong>Answer: A</strong> — Network diagram overlaid with population density data.</p><p>A network diagram of routes overlaid with population density data can significantly help transportation planners identify areas underserved in terms of transportation routes and services. This will allow them to make informed decisions about where to add additional routes or services.</p>` }
       ] },
     // ---------------- Summarise Data using Spreadsheets ----------------
     { number: '291', marks: 1, layout: 0, section: 'Summarise Data using Spreadsheets',
@@ -2437,7 +2437,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What could be a practical use of filters in a spreadsheet dataset of customer service records for a company?</p>`,
-          options: [`To view only the records where the 'Customer Name' is "John"`, `To hide all records that are more than a month old`, `To display only the rows where the 'Resolution Status' is "Pending"`, `To change the 'Date' of all entries in the dataset`],
+          options: [`To permanently delete all records where the 'Customer Name' is "John"`, `To calculate the average resolution time for all records`, `To display only the rows where the 'Resolution Status' is "Pending"`, `To change the 'Date' of all entries in the dataset`],
           answer: 3,
           guide: `<p><strong>Answer: C</strong> — To display only the rows where the 'Resolution Status' is "Pending"</p><p>In the content, it was mentioned that if a manager wants to focus on only the unresolved cases, they can apply a filter to display rows where 'Resolution Status' is "Pending". This lets them concentrate on what’s immediately relevant without having to look through all the records.</p>` }
       ] },
@@ -2446,7 +2446,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is one of the benefits of using linked sheets in spreadsheets?</p>`,
-          options: [`They reduce errors and improve data quality.`, `They enable data from multiple sources to be aggregated automatically.`, `They make data entry accessible to users unfamiliar with spreadsheets.`, `None of the above.`],
+          options: [`They prevent other users from viewing the data.`, `They enable data from multiple sources to be aggregated automatically.`, `They make data entry accessible to users unfamiliar with spreadsheets.`, `None of the above.`],
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — They enable data from multiple sources to be aggregated automatically.</p><p>Using linked sheets increases efficiency as it allows the aggregation of data from multiple sources automatically, saving time and effort.</p>` }
       ] },
@@ -2462,7 +2462,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>In a spreadsheet tool, what functions could be utilised when creating a monthly sales report for a retail business?</p>`,
-          options: [`SUM, AVERAGE, and MAX`, `SUM, AVERAGE, and COUNT`, `COUNT, AVERAGE, and MEAN`, `ADD, MULTIPLY, and DIVIDE`],
+          options: [`SUM, TOTAL, and MEAN`, `SUM, AVERAGE, and COUNT`, `COUNT, AVERAGE, and MEAN`, `ADD, MULTIPLY, and DIVIDE`],
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — SUM, AVERAGE, and COUNT</p><p>In a sales report, functions like SUM (for total sales or revenue), AVERAGE (for average units sold or average revenue) and COUNT (for the number of sold units or selling days) are likely to be used.</p>` }
       ] },
@@ -2616,7 +2616,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>Which of the following is NOT a benefit of using flat-file databases?</p>`,
-          options: [`Portability`, `Low overhead`, `Scalability`, `Avoidance of data redundancy`],
+          options: [`Portability`, `Low overhead`, `Simplicity`, `Avoidance of data redundancy`],
           answer: 4,
           guide: `<p><strong>Answer: D</strong> — Avoidance of data redundancy</p><p>Flat-file databases often lead to redundancy as all data is stored in a single table resulting in duplication of information. This is not a benefit, rather it's a limitation.</p>` }
       ] },
@@ -2794,9 +2794,9 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>How would you sort customers by age in ascending order in SQL?</p>`,
-          options: [`SELECT * FROM Customer ORDER BY Age;`, `SELECT * FROM Customer ORDER BY Age ASC;`, `SELECT * FROM Customer ORDER BY Age DESC;`, `SELECT * FROM Customer ORDER Age BY;`],
+          options: [`SELECT * FROM Customer SORT BY Age;`, `SELECT * FROM Customer ORDER BY Age ASC;`, `SELECT * FROM Customer ORDER BY Age DESC;`, `SELECT * FROM Customer ORDER Age BY;`],
           answer: 2,
-          guide: `<p><strong>Answer: B</strong> — SELECT * FROM Customer ORDER BY Age ASC;</p><p>In SQL, data is sorted in ascending order by default. Therefore, both options A and B are correct. However, using the ASC keyword explicitly specifies the order, making the statement more clear.</p>` }
+          guide: `<p><strong>Answer: B</strong> — SELECT * FROM Customer ORDER BY Age ASC;</p><p>ORDER BY … ASC sorts from lowest to highest (ASC is also the default). DESC sorts in descending order, and SORT BY is not valid SQL.</p>` }
       ] },
     { number: '346', marks: 1, layout: 0, section: 'Using SQL for Sorting & Searching',
       items: [
@@ -2804,7 +2804,7 @@ registerExam({
           question: `<p>Which of the following scenarios does not represent a practical application of sorting and searching in databases?</p>`,
           options: [`E-commerce websites use sorting and searching to find products based on price range, category, brand and to sort results by price, popularity, or reviews.`, `Social media platforms store user data and enable users to search for friends by name, filter results by location, and sort profiles based on various attributes.`, `School management systems use sorting and searching to search for students based on age, grade, or name and then sort the results.`, `A music streaming website uses database sorting and searching to randomly display songs from various genres.`],
           answer: 4,
-          guide: `<p><strong>Answer: D</strong> — A music streaming website uses database sorting and searching to randomly display songs from various genres.</p><p>The random display of songs in</p>` }
+          guide: `<p><strong>Answer: D</strong> — A music streaming website uses database sorting and searching to randomly display songs from various genres.</p><p>Randomly displaying songs does not sort results or search for records that match criteria, so it is not an application of sorting and searching. Options A–C all filter records by criteria and then order the results.</p>` }
       ] },
     { number: '347', marks: 1, layout: 0, section: 'Using SQL for Sorting & Searching',
       items: [
@@ -2850,7 +2850,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is an example of a practical application of sorting and searching in databases?</p>`,
-          options: [`Searching for products based on specific criteria on e-commerce websites.`, `Organizing data alphabetically in a word document.`, `Sorting music playlists by song name on a music streaming service.`, `Grouping similar images together in a mobile photo album.`],
+          options: [`Searching for products based on specific criteria on e-commerce websites.`, `Organizing data alphabetically in a word document.`, `Shuffling the order of songs in a playlist at random.`, `Grouping similar images together in a mobile photo album.`],
           answer: 1,
           guide: `<p><strong>Answer: A</strong> — Searching for products based on specific criteria on e-commerce websites.</p><p>Searching for products based on specific criteria on e-commerce websites relates to searching in databases, where data is certain to be stored and efficiently managed. Options B, C and D are not necessarily related to storing and managing data in databases.</p>` }
       ] },
@@ -2923,9 +2923,9 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>Which of the following is NOT a challenge of Machine Learning and Big Data Analytics as mentioned in the text?</p>`,
-          options: [`Data Quality`, `Overfitting`, `Computational Power`, `Data Volume`],
+          options: [`Data Quality`, `Overfitting`, `Computational Power`, `Increased data accuracy`],
           answer: 4,
-          guide: `<p><strong>Answer: D</strong> — Data Volume</p><p>According to the text, "Data Quality", "Overfitting", and "Computational Power" are challenges faced in Machine Learning and Big Data Analytics. "Data Volume" is not mentioned as a challenge in this context.</p>` }
+          guide: `<p><strong>Answer: D</strong> — Increased data accuracy</p><p>"Data Quality", "Overfitting" and "Computational Power" are challenges faced in Machine Learning and Big Data Analytics. "Increased data accuracy" is a benefit, not a challenge.</p>` }
       ] },
     { number: '362', marks: 1, layout: 0, section: 'Machine Learning for Prediction',
       items: [
@@ -2974,13 +2974,13 @@ registerExam({
           question: `<p>What distinguishes interval data from other forms of numerical data?</p>`,
           options: [`Interval data can be represented on line graphs.`, `Interval data always has a true "absence" of the measured attribute.`, `The intervals between values in interval data are equal and consistent.`, `In interval data, ratios are meaningful.`],
           answer: 3,
-          guide: `<p><strong>Answer: C</strong> — The intervals between values in interval data are equal and consistent.</p><p>Only interval data has the unique property of having equal intervals between values. This means the difference between the values is consistent throughout the scale.</p>` }
+          guide: `<p><strong>Answer: C</strong> — The intervals between values in interval data are equal and consistent.</p><p>Interval data has equal, consistent intervals between values (unlike ordinal data), but it has no true zero, so ratios are not meaningful (unlike ratio data).</p>` }
       ] },
     { number: '368', marks: 1, layout: 0, section: 'Data Types',
       items: [
         { type: 'mcq',
           question: `<p>What is NOT true about nominal data?</p>`,
-          options: [`It only consists of text labels.`, `It can be used in arithmetic operations.`, `It categorises items based on shared characteristics.`, `Bar charts and pie charts can be used to visualise nominal data.`],
+          options: [`It has no meaningful order or ranking.`, `It can be used in arithmetic operations.`, `It categorises items based on shared characteristics.`, `Bar charts and pie charts can be used to visualise nominal data.`],
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — It can be used in arithmetic operations.</p><p>Unlike other forms of data, nominal data cannot be used in arithmetic operations such as addition, subtraction, or averaging. It is purely descriptive and categorized based on shared characteristics.</p>` }
       ] },
@@ -3011,10 +3011,10 @@ registerExam({
     { number: '372', marks: 1, layout: 0, section: 'Data Types',
       items: [
         { type: 'mcq',
-          question: `<p>Which of the following characteristics is unique to interval data?</p>`,
+          question: `<p>Which of the following characteristics applies to interval data?</p>`,
           options: [`It has an absolute zero`, `Addition and subtraction are not meaningful`, `It has equal intervals between values`, `Ratios are meaningful`],
           answer: 3,
-          guide: `<p><strong>Answer: C</strong> — It has equal intervals between values</p><p>Unlike other types of data, interval data has equal intervals between its values, making the difference between its values meaningful and consistent. This unique property allows it to be used in addition and subtraction. However, ratios are not meaningful because there is no true "absence" of the measured attribute, meaning there is no absolute zero.</p>` }
+          guide: `<p><strong>Answer: C</strong> — It has equal intervals between values</p><p>Interval data (like ratio data, but unlike ordinal data) has equal intervals between its values, making the difference between its values meaningful and consistent. This property allows it to be used in addition and subtraction. However, ratios are not meaningful because there is no true "absence" of the measured attribute, meaning there is no absolute zero.</p>` }
       ] },
     { number: '373', marks: 1, layout: 0, section: 'Data Types',
       items: [
@@ -3247,7 +3247,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is a significant challenge of using autofill features from a privacy perspective?</p>`,
-          options: [`Difficulty of storing information locally.`, `The inconvenience of entering form details.`, `Ensuring the protection of user data.`, `Increasing the risk of phishing attacks.`],
+          options: [`Difficulty of storing information locally.`, `The inconvenience of entering form details.`, `Ensuring the protection of user data.`, `Making forms slower to complete.`],
           answer: 3,
           guide: `<p><strong>Answer: C</strong> — Ensuring the protection of user data.</p><p>One of the primary challenges with autofill from a privacy perspective is ensuring users' data protection. Encryption is necessary to protect sensitive information, and users should be able to control the enabling or disabling autofill features for various websites.</p>` }
       ] },
@@ -3360,7 +3360,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is a major risk associated with data mining?</p>`,
-          options: [`Invasion of personal privacy`, `Misinterpretation of data`, `Lack of interesting data`, `All of the above`],
+          options: [`Invasion of personal privacy`, `Improved customer service`, `Lack of interesting data`, `All of the above`],
           answer: 1,
           guide: `<p><strong>Answer: A</strong> — Invasion of personal privacy</p><p>This content specifically identifies the invasion of personal privacy as a major risk associated with data mining.</p>` }
       ] },
@@ -3376,7 +3376,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is a consequence of data misuse and unethical conduct associated with data mining?</p>`,
-          options: [`Invasion of personal privacy`, `Discrimination or profiling`, `Inaccuracy of the data`, `Significant increase of security risks`],
+          options: [`Improved fraud detection`, `Discrimination or profiling`, `Inaccuracy of the data`, `Significant increase of security risks`],
           answer: 2,
           guide: `<p><strong>Answer: B</strong> — Discrimination or profiling</p><p>If data mining is misused, it can lead to harmful consequences like discrimination or profiling. For instance, a company could exclude specific customer groups from receiving offers based on income or ethnicity, which is a discriminatory practice.</p>` }
       ] },
@@ -3459,7 +3459,7 @@ registerExam({
           question: `<p>What is an example of how bias can enter a machine learning model?</p>`,
           options: [`A facial recognition system performs poorly at recognising darker-skinned faces because the training data consisted primarily of lighter-skinned faces.`, `A system fails to identify certain fruits in images because its training data included only pictures of vegetables.`, `A translation system makes mistakes because it was trained on a dataset that included both English and French sentences.`, `A system incorrectly classifies cats as dogs because its training data included images of both animals.`],
           answer: 1,
-          guide: `<p><strong>Answer: A</strong> — A facial recognition system performs poorly at recognising darker-skinned faces because the training data consisted primarily of lighter-skinned faces.</p><p>The</p>` }
+          guide: `<p><strong>Answer: A</strong> — A facial recognition system performs poorly at recognising darker-skinned faces because the training data consisted primarily of lighter-skinned faces.</p><p>Bias enters a model when its training data under-represents some groups. Because the system was trained mainly on lighter-skinned faces, it is less accurate for darker-skinned people, which is an unfair outcome for a demographic group. The other options describe ordinary gaps or errors in the data, not unfair treatment of groups of people.</p>` }
       ] },
     { number: '428', marks: 1, layout: 0, section: 'Ethical Use of Data in Research',
       items: [
@@ -3521,7 +3521,7 @@ registerExam({
       items: [
         { type: 'mcq',
           question: `<p>What is one of the methods you could use to ensure the accuracy of data in a dataset?</p>`,
-          options: [`Use conditional formatting to highlight entries with income recorded as 0 for employed individuals.`, `Remove any records where Consent Obtained is marked as Yes.`, `Check for outliers in age, such as entries indicating an age of 5.`, `Include all entries regardless of their accuracy to maintain data volume.`],
+          options: [`Use conditional formatting to highlight entries with income recorded as 0 for employed individuals.`, `Remove any records where Consent Obtained is marked as Yes.`, `Delete any records that contain unusual values without investigating them.`, `Include all entries regardless of their accuracy to maintain data volume.`],
           answer: 1,
           guide: `<p><strong>Answer: A</strong> — Use conditional formatting to highlight entries with income recorded as 0 for employed individuals.</p><p>To ensure the accuracy of a dataset, you could use methods such as conditional formatting to highlight potential errors or discrepancies, such as income recorded as 0 for employed individuals.</p>` }
       ] },

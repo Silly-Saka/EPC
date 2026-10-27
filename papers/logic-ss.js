@@ -92,7 +92,7 @@ registerExam({
             ['Jack', null, null, null, null, null, 75], ['Kiara', null, null, null, null, null, 43], ['Liam', null, null, null, null, null, 80],
           ],
           cells: [{ cell: 'I2', answer: '=COUNTIF(G2:G100,">75")' }],
-          guide: `<p><strong>Sample answer:</strong> <code>=COUNTIF(G2:G100, "&gt;75")</code></p><p>COUNTIF counts the cells in a range that meet a condition; the condition is written in quotes. Scores of exactly 75 are not counted.</p>` }
+          guide: `<p><strong>Sample answer:</strong> <code>=COUNTIF(G2:G100, "&gt;75")</code></p><p>COUNTIF counts the cells in a range that meet a condition; the condition is written in quotes. Scores of exactly 75 are not counted.</p><p><em>Note: the spreadsheet in the NESA online exam does not support COUNTIF, SUMIF or AVERAGEIF (they show #ERROR!). Know them for written answers, but in the exam spreadsheet you may need another approach, e.g. an IF column that is then added up with SUM or COUNT.</em></p>` }
       ] },
     { number: '7', marks: 1, layout: 0, section: 'Ec.eforge · Joining Text Values',
       items: [
@@ -231,7 +231,7 @@ registerExam({
         { cell: 'B14', answer: '=COUNTIF(C2:C11,">0")' },
         { cell: 'B15', answer: '=AVERAGEIF(C2:C11,">0",B2:B11)' }
       ],
-      guide: `<p><strong>Sample answers:</strong> B13 <code>=SUMIF(B2:B11,"&gt;25",C2:C11)</code> (3), B14 <code>=COUNTIF(C2:C11,"&gt;0")</code> (6), B15 <code>=AVERAGEIF(C2:C11,"&gt;0",B2:B11)</code> (22.33).</p><p>The textbook's example is <code>=SUMIF(Temperature, "&gt;25", Rainfall)</code> (p. 205): the first range is tested against the criterion and the matching cells of the last range are added. AVERAGEIF works the same way.</p>` }
+      guide: `<p><strong>Sample answers:</strong> B13 <code>=SUMIF(B2:B11,"&gt;25",C2:C11)</code> (3), B14 <code>=COUNTIF(C2:C11,"&gt;0")</code> (6), B15 <code>=AVERAGEIF(C2:C11,"&gt;0",B2:B11)</code> (22.33).</p><p>The textbook's example is <code>=SUMIF(Temperature, "&gt;25", Rainfall)</code> (p. 205): the first range is tested against the criterion and the matching cells of the last range are added. AVERAGEIF works the same way.</p><p><em>Note: the spreadsheet in the NESA online exam does not support COUNTIF, SUMIF or AVERAGEIF (they show #ERROR!). Know them for written answers, but in the exam spreadsheet you may need another approach, e.g. an IF column that is then added up with SUM or COUNT.</em></p>` }
   ] },
 { number: '13', marks: 2, layout: 0, section: 'Textbook p. 208 · Linking multiple sheets (cell references)',
   items: [
@@ -375,7 +375,7 @@ registerExam({
         ['06/01/2024', 'Food', 30, null, null, null]
       ],
       cells: [ { cell: 'F2', fill: 'F2:F4', answer: '=SUMIF($B$2:$B$7,E2,$C$2:$C$7)' } ],
-      guide: `<p><strong>Sample answer:</strong> <code>=SUMIF($B$2:$B$7,E2,$C$2:$C$7)</code>, filled down to F4 (Food 100, Transport 70, Bills 100).</p><p>The absolute references ($) keep the data ranges fixed when the formula is filled down, while E2 changes to E3 and E4. The results match the pivot table on textbook p. 222.</p>` }
+      guide: `<p><strong>Sample answer:</strong> <code>=SUMIF($B$2:$B$7,E2,$C$2:$C$7)</code>, filled down to F4 (Food 100, Transport 70, Bills 100).</p><p>The absolute references ($) keep the data ranges fixed when the formula is filled down, while E2 changes to E3 and E4. The results match the pivot table on textbook p. 222.</p><p><em>Note: the spreadsheet in the NESA online exam does not support COUNTIF, SUMIF or AVERAGEIF (they show #ERROR!). Know them for written answers, but in the exam spreadsheet you may need another approach, e.g. an IF column that is then added up with SUM or COUNT.</em></p>` }
   ] },
 { number: '18', marks: 2, layout: 0, section: 'Textbook p. 225 · Activity: Building a weather dashboard (Step 3A)',
   stimulus: `<p><strong>Weather dashboard</strong></p><p>A student is building a dashboard from one week of weather observations. Sheet1 has one row per day showing the temperature (°C), wind speed (km/h), rainfall (mm) and that day's condition (Sunny, Cloudy or Rain).</p><p>To show which kind of weather brought the most rain, the student created a pivot table with Condition as the rows and the <strong>Sum of Rainfall (mm)</strong> as the values. The pivot table lists each condition once, in alphabetical order, and ends with a Grand Total row giving the rainfall for the whole week.</p>`,
@@ -397,7 +397,7 @@ registerExam({
         { cell: 'H2', fill: 'H2:H4', answer: '=SUMIF($E$2:$E$8,G2,$D$2:$D$8)' },
         { cell: 'H5', answer: '=SUM(H2:H4)' }
       ],
-      guide: `<p><strong>Sample answers:</strong> H2 <code>=SUMIF($E$2:$E$8,G2,$D$2:$D$8)</code> filled down to H4 (Cloudy 5, Rain 30, Sunny 0); H5 <code>=SUM(H2:H4)</code> (35). <code>=SUM(D2:D8)</code> also gives 35.</p><p>These match the pivot table in the dashboard activity (textbook pp. 225–227).</p>` }
+      guide: `<p><strong>Sample answers:</strong> H2 <code>=SUMIF($E$2:$E$8,G2,$D$2:$D$8)</code> filled down to H4 (Cloudy 5, Rain 30, Sunny 0); H5 <code>=SUM(H2:H4)</code> (35). <code>=SUM(D2:D8)</code> also gives 35.</p><p>These match the pivot table in the dashboard activity (textbook pp. 225–227).</p><p><em>Note: the spreadsheet in the NESA online exam does not support COUNTIF, SUMIF or AVERAGEIF (they show #ERROR!). Know them for written answers, but in the exam spreadsheet you may need another approach, e.g. an IF column that is then added up with SUM or COUNT.</em></p>` }
   ] },
 { number: '19', marks: 3, layout: 0, section: 'Textbook p. 284 · Activity: Mean, median, and mode',
   items: [
@@ -430,7 +430,7 @@ registerExam({
   stimulus: `<p><strong>Colour-coded test scores</strong></p><p>A teacher records each student's test score in a spreadsheet and uses conditional formatting so that every score cell is shaded automatically according to its value. The legend in rows 10 to 13 explains the three bands: green for a high score, yellow for an average score and pink for a low score.</p><p>Colours can be hard to tell apart when the sheet is printed in black and white or read by someone who is colour-blind, so the teacher also wants each student's band shown as a word in column C.</p>`,
   items: [
     { type: 'formula', marks: 2,
-      question: `<p>Instead of colours, write a formula in <strong>C2</strong> that displays the band as text: <strong>High</strong> for a score above 90, <strong>Average</strong> for a score from 70 to 89, and <strong>Low</strong> for a score below 70. It should be possible to fill it down to C8.</p>`,
+      question: `<p>Instead of colours, write a formula in <strong>C2</strong> that displays the band as text: <strong>High</strong> for a score above 90, <strong>Average</strong> for a score from 70 to 90, and <strong>Low</strong> for a score below 70. It should be possible to fill it down to C8.</p>`,
       sheet: [
         ['Student', 'Score', 'Band'],
         ['Ava', 92, null],
@@ -443,7 +443,7 @@ registerExam({
         [null, null, null],
         ['Legend', null, null],
         ['Green', 'High score (>90)', null],
-        ['Yellow', 'Average score (70–89)', null],
+        ['Yellow', 'Average score (70–90)', null],
         ['Pink', 'Low score (<70)', null]
       ],
       cells: [ { cell: 'C2', fill: 'C2:C8', answer: '=IF(B2>90,"High",IF(B2>=70,"Average","Low"))' } ],
@@ -494,7 +494,7 @@ registerExam({
         ['Ella', 'Science', 3, 70]
       ],
       cells: [ { cell: 'G2', fill: 'G2:G7', answer: '=AVERAGEIF($A$2:$A$37,F2,$D$2:$D$37)' } ],
-      guide: `<p><strong>Sample answer:</strong> <code>=AVERAGEIF($A$2:$A$37,F2,$D$2:$D$37)</code>, filled down to G7.</p><p>AVERAGEIF averages the scores in column D whose student in column A matches F2. The results (Ava 82.3, Ben 83, Chloe 81.2, Daniel 77.7, Dave 39.7, Ella 76.8) round to the Total column of the pivot table on textbook p. 287. Finn and Grace are left out because their rows are cut off in the book's screenshot.</p>` }
+      guide: `<p><strong>Sample answer:</strong> <code>=AVERAGEIF($A$2:$A$37,F2,$D$2:$D$37)</code>, filled down to G7.</p><p>AVERAGEIF averages the scores in column D whose student in column A matches F2. The results (Ava 82.3, Ben 83, Chloe 81.2, Daniel 77.7, Dave 39.7, Ella 76.8) round to the Total column of the pivot table on textbook p. 287. Finn and Grace are left out because their rows are cut off in the book's screenshot.</p><p><em>Note: the spreadsheet in the NESA online exam does not support COUNTIF, SUMIF or AVERAGEIF (they show #ERROR!). Know them for written answers, but in the exam spreadsheet you may need another approach, e.g. an IF column that is then added up with SUM or COUNT.</em></p>` }
   ] },
 { number: '22', marks: 5, layout: 0, section: 'Textbook p. 299 · Activity: Correlation',
   stimulus: `<p><strong>Fred's prediction theory</strong></p><p>Fred, an Enterprise Computing (EC) student, believes that a student's HSC EC result is closely linked to their English and Maths results. To test the idea he collected the EC, English and Maths marks of 15 students in his EC class (including his own) and entered them in a spreadsheet. He hopes to predict any student's English and Maths marks from their EC mark alone.</p><p>Below the marks, Fred summarises each subject with sample statistics. Because his classmates are only a sample of all EC students, he uses the sample standard deviation. The correlation coefficient, which ranges from −1 to 1, measures how closely each subject's marks rise and fall with the EC marks; a value near 1 indicates a strong positive relationship.</p>`,
@@ -579,7 +579,7 @@ registerExam({
         { cell: 'B3', answer: '=B1-B2' },
         { cell: 'B4', answer: "=SUMIF('Raw Data'!C2:C9,\"Groceries\",'Raw Data'!D2:D9)" }
       ],
-      guide: `<p><strong>Sample answers:</strong> B1 <code>=SUM('Raw Data'!B2:B9)</code> (12950), B2 <code>=SUM('Raw Data'!D2:D9)</code> (6280), B3 <code>=B1-B2</code> (6670), B4 <code>=SUMIF('Raw Data'!C2:C9,"Groceries",'Raw Data'!D2:D9)</code> (1610).</p><p>The activity's dashboard uses =SUM for the totals and "=Total Income - Total Expenses" for savings (textbook p. 346). SUMIF gives the total for one expense category, which is what the activity's pie chart of category totals needs.</p>` }
+      guide: `<p><strong>Sample answers:</strong> B1 <code>=SUM('Raw Data'!B2:B9)</code> (12950), B2 <code>=SUM('Raw Data'!D2:D9)</code> (6280), B3 <code>=B1-B2</code> (6670), B4 <code>=SUMIF('Raw Data'!C2:C9,"Groceries",'Raw Data'!D2:D9)</code> (1610).</p><p>The activity's dashboard uses =SUM for the totals and "=Total Income - Total Expenses" for savings (textbook p. 346). SUMIF gives the total for one expense category, which is what the activity's pie chart of category totals needs.</p><p><em>Note: the spreadsheet in the NESA online exam does not support COUNTIF, SUMIF or AVERAGEIF (they show #ERROR!). Know them for written answers, but in the exam spreadsheet you may need another approach, e.g. an IF column that is then added up with SUM or COUNT.</em></p>` }
   ] },
 { number: '24', marks: 2, layout: 0, section: 'Textbook p. 394 · Activity: Anonymise and mask a dataset',
   stimulus: `<p><strong>Protecting personal data</strong></p><p>An organisation holds a fictional dataset about seven people: each person's name, age, suburb, medical condition and mobile phone number. Before the data is used for analysis, personal details must be protected, as Australian privacy law such as the Privacy Act 1988 expects, while the data stays useful for spotting trends.</p><p><strong>Data masking</strong> hides part of a value but keeps its overall format, so a masked phone number still looks like a phone number. <strong>Anonymisation</strong> removes or generalises details that could identify a person; for example, an exact age can be replaced by a broader age group.</p>`,
