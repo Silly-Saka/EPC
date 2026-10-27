@@ -427,3 +427,56 @@ textarea.wx-ta:focus { border-color: #1ca1c1; }
 /* dialogs don't block the grid: ranges can be dragged into their range boxes */
 .dlg-bg { pointer-events: none; }
 .dlg-bg .dlg { pointer-events: auto; }
+
+/* ---------- graphs, matched to NESA (Webix 11) ---------- */
+/* charts sit above the cells but slide under the column letters / row numbers when scrolled (NESA) */
+.ss-grid thead th { z-index: 8; }
+.ss-grid tbody th { z-index: 7; }
+.ss-grid thead th.corner { z-index: 9; }
+.ss-chart { position: absolute; background: #fff; border: 1px solid #dadee0; box-shadow: none; display: block; box-sizing: border-box; }
+.ss-chart.focused { border-color: #1ca1c1; box-shadow: 0 2px 6px rgba(0,0,0,.1); }
+.ss-chart-body { position: absolute; inset: 0; padding: 0; cursor: default; }
+.ss-chart-body canvas { display: block; }
+.ss-chart-menu { position: absolute; right: 8px; top: 6px; width: 24px; height: 24px; display: grid; place-items: center; color: #475466; cursor: pointer; z-index: 2; background: none; border-radius: 0; }
+.ss-chart-menu:hover { background: none; }
+.ss-chart-resize { position: absolute; right: 0; bottom: 0; width: 15px; height: 15px; cursor: nwse-resize; background: none; z-index: 2; }
+.ss-chart-resize svg { display: block; }
+/* "Edit chart" panel: docked at the right, the grid narrows */
+body.chart-panel-open .ss-grid-wrap { margin-right: 440px; }
+.ss-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 440px; box-sizing: border-box; background: #fff; border-left: 1px solid #dadee0; box-shadow: none; z-index: 150; display: flex; flex-direction: column; font: 16px Roboto, sans-serif; color: #475466; }
+.ss-panel-head { height: 44px; flex: 0 0 44px; padding: 0 16px; display: flex; align-items: center; gap: 14px; font-weight: 500; border-bottom: 0; }
+.ss-panel-back { color: #94a1b3; cursor: pointer; display: flex; }
+.ss-panel-back:hover { color: #475466; }
+.ss-tabs { display: flex; margin: 0 16px; border-bottom: 0; flex: 0 0 auto; }
+.ss-tabs span { flex: 1; text-align: center; height: 42px; line-height: 42px; padding: 0; color: #1ca1c1; font-weight: 500; cursor: pointer; border: 0; }
+.ss-tabs span.on { color: #1ca1c1; box-shadow: inset 0 -2px 0 #1ca1c1; border: 0; }
+.ss-panel-body { flex: 1; overflow: auto; padding: 14px 16px 16px; }
+.ss-panel .pf { display: flex; align-items: center; min-height: 46px; margin: 0; gap: 0; justify-content: flex-start; }
+.ss-panel .pf > label { flex: 0 0 176px; width: 176px; font-weight: 500; color: #313131; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 8px; }
+.ss-panel .pf.top { align-items: flex-start; padding-top: 12px; }
+.ss-panel .pf-in, .ss-panel .pf-sel { flex: 1; min-width: 0; width: auto; height: 32px; box-sizing: border-box; border: 0; border-bottom: 1px solid #dadee0; border-radius: 0; padding: 0 12px; font: 16px Roboto, sans-serif; color: #475466; background: transparent; outline: none; }
+.ss-panel .pf-in:focus, .ss-panel .pf-sel:focus { border-bottom-color: #1ca1c1; }
+.ss-panel .pf-sel { appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 26px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23475466'/%3E%3C/svg%3E") no-repeat right 8px center; }
+.ss-panel .pf-cb { width: 18px; height: 18px; box-sizing: border-box; border: 2px solid #94a1b3; border-radius: 2px; cursor: pointer; display: inline-grid; place-items: center; outline: none; }
+.ss-panel .pf-cb.on { background: #1ca1c1; border-color: #1ca1c1; }
+.ss-panel .pf-cb.on::after { content: ''; width: 4px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); margin-top: -2px; }
+.ss-panel .pf-radios { display: flex; flex-direction: column; gap: 10px; }
+.ss-panel .pf-rad { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.ss-panel .pf-rad i { width: 18px; height: 18px; box-sizing: border-box; border: 2px solid #94a1b3; border-radius: 50%; }
+.ss-panel .pf-rad.on i { border: 5px solid #1ca1c1; }
+.ss-panel .pf-color { flex: 1; min-width: 0; display: flex; align-items: center; border-bottom: 1px solid #dadee0; }
+.ss-panel .pf-color:focus-within { border-bottom-color: #1ca1c1; }
+.ss-panel .pf-color .pf-in { border: 0; }
+.ss-panel .pf-sw { flex: 0 0 24px; width: 24px; height: 22px; border-radius: 2px; cursor: pointer; margin-right: 4px; }
+.ss-panel .pf-sw.empty { background: none !important; }
+.ss-panel .pf-acc { margin: 0 0 8px; }
+.ss-panel .pf-acc-h { background: #f4f5f9; height: 42px; display: flex; align-items: center; padding: 0 8px 0 12px; font-weight: 500; cursor: pointer; }
+.ss-panel .pf-acc-h .t { flex: 1; }
+.ss-panel .pf-acc-h .tr, .ss-panel .pf-acc-h .chev { width: 28px; height: 28px; display: grid; place-items: center; color: #475466; }
+.ss-panel .pf-acc.collapsed .pf-acc-h .chev { transform: rotate(180deg); }
+.ss-panel .pf-acc.collapsed .pf-acc-b { display: none; }
+.ss-panel .pf-acc-b { padding: 2px 12px 6px; }
+.ss-panel .pf-note { font-size: 13px; color: #94a1b3; font-style: italic; padding: 6px 0 2px; }
+.ss-panel .pf-addline { margin-top: 6px; height: 36px; width: 100%; background: #f4f5f9; color: #1ca1c1; border: 0; font: 500 16px Roboto, sans-serif; cursor: pointer; }
+.ss-panel .pf-addline:hover { background: #e9edf4; }

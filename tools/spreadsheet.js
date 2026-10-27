@@ -538,7 +538,7 @@
     var cw = {}; Object.keys(colW).forEach(function (c) { cw[colName(+c)] = colW[c]; });
     var cm = {}; Object.keys(comments).forEach(function (x) { p = x.split(','); cm[a1(+p[0], +p[1])] = comments[x]; });
     return { format: 'epc-sheet', cells: cells, colW: cw, rowH: Object.assign({}, rowH), merges: merges.slice(), conds: conds.map(function (x) { return Object.assign({}, x); }),
-      comments: cm, charts: charts.map(function (ch) { return Object.assign({}, ch); }), named: Object.assign({}, named), filter: filter ? JSON.parse(JSON.stringify(filter)) : null,
+      comments: cm, charts: charts.map(function (ch) { return JSON.parse(JSON.stringify(ch)); }), named: Object.assign({}, named), filter: filter ? JSON.parse(JSON.stringify(filter)) : null,
       showFormulas: showFormulas, hiddenRows: Object.keys(hiddenRows).map(Number), hiddenCols: Object.keys(hiddenCols).map(Number),
       groups: JSON.parse(JSON.stringify(groups)), highlightInvalid: highlightInvalid, changed: changed };
   }
@@ -574,7 +574,7 @@
       merges = (v.merges || v.merge || []).slice();
       conds = (v.conds || []).map(function (x) { return Object.assign({}, x); });
       Object.keys(v.comments || {}).forEach(function (ref) { var p = parseA1(ref); if (p) comments[key(p.r, p.c)] = v.comments[ref]; });
-      charts = (v.charts || []).map(function (ch) { return Object.assign({}, ch); });
+      charts = (v.charts || []).map(function (ch) { return JSON.parse(JSON.stringify(ch)); });
       named = Object.assign({}, v.named || {});
       filter = v.filter ? JSON.parse(JSON.stringify(v.filter)) : null;
       showFormulas = !!v.showFormulas;
@@ -656,8 +656,9 @@
   var drag = null;
   grid.addEventListener('mousedown', function (e) {
     if (e.button !== 0) return;
-    if (dlgOpen) {
-      // NESA: while a dialog is open, dragging over the grid fills its range box (Add dropdown, sparkline, validation range)
+    var ae0 = document.activeElement, panelPick = ae0 && ae0.classList && ae0.classList.contains('pf-in') && ae0.hasAttribute('data-pick');
+    if (dlgOpen || panelPick) {
+      // NESA: while a dialog is open (or a chart Range box has the cursor), dragging over the grid fills the range box
       e.preventDefault();
       var a = document.activeElement, pc = cellFromEvent(e);
       if (a && a.hasAttribute && a.hasAttribute('data-pick') && pc) { drag = { mode: 'pick', input: a, r1: pc.r, c1: pc.c, r2: pc.r, c2: pc.c }; showBlock(drag); }
@@ -719,6 +720,7 @@
     else if (d.mode === 'pick') {
       var ref = rangeStr(norm(d)), inp = d.input;
       inp.value = (inp.getAttribute('data-pick') || '') + ref; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.focus();
+      if (inp.classList.contains('pf-in')) inp.dispatchEvent(new Event('change'));   // chart panel: apply straight away
       renderSelection();
     }
   });
@@ -1291,7 +1293,7 @@
     function shiftG(g) { if (isRow) { if (g.r1 >= at) g.r1 = Math.max(at, g.r1 + n); if (g.r2 >= at) g.r2 = Math.max(at - 1, g.r2 + n); } else { if (g.c1 >= at) g.c1 = Math.max(at, g.c1 + n); if (g.c2 >= at) g.c2 = Math.max(at - 1, g.c2 + n); } return g.r2 >= g.r1 && g.c2 >= g.c1 ? g : null; }
     merges = merges.map(function (m) { var g = shiftG(parseRange(m)); return g && (g.r1 !== g.r2 || g.c1 !== g.c2) ? rangeStr(g) : null; }).filter(Boolean);
     conds = conds.filter(function (rule) { var g = shiftG(parseRange(rule.range)); if (g) rule.range = rangeStr(g); return !!g; });
-    charts.forEach(function (ch) { var g = shiftG(parseRange(ch.range)); if (g) ch.range = rangeStr(g); });
+    charts.forEach(function (ch) { upgradeChart(ch); var sh = function (x) { var g = x && shiftG(parseRange(x)); return g ? rangeStr(g) : ''; }; ch.range = sh(ch.range) || ch.range; ch.series.forEach(function (s) { if (s.range) s.range = sh(s.range); }); if (ch.xAxis.range) ch.xAxis.range = sh(ch.xAxis.range); if (ch.legend.range) ch.legend.range = sh(ch.legend.range); });
     Object.keys(named).forEach(function (nm) { var g = shiftG(parseRange(named[nm])); if (g) named[nm] = rangeStr(g); else delete named[nm]; });
     if (filter) { var fg = shiftG(parseRange(filter.range)); filter = fg ? { range: rangeStr(fg), crit: {} } : null; }
     // hidden and grouped rows / columns move with the insert or delete
@@ -1616,67 +1618,172 @@
     tb.undo.disabled = !undoStack.length; tb.redo.disabled = !redoStack.length;
   }
 
-  // ------------------------------------------------------------------ graphs ("Add above cells", edited in a side panel like Webix)
-  var PALETTE = ['#6666ff', '#e1251b', '#00a650', '#ff9900', '#7030a0', '#00b0f0', '#d5a6bd', '#666666'];
-  var CHART_TYPES = [['line', 'Line'], ['spline', 'Spline'], ['splineArea', 'Spline Area'], ['area', 'Area'], ['bar', 'Bar'], ['hbar', 'Bar (horizontal)'], ['radar', 'Radar'], ['pie', 'Pie'], ['donut', 'Donut'], ['scatter', 'Scatter']];
-  function chartData(ch) {
-    var g = parseRange(ch.range); if (!g) return null;
-    var M = [];
-    for (var r = g.r1; r <= g.r2; r++) { var row = []; for (var c = g.c1; c <= g.c2; c++) { var v = cellValue(r, c); row.push(isError(v) ? null : v); } M.push(row); }
-    if (ch.seriesFrom === 'rows') M = M[0].map(function (_, c) { return M.map(function (row) { return row[c]; }); });
-    var body = ch.legendTop ? M.slice(1) : M;
-    var labels = body.map(function (row, i) { return ch.xCol ? String(row[0] == null ? '' : row[0]) : String(i + 1); });
-    var series = [];
-    for (var c = ch.xCol ? 1 : 0; c < (M[0] || []).length; c++) {
-      series.push({ label: ch.legendTop ? String(M[0][c] == null ? '' : M[0][c]) : 'Data ' + (series.length + 1), data: body.map(function (row) { return typeof row[c] === 'number' ? row[c] : null; }) });
+  // ------------------------------------------------------------------ graphs: NESA (Webix) "Add above cells" charts
+  // The model mirrors what NESA stores: type, range, dataSeries, xAxis / legend (fromData + range), one entry per series
+  // (range, color, tooltip, label, marker), scale, yAxis and origin. Drawn with Chart.js styled like the Webix charts.
+  var SERIES_COLORS = ['#e06666', '#6aa84f', '#3c78d8', '#e69138', '#783f04', '#134f5c', '#674ea7', '#c27ba0'];
+  var PIE_COLORS = ['#f55b50', '#ff6d3f', '#ffa521', '#ffc927', '#ffee54', '#d3e153', '#9acb61', '#63b967', '#21a497', '#21c5da', '#3ea4f5', '#5868bf', '#7b53c0', '#a943ba', '#ec3b77', '#9eb0b8'];
+  var CHART_TYPES = [['line', 'Line'], ['spline', 'Spline'], ['splineArea', 'Spline Area'], ['area', 'Area'], ['bar', 'Bar'], ['radar', 'Radar'], ['pie', 'Pie'], ['donut', 'Donut'], ['scatter', 'Scatter']];
+  var MARKERS = [['square', 'Square'], ['triangle', 'Triangle'], ['diamond', 'Diamond'], ['round', 'Round']];
+  var MARKER_STYLE = { square: 'rect', triangle: 'triangle', diamond: 'rectRot', round: 'circle' };
+  var CHART_MIN_W = 50, CHART_MIN_H = 200, chartFocus = null;
+  if (window.Chart) { Chart.defaults.font.family = 'Roboto, sans-serif'; Chart.defaults.font.size = 12; Chart.defaults.color = '#94a1b3'; }
+  function isPie(t) { return t === 'pie' || t === 'donut'; }
+  // Webix spreads the 16 pie colours out when there are fewer slices than colours
+  function pieColors(n) {
+    var out = [], L = PIE_COLORS.length, idx = 0;
+    for (var i = 0; i < n; i++) { if (n >= L) idx = i % L; else if (i) idx += i < L - n ? 2 : 1; out.push(PIE_COLORS[Math.min(idx, L - 1)]); }
+    return out;
+  }
+  function hexA(c, a) { var m = /^#?([0-9a-f]{6})$/i.exec(c || ''); if (!m) return c; var n = parseInt(m[1], 16); return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; }
+  function rangeCells(s) { var g = parseRange(s); if (!g) return []; var out = []; for (var r = g.r1; r <= g.r2; r++) for (var c = g.c1; c <= g.c2; c++) out.push([r, c]); return out; }
+  function cellNum(rc) { var v = cellValue(rc[0], rc[1]); return typeof v === 'number' ? v : null; }
+  function cellTxt(rc) { return displayText(rc[0], rc[1]); }
+
+  function newChartModel(range, x, y) {
+    var ch = { id: 'ch' + Date.now() + Math.floor(Math.random() * 1000), x: x, y: y, w: 500, h: 300, type: 'line', stacked: 0, horizontal: 0, d3: 0, range: range, dataSeries: 'columns',
+      xAxis: { fromData: 0, range: '', title: '' }, legend: { fromData: 0, range: '', align: 'center', valign: 'bottom' }, series: [],
+      scale: { lines: 1, color: '' }, yAxis: { title: '', start: '', end: '', step: '' }, origin: '' };
+    genSeries(ch); return ch;
+  }
+  // one series per column (or row) of the range; the first column/row can be used for the x axis or the legend (NESA)
+  function genSeries(ch) {
+    var g = parseRange(ch.range); ch.series = [];
+    var pie = isPie(ch.type), rows = ch.dataSeries === 'rows';
+    if (pie) ch.xAxis.fromData = 0;
+    if (!g) { ch.xAxis.range = ''; ch.legend.range = ''; return; }
+    var xFrom = !pie && !!ch.xAxis.fromData, lgFrom = !!ch.legend.fromData;
+    var first = rows ? { r1: g.r1, c1: g.c1, r2: g.r1, c2: g.c2 } : { r1: g.r1, c1: g.c1, r2: g.r2, c2: g.c1 };   // left column (columns) / top row (rows)
+    var cross = rows ? { r1: g.r1, c1: g.c1, r2: g.r2, c2: g.c1 } : { r1: g.r1, c1: g.c1, r2: g.r1, c2: g.c2 };   // top row (columns) / left column (rows)
+    ch.xAxis.range = xFrom ? rangeStr(first) : '';
+    ch.legend.range = lgFrom ? rangeStr(pie ? first : cross) : '';
+    var n = rows ? g.r2 - g.r1 + 1 : g.c2 - g.c1 + 1;
+    for (var i = (xFrom || (pie && lgFrom)) ? 1 : 0; i < n; i++) {
+      var sg = rows ? { r1: g.r1 + i, c1: g.c1, r2: g.r1 + i, c2: g.c2 } : { r1: g.r1, c1: g.c1 + i, r2: g.r2, c2: g.c1 + i };
+      ch.series.push({ range: rangeStr(sg), color: SERIES_COLORS[i % SERIES_COLORS.length], tooltip: 1, label: 0, marker: 'square' });
     }
-    return { labels: labels, series: series };
   }
-  function chartConfig(ch) {
-    var data = chartData(ch); if (!data) return null;
-    var t = ch.type || 'line', pie = t === 'pie' || t === 'donut';
-    var type = { line: 'line', spline: 'line', splineArea: 'line', area: 'line', bar: 'bar', hbar: 'bar', radar: 'radar', pie: 'pie', donut: 'doughnut', scatter: 'scatter' }[t] || 'line';
-    var colors = ch.colors || [];
-    var datasets = (pie ? data.series.slice(0, 1) : data.series).map(function (s, i) {
-      var col = colors[i] || PALETTE[i % PALETTE.length];
-      var ds = { label: s.label, data: s.data, borderColor: col, backgroundColor: pie ? data.labels.map(function (_, j) { return PALETTE[j % PALETTE.length]; }) : (/area|Area/.test(t) ? col + '55' : col), borderWidth: 2,
-        tension: /spline/i.test(t) ? 0.4 : 0, fill: /area|Area/.test(t), pointRadius: t === 'scatter' ? 4 : 3, pointBackgroundColor: '#fff', pointBorderColor: col };
-      if (t === 'scatter') ds.data = s.data.map(function (y, j) { return { x: isNaN(+data.labels[j]) ? j + 1 : +data.labels[j], y: y }; });
-      return ds;
+  // charts saved by the older version of this tool
+  function upgradeChart(ch) {
+    if (ch.series && ch.xAxis && ch.legend) return ch;
+    var t = ch.type || 'line'; if (t === 'hbar') { t = 'bar'; ch.horizontal = 1; }
+    ch.type = t; ch.dataSeries = ch.dataSeries || ch.seriesFrom || 'columns';
+    ch.xAxis = { fromData: ch.xCol ? 1 : 0, range: '', title: ch.xTitle || '' };
+    ch.legend = { fromData: ch.legendTop ? 1 : 0, range: '', align: 'center', valign: ch.legendPos === 'top' ? 'top' : 'bottom' };
+    ch.scale = { lines: ch.lines === false ? 0 : 1, color: '' }; ch.yAxis = { title: ch.yTitle || '', start: '', end: '', step: '' }; ch.origin = '';
+    var cols = ch.colors || []; genSeries(ch); ch.series.forEach(function (s, i) { if (cols[i]) s.color = cols[i]; });
+    ['xCol', 'legendTop', 'seriesFrom', 'colors', 'title', 'legendPos', 'lines', 'xTitle', 'yTitle'].forEach(function (k) { delete ch[k]; });
+    ch.w = ch.w || 500; ch.h = ch.h || 300; return ch;
+  }
+  // values ready to draw
+  function chartModel(ch) {
+    var pie = isPie(ch.type), hdr = !pie && ch.legend.fromData ? 1 : 0;
+    var lg = ch.legend.range ? rangeCells(ch.legend.range) : [];
+    var series = ch.series.filter(function (s) { return parseRange(s.range); }).map(function (s, i) {
+      var cells = rangeCells(s.range), name = '';
+      if (!pie) name = ch.legend.fromData ? cellTxt(cells[0]) : (lg[i] ? cellTxt(lg[i]) : '');
+      return { s: s, name: name, values: cells.slice(hdr).map(cellNum) };
     });
-    var cfg = { type: type, data: { labels: data.labels, datasets: datasets }, options: { responsive: true, maintainAspectRatio: false, animation: false, indexAxis: t === 'hbar' ? 'y' : 'x',
-      plugins: { legend: { display: !!ch.legendTop || pie, position: ch.legendPos || 'bottom' }, title: { display: !!ch.title, text: ch.title } } } };
-    if (!pie && type !== 'radar') cfg.options.scales = { x: { title: { display: !!ch.xTitle, text: ch.xTitle }, grid: { display: ch.lines !== false } }, y: { beginAtZero: true, title: { display: !!ch.yTitle, text: ch.yTitle }, grid: { display: ch.lines !== false } } };
-    return cfg;
+    var n = series.reduce(function (m, x) { return Math.max(m, x.values.length); }, 0);
+    var xc = ch.xAxis.range ? rangeCells(ch.xAxis.range).slice(hdr) : [], labels = [], xNums = [];
+    for (var i = 0; i < n; i++) { labels.push(xc[i] ? cellTxt(xc[i]) : ''); xNums.push(xc[i] ? cellNum(xc[i]) : null); }
+    return { series: series, labels: labels, xNums: xNums, n: n, pieLabels: pie && lg.length ? lg.map(cellTxt) : null, showLegend: lg.length > 0 };
   }
+  var valueLabels = { id: 'epcLabels', afterDatasetsDraw: function (chart) {
+    var ctx = chart.ctx, pie = chart.config.type === 'pie' || chart.config.type === 'doughnut';
+    ctx.save(); ctx.font = '12px Roboto, sans-serif'; ctx.fillStyle = '#475466'; ctx.textAlign = 'center'; ctx.textBaseline = pie ? 'middle' : 'bottom';
+    chart.data.datasets.forEach(function (ds, di) {
+      if (!ds._s || !ds._s.label || !chart.isDatasetVisible(di)) return;
+      chart.getDatasetMeta(di).data.forEach(function (el, j) {
+        var raw = ds.data[j], v = raw && typeof raw === 'object' ? raw.y : raw; if (v == null || (pie && !chart.getDataVisibility(j))) return;
+        var p = pie ? el.tooltipPosition() : el; ctx.fillText(String(v), p.x, pie ? p.y : p.y - 7);
+      });
+    });
+    ctx.restore();
+  } };
+  function chartConfig(ch, forExport) {
+    upgradeChart(ch);
+    var m = chartModel(ch), t = ch.type, pie = isPie(t), area = t === 'area' || t === 'splineArea', spline = t === 'spline' || t === 'splineArea';
+    var cj = pie ? (t === 'donut' ? 'doughnut' : 'pie') : t === 'bar' ? 'bar' : t === 'radar' ? 'radar' : t === 'scatter' ? 'scatter' : 'line';
+    var stacked = !!ch.stacked && (t === 'bar' || t === 'area'), horiz = t === 'bar' && !!ch.horizontal, origin = parseFloat(ch.origin);
+    var datasets;
+    if (pie) {
+      var pc = pieColors(m.n);
+      datasets = m.series.map(function (x) { return { label: x.name, data: x.values.map(function (v) { return v == null ? 0 : v; }), backgroundColor: pc, hoverBackgroundColor: pc, borderColor: '#fff', borderWidth: 1, _s: x.s }; });
+    } else {
+      datasets = m.series.map(function (x, i) {
+        var col = x.s.color || SERIES_COLORS[i % SERIES_COLORS.length];
+        var ds = { label: x.name, data: x.values, _s: x.s, borderColor: col, backgroundColor: col };
+        if (cj === 'bar') { ds.borderWidth = 0; ds.maxBarThickness = 30; ds.barPercentage = 1; ds.categoryPercentage = 0.75; if (!isNaN(origin)) ds.base = origin; return ds; }
+        ds.borderWidth = 2; ds.pointStyle = MARKER_STYLE[x.s.marker] || 'rect'; ds.pointRadius = area ? 0 : 3.5; ds.pointHoverRadius = area ? 3 : 4.5;
+        ds.pointBorderWidth = 2; ds.pointBackgroundColor = '#fff'; ds.pointBorderColor = col; ds.tension = spline ? 0.4 : 0; ds.fill = false;
+        if (area) { ds.fill = stacked && i ? '-1' : 'origin'; ds.backgroundColor = hexA(col, 0.7); ds.borderWidth = 0; }
+        if (cj === 'scatter') { ds.showLine = false; ds.data = x.values.map(function (v, j) { return v == null ? null : { x: m.xNums[j] == null ? 0 : m.xNums[j], y: v }; }).filter(Boolean); }
+        return ds;
+      });
+    }
+    var tick = { color: '#94a1b3', font: { size: 12, family: 'Roboto, sans-serif' } };
+    var gridCol = ch.scale.color || '#edeff0', lines = !!ch.scale.lines;
+    var plain = function (v) { return typeof v === 'number' ? String(+v.toFixed(10)) : v; };
+    var legendGen = function (chart) {
+      var base = pie ? Chart.overrides[cj].plugins.legend.labels.generateLabels(chart) : Chart.defaults.plugins.legend.labels.generateLabels(chart);
+      base.forEach(function (it) {
+        var ds = chart.data.datasets[it.datasetIndex]; if (!pie && ds) it.fillStyle = it.strokeStyle = ds._s.color || ds.borderColor;
+        if (it.hidden) { it.fillStyle = it.strokeStyle = '#dadee0'; it.hidden = false; }   // Webix greys the marker of a hidden series
+        it.pointStyle = 'rectRounded'; it.lineWidth = 0; it.fontColor = '#475466';
+      });
+      return base;
+    };
+    var opts = { responsive: !forExport, maintainAspectRatio: false, animation: false, indexAxis: horiz ? 'y' : 'x',
+      layout: { padding: { top: 30, right: 16, bottom: 4, left: 8 } },
+      plugins: {
+        legend: { display: pie ? !!m.pieLabels : m.showLegend, position: ch.legend.valign === 'top' ? 'top' : 'bottom', align: { left: 'start', center: 'center', right: 'end' }[ch.legend.align || 'center'],
+          labels: { color: '#475466', font: { size: 12 }, boxWidth: 14, boxHeight: 14, usePointStyle: true, pointStyle: 'rectRounded', padding: 10, generateLabels: legendGen } },
+        tooltip: { filter: function (it) { var s = it.dataset._s; return !s || !!s.tooltip; }, displayColors: false, backgroundColor: '#475466', bodyColor: '#fff', bodyFont: { size: 14, family: 'Roboto, sans-serif' },
+          padding: { x: 10, y: 6 }, cornerRadius: 2, caretSize: 0, callbacks: { title: function () { return ''; }, label: function (it) { var r = it.raw; return plain(r && typeof r === 'object' ? r.y : r); } } },
+        title: { display: false } } };
+    if (cj === 'radar') {
+      opts.scales = { r: { beginAtZero: true, grid: { display: lines, color: gridCol }, angleLines: { display: lines, color: gridCol }, ticks: Object.assign({ backdropColor: 'transparent', callback: plain }, tick), pointLabels: { display: !!ch.xAxis.range, color: '#94a1b3', font: { size: 12 } } } };
+    } else if (!pie) {
+      var axTitle = function (s) { return { display: !!s, text: s, color: '#94a1b3', font: { size: 12 } }; };
+      var cat = { offset: !area, stacked: stacked, ticks: Object.assign({ display: !!ch.xAxis.range }, tick), grid: { display: lines, color: gridCol, drawTicks: false }, border: { color: gridCol }, title: axTitle(ch.xAxis.title) };
+      if (cj === 'scatter') cat = { type: 'linear', min: 0, suggestedMax: 5, ticks: Object.assign({ callback: plain }, tick), grid: { display: lines, color: gridCol, drawTicks: false }, border: { color: gridCol }, title: axTitle(ch.xAxis.title) };
+      var val = { beginAtZero: true, stacked: stacked, ticks: Object.assign({ callback: plain, padding: 8 }, tick), grid: { display: lines, color: gridCol, drawTicks: false }, border: { display: false }, title: axTitle(ch.yAxis.title) };
+      var st = parseFloat(ch.yAxis.start), en = parseFloat(ch.yAxis.end), sp = parseFloat(ch.yAxis.step);
+      if (!isNaN(st) && !isNaN(en) && !isNaN(sp) && sp > 0) { val.min = st; val.max = en; val.ticks.stepSize = sp; }
+      opts.scales = horiz ? { x: val, y: cat } : { x: cat, y: val };
+    }
+    if (t === 'donut') opts.cutout = '45%';
+    return { type: cj, data: { labels: pie ? (m.pieLabels || m.labels) : m.labels, datasets: datasets }, options: opts, plugins: [valueLabels] };
+  }
+
+  function chartOrigin() { return { x: 40, y: grid.tHead && grid.tHead.rows[0] ? grid.tHead.rows[0].offsetHeight : 21 }; }
   function addChart() {
     if (readOnly) return; commitEdit();
-    var g = norm(sel);
-    if (g.r1 === g.r2 && g.c1 === g.c2) { flash('Select the data to graph first (include headings).'); return; }
-    var firstColText = false, firstRowText = false;
-    for (var r = g.r1; r <= g.r2; r++) { var v = cellValue(r, g.c1); if (typeof v === 'string' && v !== '') firstColText = true; }
-    for (var c = g.c1; c <= g.c2; c++) { var v2 = cellValue(g.r1, c); if (typeof v2 === 'string' && v2 !== '') firstRowText = true; }
-    var rc = rangeRect(g);
+    var g = norm(sel), z = zoomLvl || 1;
     beginChange();
-    var ch = { id: 'ch' + Date.now(), type: 'line', range: rangeStr(g), xCol: firstColText && g.c2 > g.c1, legendTop: firstRowText && g.r2 > g.r1, seriesFrom: 'columns', x: rc.x + 30, y: rc.y + 30, w: 420, h: 260 };
+    var ch = newChartModel(rangeStr(g), Math.round(wrap.scrollLeft / z) + 50, Math.round(wrap.scrollTop / z) + 50);   // NESA: 50px in from the top-left, 500 x 300
     charts.push(ch);
     endChange(false);
-    openChartPanel(ch.id);
+    focusChart(ch.id); openChartPanel(ch.id, true);
   }
+  var DOTS_SVG = '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="18" r="1.8" fill="currentColor"/></svg>';
+  var GRIP_SVG = '<svg width="15" height="15" viewBox="0 0 15 15"><path d="M13 5 5 13M13 9 9 13" stroke="#475466" stroke-width="1.2"/></svg>';
   function renderCharts() {
-    var layer = $('charts'), keep = {};
+    var layer = $('charts'), keep = {}, o = chartOrigin();
     charts.forEach(function (ch) {
-      keep[ch.id] = 1;
+      upgradeChart(ch); keep[ch.id] = 1;
       var box = layer.querySelector('[data-id="' + ch.id + '"]');
       if (!box) {
         box = document.createElement('div'); box.className = 'ss-chart'; box.setAttribute('data-id', ch.id);
-        box.innerHTML = '<div class="ss-chart-menu" title="Menu"><i class="fas fa-ellipsis-v"></i></div><div class="ss-chart-body"><canvas></canvas></div><div class="ss-chart-resize"></div>';
+        box.innerHTML = '<div class="ss-chart-body"><canvas></canvas></div><div class="ss-chart-menu">' + DOTS_SVG + '</div><div class="ss-chart-resize">' + GRIP_SVG + '</div>';
         layer.appendChild(box); wireChart(box, ch.id);
       }
-      box.style.left = ch.x + 'px'; box.style.top = ch.y + 'px'; box.style.width = ch.w + 'px'; box.style.height = ch.h + 'px';
+      box.classList.toggle('focused', chartFocus === ch.id);
+      box.style.left = (ch.x + o.x) + 'px'; box.style.top = (ch.y + o.y) + 'px'; box.style.width = ch.w + 'px'; box.style.height = ch.h + 'px';
       drawChart(box, ch);
     });
-    Array.prototype.forEach.call(layer.children, function (b) { if (!keep[b.getAttribute('data-id')]) { var o = chartObjs[b.getAttribute('data-id')]; o && o.destroy(); b.remove(); } });
+    Array.prototype.forEach.call(layer.children, function (b) { if (!keep[b.getAttribute('data-id')]) { var ob = chartObjs[b.getAttribute('data-id')]; ob && ob.destroy(); b.remove(); } });
     if (chartPanelFor && !charts.some(function (c) { return c.id === chartPanelFor; })) closeChartPanel();
   }
   function drawChart(box, ch) {
@@ -1686,69 +1793,247 @@
     chartObjs[ch.id] = new Chart(box.querySelector('canvas'), cfg);
   }
   function findChart(id) { return charts.filter(function (c) { return c.id === id; })[0]; }
+  function focusChart(id) { chartFocus = id; Array.prototype.forEach.call($('charts').children, function (b) { b.classList.toggle('focused', b.getAttribute('data-id') === id); }); }
+  document.addEventListener('mousedown', function (e) {
+    if (chartFocus && !(e.target.closest && e.target.closest('.ss-chart, #chartpanel, .menu'))) focusChart(null);
+  }, true);
   function wireChart(box, id) {
+    box.addEventListener('mousedown', function () { focusChart(id); });
     box.querySelector('.ss-chart-menu').addEventListener('mousedown', function (e) {
-      e.preventDefault(); e.stopPropagation(); if (readOnly) return;
+      e.preventDefault(); e.stopPropagation(); focusChart(id); if (readOnly) return;
       var b = e.currentTarget.getBoundingClientRect();
-      openMenu(b.left, b.bottom, [['Edit', null, function () { openChartPanel(id); }], ['Download', null, function () {
-        var a = document.createElement('a'); a.href = chartObjs[id].toBase64Image(); a.download = 'graph.png'; a.click();
-      }], ['Remove', null, function () { beginChange(); charts = charts.filter(function (c) { return c.id !== id; }); endChange(false); }]]);
+      openMenu(b.left + b.width / 2, b.bottom - 2, [['Edit', null, function () { openChartPanel(id); }],
+        ['Download', null, null, [['PDF document', null, function () { downloadChart(id, 'pdf'); }], ['PNG image', null, function () { downloadChart(id, 'png'); }], ['Excel file', null, function () { downloadChart(id, 'xlsx'); }]]],
+        ['Remove', null, function () { beginChange(); charts = charts.filter(function (c) { return c.id !== id; }); if (chartFocus === id) chartFocus = null; endChange(false); }]]);
     });
     function dragger(handle, resize) {
       handle.addEventListener('mousedown', function (e) {
-        if (readOnly || e.target.closest('.ss-chart-menu')) return; e.preventDefault(); e.stopPropagation();
-        var ch = findChart(id), sx = e.clientX, sy = e.clientY, o = { x: ch.x, y: ch.y, w: ch.w, h: ch.h }, snap = snapshot(), moved = false;
+        if (readOnly || e.button !== 0 || e.target.closest('.ss-chart-menu')) return; e.preventDefault(); e.stopPropagation(); focusChart(id);
+        var ch = findChart(id), sx = e.clientX, sy = e.clientY, o = { x: ch.x, y: ch.y, w: ch.w, h: ch.h }, snap = snapshot(), moved = false, org = chartOrigin();
         function mv(ev) {
-          moved = true;
           var ddx = (ev.clientX - sx) / zoomLvl, ddy = (ev.clientY - sy) / zoomLvl;
-          if (resize) { ch.w = Math.max(220, o.w + ddx); ch.h = Math.max(160, o.h + ddy); }
-          else { ch.x = Math.max(0, o.x + ddx); ch.y = Math.max(0, o.y + ddy); }
-          box.style.left = ch.x + 'px'; box.style.top = ch.y + 'px'; box.style.width = ch.w + 'px'; box.style.height = ch.h + 'px';
+          if (!moved && Math.abs(ddx) < 3 && Math.abs(ddy) < 3) return;
+          moved = true;
+          if (resize) { ch.w = Math.round(Math.max(CHART_MIN_W, o.w + ddx)); ch.h = Math.round(Math.max(CHART_MIN_H, o.h + ddy)); }
+          else { ch.x = Math.round(Math.max(0, o.x + ddx)); ch.y = Math.round(Math.max(0, o.y + ddy)); }
+          box.style.left = (ch.x + org.x) + 'px'; box.style.top = (ch.y + org.y) + 'px'; box.style.width = ch.w + 'px'; box.style.height = ch.h + 'px';
+          if (resize && chartObjs[id]) chartObjs[id].resize();
         }
-        function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); if (moved) { undoStack.push(snap); redoStack = []; endChange(false); } }
+        function up() {
+          document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up);
+          if (moved) {
+            undoStack.push(snap); redoStack = []; endChange(false);
+            // a drag that ends over the legend must not also toggle a series
+            var swallow = function (ev) { ev.stopPropagation(); };
+            box.addEventListener('click', swallow, true);
+            setTimeout(function () { box.removeEventListener('click', swallow, true); }, 0);
+          }
+        }
         document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up);
       });
     }
     dragger(box.querySelector('.ss-chart-body'), false); dragger(box.querySelector('.ss-chart-resize'), true);
   }
-  function closeChartPanel() { var p = $('chartpanel'); if (p) p.remove(); chartPanelFor = null; }
-  function openChartPanel(id) {
-    closeChartPanel(); chartPanelFor = id;
-    var ch = findChart(id); if (!ch) return;
-    var p = document.createElement('div'); p.id = 'chartpanel'; p.className = 'ss-panel';
-    p.innerHTML = '<div class="ss-panel-head"><span class="ss-panel-back"><i class="fas fa-arrow-left"></i></span> Edit chart</div><div class="ss-tabs"><span data-t="common" class="on">Common</span><span data-t="series">Series</span><span data-t="extras">Extras</span></div><div class="ss-panel-body"></div>';
-    document.body.appendChild(p);
-    p.querySelector('.ss-panel-back').onclick = closeChartPanel;
-    var body = p.querySelector('.ss-panel-body');
-    function update(fn) { beginChange(); fn(ch); endChange(false); }
-    function tab(t) {
-      Array.prototype.forEach.call(p.querySelectorAll('.ss-tabs span'), function (s) { s.classList.toggle('on', s.getAttribute('data-t') === t); });
-      if (t === 'common') {
-        body.innerHTML = '<div class="pf"><label>Type</label><select id="ct">' + CHART_TYPES.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + '</option>'; }).join('') + '</select></div>' +
-          '<div class="pf"><label>Range</label><input id="cr"></div><div class="pf"><label>Use left column as xAxis</label><input type="checkbox" id="cx"></div><div class="pf"><label>Use top row as legend</label><input type="checkbox" id="cl"></div>' +
-          '<div class="pf pf-col"><label>Data series from</label><label class="rad"><input type="radio" name="csf" value="columns"> columns</label><label class="rad"><input type="radio" name="csf" value="rows"> rows</label></div>';
-        body.querySelector('#ct').value = ch.type; body.querySelector('#cr').value = ch.range; body.querySelector('#cx').checked = !!ch.xCol; body.querySelector('#cl').checked = !!ch.legendTop;
-        body.querySelector('input[name=csf][value=' + (ch.seriesFrom || 'columns') + ']').checked = true;
-        body.querySelector('#ct').onchange = function (e) { update(function (c) { c.type = e.target.value; }); };
-        body.querySelector('#cr').onchange = function (e) { var rg = parseRange(e.target.value.toUpperCase()); if (rg) update(function (c) { c.range = rangeStr(rg); }); };
-        body.querySelector('#cx').onchange = function (e) { update(function (c) { c.xCol = e.target.checked; }); };
-        body.querySelector('#cl').onchange = function (e) { update(function (c) { c.legendTop = e.target.checked; }); };
-        Array.prototype.forEach.call(body.querySelectorAll('input[name=csf]'), function (r) { r.onchange = function () { update(function (c) { c.seriesFrom = r.value; }); }; });
-      } else if (t === 'series') {
-        var data = chartData(ch) || { series: [] };
-        body.innerHTML = data.series.map(function (s, i) { return '<div class="pf-sec">' + escapeHtml(s.label) + '</div><div class="pf"><label>Color</label><input type="color" data-i="' + i + '" value="' + ((ch.colors || [])[i] || PALETTE[i % PALETTE.length]) + '"></div>'; }).join('') || '<p class="muted">No data series in the range.</p>';
-        Array.prototype.forEach.call(body.querySelectorAll('input[type=color]'), function (inp) { inp.onchange = function () { update(function (c) { c.colors = (c.colors || []).slice(); c.colors[+inp.getAttribute('data-i')] = inp.value; }); }; });
-      } else {
-        body.innerHTML = '<div class="pf-sec">Title</div><div class="pf"><label>Chart title</label><input id="et"></div><div class="pf-sec">Legend</div><div class="pf"><label>Position</label><select id="elp"><option value="bottom">Bottom</option><option value="top">Top</option><option value="left">Left</option><option value="right">Right</option></select></div>' +
-          '<div class="pf-sec">Scale</div><div class="pf"><label>Lines</label><input type="checkbox" id="esl"></div><div class="pf-sec">X axis</div><div class="pf"><label>Title</label><input id="ext"></div><div class="pf-sec">Y axis</div><div class="pf"><label>Title</label><input id="eyt"></div>';
-        body.querySelector('#et').value = ch.title || ''; body.querySelector('#elp').value = ch.legendPos || 'bottom'; body.querySelector('#esl').checked = ch.lines !== false;
-        body.querySelector('#ext').value = ch.xTitle || ''; body.querySelector('#eyt').value = ch.yTitle || '';
-        body.querySelector('#et').onchange = function (e) { update(function (c) { c.title = e.target.value; }); };
-        body.querySelector('#elp').onchange = function (e) { update(function (c) { c.legendPos = e.target.value; }); };
-        body.querySelector('#esl').onchange = function (e) { update(function (c) { c.lines = e.target.checked; }); };
-        body.querySelector('#ext').onchange = function (e) { update(function (c) { c.xTitle = e.target.value; }); };
-        body.querySelector('#eyt').onchange = function (e) { update(function (c) { c.yTitle = e.target.value; }); };
+
+  // ---------- Download: PDF document / PNG image / Excel file (as in NESA's chart menu)
+  function renderChartImage(ch, mime) {
+    if (!window.Chart) return null;
+    var cv = document.createElement('canvas'); cv.style.width = ch.w + 'px'; cv.style.height = ch.h + 'px';
+    var holder = document.createElement('div'); holder.style.cssText = 'position:fixed;left:-9999px;top:0;width:' + ch.w + 'px;height:' + ch.h + 'px';
+    holder.appendChild(cv); document.body.appendChild(holder);
+    var cfg = chartConfig(ch, true); cfg.options.responsive = false; cfg.options.devicePixelRatio = 2;
+    cfg.plugins = cfg.plugins.concat([{ id: 'bg', beforeDraw: function (c) { var x = c.ctx; x.save(); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.restore(); } }]);
+    cv.width = ch.w; cv.height = ch.h;
+    var chart = new Chart(cv, cfg), url = chart.toBase64Image(mime || 'image/png', 0.92);
+    chart.destroy(); holder.remove(); return url;
+  }
+  function saveBlob(blob, name) { var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000); }
+  function dataUrlBytes(u) { var b = atob(u.split(',')[1]), out = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) out[i] = b.charCodeAt(i); return out; }
+  function pdfFromJpeg(bytes, pw, ph, iw, ih) {
+    var enc = new TextEncoder(), parts = [], offs = [], len = 0;
+    function add(s) { var b = typeof s === 'string' ? enc.encode(s) : s; parts.push(b); len += b.length; }
+    function obj(n, s) { offs[n] = len; add(n + ' 0 obj\n' + s + '\nendobj\n'); }
+    add('%PDF-1.4\n');
+    obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+    obj(2, '<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+    obj(3, '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + pw + ' ' + ph + '] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>');
+    offs[4] = len; add('4 0 obj\n<< /Type /XObject /Subtype /Image /Width ' + iw + ' /Height ' + ih + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + bytes.length + ' >>\nstream\n'); add(bytes); add('\nendstream\nendobj\n');
+    var cs = 'q ' + pw + ' 0 0 ' + ph + ' 0 0 cm /Im0 Do Q';
+    obj(5, '<< /Length ' + cs.length + ' >>\nstream\n' + cs + '\nendstream');
+    var xref = len, x = 'xref\n0 6\n0000000000 65535 f \n';
+    for (var i = 1; i <= 5; i++) x += String(offs[i]).padStart(10, '0') + ' 00000 n \n';
+    add(x + 'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF');
+    return new Blob(parts, { type: 'application/pdf' });
+  }
+  function crc32(b) {
+    var t = crc32.t, c, i;
+    if (!t) { t = crc32.t = []; for (var n = 0; n < 256; n++) { c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } }
+    c = 0xFFFFFFFF; for (i = 0; i < b.length; i++) c = t[(c ^ b[i]) & 255] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function zipStore(files, type) {
+    var enc = new TextEncoder(), parts = [], central = [], off = 0;
+    function u16(n) { return [n & 255, (n >> 8) & 255]; } function u32(n) { return [n & 255, (n >> 8) & 255, (n >> 16) & 255, (n >>> 24) & 255]; }
+    files.forEach(function (f) {
+      var nm = enc.encode(f.name), d = typeof f.data === 'string' ? enc.encode(f.data) : f.data, crc = crc32(d);
+      var hdr = new Uint8Array([0x50, 0x4b, 3, 4].concat(u16(20), u16(0), u16(0), u16(0), u16(0x21), u32(crc), u32(d.length), u32(d.length), u16(nm.length), u16(0)));
+      parts.push(hdr, nm, d);
+      central.push(new Uint8Array([0x50, 0x4b, 1, 2].concat(u16(20), u16(20), u16(0), u16(0), u16(0), u16(0x21), u32(crc), u32(d.length), u32(d.length), u16(nm.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(off))), nm);
+      off += hdr.length + nm.length + d.length;
+    });
+    var csize = central.reduce(function (a, b) { return a + b.length; }, 0);
+    var end = new Uint8Array([0x50, 0x4b, 5, 6].concat(u16(0), u16(0), u16(files.length), u16(files.length), u32(csize), u32(off), u16(0)));
+    return new Blob(parts.concat(central, [end]), { type: type });
+  }
+  function chartXlsx(ch) {
+    var g = parseRange(ch.range), rowsXml = '';
+    if (g) for (var r = g.r1; r <= g.r2; r++) {
+      rowsXml += '<row r="' + (r - g.r1 + 1) + '">';
+      for (var c = g.c1; c <= g.c2; c++) {
+        var ref = colName(c - g.c1) + (r - g.r1 + 1), v = cellValue(r, c);
+        if (typeof v === 'number') rowsXml += '<c r="' + ref + '"><v>' + v + '</v></c>';
+        else { var tx = displayText(r, c); if (tx !== '') rowsXml += '<c r="' + ref + '" t="inlineStr"><is><t>' + escapeHtml(tx) + '</t></is></c>'; }
       }
+      rowsXml += '</row>';
+    }
+    var X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+    return zipStore([
+      { name: '[Content_Types].xml', data: X + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>' },
+      { name: '_rels/.rels', data: X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+      { name: 'xl/workbook.xml', data: X + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Data" sheetId="1" r:id="rId1"/></sheets></workbook>' },
+      { name: 'xl/_rels/workbook.xml.rels', data: X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>' },
+      { name: 'xl/worksheets/sheet1.xml', data: X + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>' + rowsXml + '</sheetData></worksheet>' }
+    ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  }
+  function downloadChart(id, kind) {
+    var ch = findChart(id); if (!ch) return;
+    if (kind === 'xlsx') { saveBlob(chartXlsx(ch), 'Data.xlsx'); return; }
+    if (!window.Chart) { flash('Graphs need an internet connection (Chart.js).'); return; }
+    if (kind === 'png') { saveBlob(new Blob([dataUrlBytes(renderChartImage(ch, 'image/png'))], { type: 'image/png' }), 'Data.png'); return; }
+    var jpg = dataUrlBytes(renderChartImage(ch, 'image/jpeg'));
+    saveBlob(pdfFromJpeg(jpg, ch.w, ch.h, ch.w * 2, ch.h * 2), 'Data.pdf');
+  }
+
+  // ---------- "Edit chart" side panel: Common / Series / Extras (docked on the right, the grid narrows)
+  function closeChartPanel() {
+    var p = $('chartpanel'); if (p) p.remove();
+    var ch = chartPanelFor && findChart(chartPanelFor); if (ch) ch.series = ch.series.filter(function (s) { return s.range; });   // unused "Add line" rows
+    chartPanelFor = null; document.body.classList.remove('chart-panel-open');
+  }
+  function placeChartPanel() { var p = $('chartpanel'); if (p) p.style.top = wrap.getBoundingClientRect().top + 'px'; }
+  window.addEventListener('resize', placeChartPanel);
+  var BACK_SVG = '<svg width="18" height="18" viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z" fill="currentColor"/></svg>';
+  var TRASH_SVG = '<svg width="14" height="14" viewBox="0 0 24 24"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z" fill="currentColor"/></svg>';
+  var CHEV_SVG = '<svg width="14" height="14" viewBox="0 0 24 24"><path d="M7.4 15.4 12 10.8l4.6 4.6L18 14l-6-6-6 6z" fill="currentColor"/></svg>';
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function pRow(label, ctrl, cls) { var row = el('div', 'pf' + (cls ? ' ' + cls : '')), l = el('label'); l.textContent = label; l.title = label; row.appendChild(l); row.appendChild(ctrl); return row; }
+  function pText(val, onCommit, pick) {
+    var i = el('input', 'pf-in'); i.value = val == null ? '' : val; i.autocomplete = 'off'; i.spellcheck = false;
+    if (pick) i.setAttribute('data-pick', '');
+    var last = i.value;
+    function commit() { if (i.value !== last) { last = i.value; onCommit(i.value); } }
+    i.addEventListener('change', commit);
+    i.addEventListener('keydown', function (e) { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); commit(); } });
+    return i;
+  }
+  function pSelect(opts, val, onChange) {
+    var s = el('select', 'pf-sel'); s.innerHTML = opts.map(function (o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('');
+    s.value = val; s.addEventListener('change', function () { onChange(s.value); }); return s;
+  }
+  function pCheck(val, onChange) {
+    var c = el('span', 'pf-cb' + (val ? ' on' : '')); c.tabIndex = 0;
+    function tog() { c.classList.toggle('on'); onChange(c.classList.contains('on') ? 1 : 0); }
+    c.addEventListener('click', tog); c.addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); tog(); } });
+    return c;
+  }
+  function pRadios(opts, val, onChange) {
+    var w = el('div', 'pf-radios');
+    opts.forEach(function (o) {
+      var r = el('span', 'pf-rad' + (o[0] === val ? ' on' : ''), '<i></i><span></span>'); r.lastChild.textContent = o[1];
+      r.addEventListener('click', function () { if (r.classList.contains('on')) return; Array.prototype.forEach.call(w.children, function (x) { x.classList.toggle('on', x === r); }); onChange(o[0]); });
+      w.appendChild(r);
+    });
+    return w;
+  }
+  function pColor(val, onChange) {
+    var w = el('div', 'pf-color'), i = pText(val, function (v) { sw.style.background = v || 'transparent'; onChange(v); }), sw = el('span', 'pf-sw');
+    sw.style.background = val || 'transparent'; if (!val) sw.classList.add('empty');
+    sw.addEventListener('mousedown', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      openPopup(sw, colorBoard(i.value, function (c) { closeMenu(); i.value = c; sw.style.background = c; sw.classList.remove('empty'); i.dispatchEvent(new Event('change')); }), 'color-pop');
+      var b = sw.getBoundingClientRect(); positionMenu(b.right - menuEl.offsetWidth, b.bottom + 2);
+    });
+    w.appendChild(i); w.appendChild(sw); return w;
+  }
+  function pSection(title, onTrash) {
+    var sec = el('div', 'pf-acc'), h = el('div', 'pf-acc-h', '<span class="t"></span>' + (onTrash ? '<span class="tr" title="Remove">' + TRASH_SVG + '</span>' : '') + '<span class="chev">' + CHEV_SVG + '</span>'), b = el('div', 'pf-acc-b');
+    h.querySelector('.t').textContent = title;
+    h.addEventListener('click', function (e) { if (e.target.closest('.tr')) { onTrash(); return; } sec.classList.toggle('collapsed'); });
+    sec.appendChild(h); sec.appendChild(b); sec.body = b; return sec;
+  }
+  function openChartPanel(id, focusRange) {
+    closeChartPanel(); chartPanelFor = id;
+    var ch = findChart(id); if (!ch) return; upgradeChart(ch);
+    var p = el('div', 'ss-panel'); p.id = 'chartpanel';
+    p.innerHTML = '<div class="ss-panel-head"><span class="ss-panel-back" title="Back">' + BACK_SVG + '</span><span>Edit chart</span></div>' +
+      '<div class="ss-tabs"><span data-t="common" class="on">Common</span><span data-t="series">Series</span><span data-t="extras">Extras</span></div><div class="ss-panel-body"></div>';
+    document.body.appendChild(p); document.body.classList.add('chart-panel-open'); placeChartPanel();
+    p.querySelector('.ss-panel-back').onclick = closeChartPanel;
+    var body = p.querySelector('.ss-panel-body'), cur = 'common';
+    function update(fn, rebuild) { beginChange(); fn(ch); endChange(false); if (rebuild) tab(cur, true); }
+    function tab(t, keepScroll) {
+      cur = t; var sc = keepScroll ? body.scrollTop : 0;
+      Array.prototype.forEach.call(p.querySelectorAll('.ss-tabs span'), function (s) { s.classList.toggle('on', s.getAttribute('data-t') === t); });
+      body.innerHTML = '';
+      var pie = isPie(ch.type), rows = ch.dataSeries === 'rows';
+      if (t === 'common') {
+        body.appendChild(pRow('Type', pSelect(CHART_TYPES, ch.type, function (v) {
+          update(function (c) { var wasPie = isPie(c.type); c.type = v; if (wasPie !== isPie(v)) genSeries(c); }, true);
+        })));
+        if (ch.type === 'area' || ch.type === 'bar') body.appendChild(pRow('Stacked', pCheck(ch.stacked, function (v) { update(function (c) { c.stacked = v; }); })));
+        if (ch.type === 'bar') body.appendChild(pRow('Horizontal', pCheck(ch.horizontal, function (v) { update(function (c) { c.horizontal = v; }); })));
+        if (pie) body.appendChild(pRow('3D', pCheck(ch.d3, function (v) { update(function (c) { c.d3 = v; }); })));
+        var rin = pText(ch.range, function (v) { var g = parseRange(v.toUpperCase()); if (!g) { rin.value = ch.range; return; } update(function (c) { c.range = rangeStr(g); genSeries(c); }); rin.value = ch.range; }, true);
+        body.appendChild(pRow('Range', rin));
+        if (!pie) body.appendChild(pRow(rows ? 'Use top row as xAxis' : 'Use left column as xAxis', pCheck(ch.xAxis.fromData, function (v) { update(function (c) { c.xAxis.fromData = v; genSeries(c); }); })));
+        body.appendChild(pRow(pie ? (rows ? 'Use top row as legend' : 'Use left column as legend') : (rows ? 'Use left column as legend' : 'Use top row as legend'),
+          pCheck(ch.legend.fromData, function (v) { update(function (c) { c.legend.fromData = v; genSeries(c); }); })));
+        body.appendChild(pRow('Data series from', pRadios([['columns', 'columns'], ['rows', 'rows']], ch.dataSeries || 'columns', function (v) {
+          update(function (c) { c.dataSeries = v; c.xAxis.fromData = 0; c.legend.fromData = 0; genSeries(c); }, true);
+        }), 'top'));
+        if (focusRange) setTimeout(function () { rin.focus(); rin.setSelectionRange(rin.value.length, rin.value.length); }, 0);
+      } else if (t === 'series') {
+        ch.series.forEach(function (s, i) {
+          var sec = pSection('Data ' + (i + 1), function () { update(function (c) { c.series.splice(i, 1); }, true); });
+          sec.body.appendChild(pRow('Range', pText(s.range, function (v) { var g = parseRange(v.toUpperCase()); update(function () { s.range = g ? rangeStr(g) : ''; }); }, true)));
+          if (!pie) sec.body.appendChild(pRow('Color', pColor(s.color, function (v) { update(function () { s.color = v; }); })));
+          sec.body.appendChild(pRow('Tooltips', pCheck(s.tooltip, function (v) { update(function () { s.tooltip = v; }); })));
+          sec.body.appendChild(pRow('Labels', pCheck(s.label, function (v) { update(function () { s.label = v; }); })));
+          if (!pie) sec.body.appendChild(pRow('Markers', pSelect(MARKERS, s.marker || 'square', function (v) { update(function () { s.marker = v; }); })));
+          body.appendChild(sec);
+        });
+        var add = el('button', 'pf-addline'); add.type = 'button'; add.textContent = 'Add line';
+        add.onclick = function () { ch.series.push({ range: '', color: '', tooltip: 0, label: 0, marker: 'square' }); tab('series', true); body.scrollTop = body.scrollHeight; };
+        body.appendChild(add);
+      } else {
+        var lgS = pSection('Legend');
+        lgS.body.appendChild(pRow('Legend range', pText(ch.legend.range, function (v) { var g = parseRange(v.toUpperCase()); update(function (c) { c.legend.range = g ? rangeStr(g) : ''; }); }, true)));
+        lgS.body.appendChild(pRow('Align', pSelect([['left', 'Left'], ['center', 'Center'], ['right', 'Right']], ch.legend.align || 'center', function (v) { update(function (c) { c.legend.align = v; }); })));
+        lgS.body.appendChild(pRow('Vertical align', pSelect([['top', 'Top'], ['bottom', 'Bottom']], ch.legend.valign || 'bottom', function (v) { update(function (c) { c.legend.valign = v; }); })));
+        var scS = pSection('Scale');
+        scS.body.appendChild(pRow('Lines', pCheck(ch.scale.lines, function (v) { update(function (c) { c.scale.lines = v; }); })));
+        scS.body.appendChild(pRow('Scale color', pColor(ch.scale.color, function (v) { update(function (c) { c.scale.color = v; }); })));
+        var xS = pSection('X axis');
+        xS.body.appendChild(pRow('Range', pText(ch.xAxis.range, function (v) { var g = parseRange(v.toUpperCase()); update(function (c) { c.xAxis.range = g ? rangeStr(g) : ''; }); }, true)));
+        xS.body.appendChild(pRow('Title', pText(ch.xAxis.title, function (v) { update(function (c) { c.xAxis.title = v; }); })));
+        var yS = pSection('Y axis');
+        yS.body.appendChild(pRow('Title', pText(ch.yAxis.title, function (v) { update(function (c) { c.yAxis.title = v; }); })));
+        yS.body.appendChild(pRow('Origin', pText(ch.origin, function (v) { update(function (c) { c.origin = v; }); })));
+        yS.body.appendChild(el('div', 'pf-note', '* Set all the following parameters to see the effect'));
+        ['start', 'end', 'step'].forEach(function (k) { yS.body.appendChild(pRow(k[0].toUpperCase() + k.slice(1), pText(ch.yAxis[k], function (v) { update(function (c) { c.yAxis[k] = v; }); }))); });
+        [lgS, scS, xS, yS].forEach(function (s) { body.appendChild(s); });
+      }
+      body.scrollTop = sc;
     }
     Array.prototype.forEach.call(p.querySelectorAll('.ss-tabs span'), function (s) { s.onclick = function () { tab(s.getAttribute('data-t')); }; });
     tab('common');
@@ -1792,17 +2077,7 @@
     res.comments = Object.keys(comments).map(function (k) { var p = k.split(','); return [a1(+p[0], +p[1]), comments[k]]; });
     res.conds = conds.map(function (x) { return x.range + ': ' + x.style + ' when ' + (COND_OPS.filter(function (o) { return o[1] === x.op; })[0] || [x.op])[0] + ' ' + (x.v1 || '') + (/between/.test(x.op) ? ' and ' + x.v2 : ''); });
     res.named = Object.keys(named).map(function (n) { return n + ' = ' + named[n]; });
-    charts.forEach(function (ch) {
-      if (!window.Chart) return;
-      var cv = document.createElement('canvas'); cv.width = ch.w * 2; cv.height = ch.h * 2;
-      cv.style.width = ch.w + 'px'; cv.style.height = ch.h + 'px';
-      var holder = document.createElement('div'); holder.style.cssText = 'position:fixed;left:-9999px;width:' + ch.w + 'px;height:' + ch.h + 'px';
-      holder.appendChild(cv); document.body.appendChild(holder);
-      var cfg = chartConfig(ch); cfg.options.responsive = false; cfg.options.devicePixelRatio = 2;
-      cfg.plugins = [{ id: 'bg', beforeDraw: function (c) { var x = c.ctx; x.save(); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.restore(); } }];
-      var chart = new Chart(cv, cfg);
-      res.charts.push(chart.toBase64Image()); chart.destroy(); holder.remove();
-    });
+    charts.forEach(function (ch) { var u = renderChartImage(ch); if (u) res.charts.push(u); });
     return res;
   }
 
@@ -2283,17 +2558,21 @@
         if (mergeAt(r, idx) && (mergeAt(r, idx).c1 !== mergeAt(r, idx).c2)) continue;
         var t = displayText(r, idx); if (t === '') continue;
         var st = styles[key(r, idx)] || {};
-        w = Math.max(w, textWidth(t, (st.b ? '700 ' : '') + (st.i ? 'italic ' : '') + (st.fs || parseInt(getComputedStyle(grid).fontSize, 10) || 16) + 'px Roboto, sans-serif') + 35 + (st.dd ? 16 : 0) + (st.indent ? st.indent * 14 : 0));
+        // measured against NESA: width = text width x 1.0275 + 29 (e.g. "S5" -> 48px), never below 40px
+        w = Math.max(w, Math.round(textWidth(t, (st.b ? '700 ' : '') + (st.i ? 'italic ' : '') + (st.fs || 16) + 'px Roboto, sans-serif') * 1.0275 + 29) + (st.dd ? 16 : 0) + (st.indent ? st.indent * 14 : 0));
       }
-      beginChange(); colW[idx] = Math.max(40, Math.ceil(w || DEF_W)); endChange(true);
+      beginChange(); colW[idx] = Math.max(40, w); endChange(true);
     } else {
-      var h = DEF_H, probe = document.createElement('div');
-      probe.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;white-space:pre-wrap;word-break:break-word;line-height:1.25;font-family:Roboto,sans-serif';
+      // measured against NESA: height = text height + 6 (one line of 16px text -> 25px, an empty row -> 25px)
+      var h = 25, probe = document.createElement('div');
+      probe.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;word-break:break-word;line-height:normal;font-family:Roboto,sans-serif';
       document.body.appendChild(probe);
       for (var c = 0; c < COLS; c++) {
-        var s2 = styles[key(idx, c)] || {}, tx = displayText(idx, c); if (!tx || !s2.wrap) continue;
-        probe.style.width = ((colW[c] || DEF_W) - 24) + 'px'; probe.style.fontSize = (s2.fs || 16) + 'px'; probe.textContent = tx;
-        h = Math.max(h, probe.offsetHeight + 12);
+        var s2 = styles[key(idx, c)] || {}, tx = displayText(idx, c); if (!tx) continue;
+        probe.style.whiteSpace = s2.wrap ? 'pre-wrap' : 'pre';
+        probe.style.width = s2.wrap ? ((colW[c] || DEF_W) - 24) + 'px' : 'auto';
+        probe.style.fontSize = (s2.fs || 16) + 'px'; probe.style.fontWeight = s2.b ? '700' : '400'; probe.textContent = tx;
+        h = Math.max(h, Math.floor(probe.getBoundingClientRect().height + 5.9));
       }
       probe.remove(); beginChange(); rowH[idx] = h; endChange(true);
     }
@@ -2301,6 +2580,10 @@
   grid.addEventListener('dblclick', function (e) {
     var rz = e.target.closest('.col-resizer, .row-resizer');
     if (rz) { e.preventDefault(); e.stopPropagation(); var isCol = rz.classList.contains('col-resizer'); autofit(isCol, +rz.getAttribute(isCol ? 'data-c' : 'data-r')); return; }
+    // NESA: double-clicking a column letter / row number fits that column's width / row's height to its text
+    var hth = e.target.closest('th');
+    if (hth && hth.hasAttribute('data-c')) { e.preventDefault(); autofit(true, +hth.getAttribute('data-c')); return; }
+    if (hth && hth.hasAttribute('data-r')) { e.preventDefault(); autofit(false, +hth.getAttribute('data-r')); return; }
     var cell = cellFromEvent(e); if (!cell || readOnly) return;
     setSelection(cell.r, cell.c, cell.r, cell.c);
     if ((styles[key(cell.r, cell.c)] || {}).dd) openDropdownList(cell.r, cell.c); else beginEdit(false);
