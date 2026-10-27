@@ -8,8 +8,9 @@
   var highlighter = null; // 'yellow' | 'blue' | 'red' | 'none' | null
 
   // ---------------------------------------------------------------- loading
-  loadScript('papers/' + examId + '.js').then(function () {
-    return loadScript('papers/' + examId + '-guide.js').catch(function () { /* optional */ });
+  var PV = '?v=20261029';   // version tag so browsers fetch updated papers
+  loadScript('papers/' + examId + '.js' + PV).then(function () {
+    return loadScript('papers/' + examId + '-guide.js' + PV).catch(function () { /* optional */ });
   }).then(function () {
     exam = EXAMS[examId];
     if (!exam) throw new Error('Exam "' + examId + '" not found.');

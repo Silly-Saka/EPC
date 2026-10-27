@@ -247,27 +247,13 @@ registerExam({
     {
       number: '12', marks: 3, layout: 1,
       stimulus: `<p>A teacher has set up a spreadsheet to calculate the average mark for each student based on their results from the three tasks completed during the course. This average mark is then used to calculate a course grade using the Grade Table. It then checks the grade and if the student has received an A for the course, they will be receiving an award at the end-of-course presentations night.</p>
-<table class="hoa-table-normal"><thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr></thead><tbody>
-<tr><th>1</th><td colspan="7" style="text-align:center"><strong>Markbook</strong></td></tr>
-<tr><th>2</th><td><strong>Student Name</strong></td><td><strong>Task 1</strong></td><td><strong>Task 2</strong></td><td><strong>Task 3</strong></td><td><strong>Average</strong></td><td><strong>Grade</strong></td><td><strong>Award</strong></td></tr>
-<tr><th>3</th><td>Jim Goss</td><td>81</td><td>87</td><td>90</td><td></td><td></td><td></td></tr>
-<tr><th>4</th><td>Michelle Lenna</td><td>45</td><td>23</td><td>50</td><td>39</td><td>D</td><td>No</td></tr>
-<tr><th>5</th><td>Austin Barr</td><td>34</td><td>54</td><td>54</td><td>47</td><td>C</td><td>No</td></tr>
-<tr><th>6</th><td>Maisy Foxglove</td><td>89</td><td>95</td><td>100</td><td>95</td><td>A</td><td>Yes</td></tr>
-<tr><th>7</th><td>Rocky La Nanii</td><td>100</td><td>76</td><td>43</td><td>73</td><td>B</td><td>No</td></tr>
-<tr><th>8</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><th>10</th><td colspan="2" style="text-align:center"><strong>Grade Table</strong></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><th>11</th><td style="text-align:center"><strong>Average</strong></td><td style="text-align:center"><strong>Grade</strong></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><th>12</th><td style="text-align:center">0</td><td style="text-align:center">E</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><th>13</th><td style="text-align:center">20</td><td style="text-align:center">D</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><th>14</th><td style="text-align:center">40</td><td style="text-align:center">C</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><th>15</th><td style="text-align:center">60</td><td style="text-align:center">B</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><th>16</th><td style="text-align:center">80</td><td style="text-align:center">A</td><td></td><td></td><td></td><td></td><td></td></tr>
-</tbody></table>
-<p>Formulae are needed for:</p>`,
+<p>Formulae are needed for:</p>
+<ul class="hoa-ul" style="list-style-type:'(a)' !important; margin-left:0.5em;margin-bottom:1em"><li class="hoa-li" style="margin-bottom:0.66em"><span class="hoa-li-span"><strong>(i)</strong> Cell E3 to calculate the average of the three tasks in cells B3, C3 and D3. This formula will be used to fill down to cells E4 to E7. (1 mark)</span></li></ul>
+<ul class="hoa-ul" style="list-style-type:'' !important; margin-left:0.5em;margin-bottom:1em"><li class="hoa-li" style="margin-bottom:0.66em"><span class="hoa-li-span"><strong>(ii)</strong> Cell F3 to display the grade achieved, based on the lookup table that is located in cells A12:B16. This formula will be used to fill down to cells F4 to F7. (1 mark)</span></li></ul>
+<ul class="hoa-ul" style="list-style-type:'' !important; margin-left:0.5em;margin-bottom:1em"><li class="hoa-li" style="margin-bottom:0.66em"><span class="hoa-li-span"><strong>(iii)</strong> Cell G3 to determine whether the student will be receiving an award if they have achieved an A grade. It will display “Yes” for receiving an award, or “No” for not receiving an award. This formula will be used to fill down to cells G4 to G7. (1 mark)</span></li></ul>`,
       items: [
-        { type: 'spreadsheet', part: 'a(i)', marks: 1,
-          question: `<p>Cell E3 to calculate the average of the three tasks in cells B3, B4 and B5. This formula will be used to fill down to cells E4 to E7.</p>`,
+        { type: 'spreadsheet', marks: 3,
+          question: `<p>Enter your formulas for (a) (i), (ii) and (iii) in cells E3, F3 and G3.</p>`,
           seed: {
             cells: {
               A1: 'Markbook',
@@ -285,62 +271,16 @@ registerExam({
             colWidths: { A: 130, B: 80, C: 80, D: 80, E: 80, F: 80, G: 80 }
           },
           guide: `<p><em>Outcomes assessed: EC-12-05 · Targeted performance bands: 5–6</em></p>
-<table class="hoa-table-normal"><thead><tr><th>Criteria (whole of Question 12)</th><th>Marks</th></tr></thead><tbody>
+<table class="hoa-table-normal"><thead><tr><th>Criteria</th><th>Marks</th></tr></thead><tbody>
 <tr><td>Correctly identifies ALL formulas</td><td>3</td></tr>
 <tr><td>Correctly identifies TWO formulas</td><td>2</td></tr>
 <tr><td>Correctly identifies ONE formula</td><td>1</td></tr>
 </tbody></table>
-<p><strong>Answer:</strong></p>
-<p>(i) Cell E3: <code>=AVERAGE(B4:E4)</code></p>
-<p><em>Note: this is the answer as printed in the marking guidelines. For the spreadsheet shown, the average of Jim Goss’s three tasks is <code>=AVERAGE(B3:D3)</code>, which fills down to E4:E7.</em></p>` },
-        { type: 'spreadsheet', part: 'a(ii)', marks: 1,
-          question: `<p>Cell F3 to display the grade achieved, based on the lookup table that is located in cells A12:B16. This formula will be used to fill down to cells F4 to F7.</p>`,
-          seed: {
-            cells: {
-              A1: 'Markbook',
-              A2: 'Student Name', B2: 'Task 1', C2: 'Task 2', D2: 'Task 3', E2: 'Average', F2: 'Grade', G2: 'Award',
-              A3: 'Jim Goss', B3: 81, C3: 87, D3: 90,
-              A4: 'Michelle Lenna', B4: 45, C4: 23, D4: 50, E4: 39, F4: 'D', G4: 'No',
-              A5: 'Austin Barr', B5: 34, C5: 54, D5: 54, E5: 47, F5: 'C', G5: 'No',
-              A6: 'Maisy Foxglove', B6: 89, C6: 95, D6: 100, E6: 95, F6: 'A', G6: 'Yes',
-              A7: 'Rocky La Nanii', B7: 100, C7: 76, D7: 43, E7: 73, F7: 'B', G7: 'No',
-              A10: 'Grade Table',
-              A11: 'Average', B11: 'Grade',
-              A12: 0, B12: 'E', A13: 20, B13: 'D', A14: 40, B14: 'C', A15: 60, B15: 'B', A16: 80, B16: 'A'
-            },
-            bold: ['A1:G2', 'A10:B11'], center: ['A1:G1', 'B2:G7', 'A10:B16'], merge: ['A1:G1', 'A10:B10'],
-            colWidths: { A: 130, B: 80, C: 80, D: 80, E: 80, F: 80, G: 80 }
-          },
-          guide: `<p><em>Outcomes assessed: EC-12-05 · Targeted performance bands: 5–6</em></p>
-<table class="hoa-table-normal"><thead><tr><th>Criteria</th><th>Marks</th></tr></thead><tbody>
-<tr><td>Correctly identifies the formula</td><td>1</td></tr>
-</tbody></table>
-<p><strong>Answer:</strong></p>
-<p>(ii) Cell F3: <code>=VLOOKUP(E3,&#36;A&#36;12:&#36;B&#36;16,2)</code></p>` },
-        { type: 'spreadsheet', part: 'a(iii)', marks: 1,
-          question: `<p>Cell G3 to determine whether the student will be receiving an award if they have achieved an A grade. It will display “Yes” for receiving an award, or “No” for not receiving an award. This formula will be used to fill down to cells G4 to G7.</p>`,
-          seed: {
-            cells: {
-              A1: 'Markbook',
-              A2: 'Student Name', B2: 'Task 1', C2: 'Task 2', D2: 'Task 3', E2: 'Average', F2: 'Grade', G2: 'Award',
-              A3: 'Jim Goss', B3: 81, C3: 87, D3: 90,
-              A4: 'Michelle Lenna', B4: 45, C4: 23, D4: 50, E4: 39, F4: 'D', G4: 'No',
-              A5: 'Austin Barr', B5: 34, C5: 54, D5: 54, E5: 47, F5: 'C', G5: 'No',
-              A6: 'Maisy Foxglove', B6: 89, C6: 95, D6: 100, E6: 95, F6: 'A', G6: 'Yes',
-              A7: 'Rocky La Nanii', B7: 100, C7: 76, D7: 43, E7: 73, F7: 'B', G7: 'No',
-              A10: 'Grade Table',
-              A11: 'Average', B11: 'Grade',
-              A12: 0, B12: 'E', A13: 20, B13: 'D', A14: 40, B14: 'C', A15: 60, B15: 'B', A16: 80, B16: 'A'
-            },
-            bold: ['A1:G2', 'A10:B11'], center: ['A1:G1', 'B2:G7', 'A10:B16'], merge: ['A1:G1', 'A10:B10'],
-            colWidths: { A: 130, B: 80, C: 80, D: 80, E: 80, F: 80, G: 80 }
-          },
-          guide: `<p><em>Outcomes assessed: EC-12-05 · Targeted performance bands: 5–6</em></p>
-<table class="hoa-table-normal"><thead><tr><th>Criteria</th><th>Marks</th></tr></thead><tbody>
-<tr><td>Correctly identifies the formula</td><td>1</td></tr>
-</tbody></table>
-<p><strong>Answer:</strong></p>
-<p>(iii) Cell G3: <code>=IF(F3="A", "Yes", "No")</code></p>` }
+<p><strong>Sample answer:</strong></p>
+<p>(i) Cell E3: <code>=AVERAGE(B3:D3)</code></p>
+<p>(ii) Cell F3: <code>=VLOOKUP(E3,&#36;A&#36;12:&#36;B&#36;16,2)</code></p>
+<p>(iii) Cell G3: <code>=IF(F3="A","Yes","No")</code></p>
+<p><em>Note: the CSSA paper says “the three tasks in cells B3, B4 and B5”, and its marking guidelines give <code>=AVERAGE(B4:E4)</code>. Both are misprints: a student’s three tasks are across the row (B3, C3 and D3), and B4:E4 is the wrong row and would include the Average column. The question above uses the corrected cells.</em></p>` }
       ]
     },
     {
