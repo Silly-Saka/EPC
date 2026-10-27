@@ -4,114 +4,130 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Drawing tool</title>
-  <!-- Embedded drawing tool (Excalidraw, MIT licence) — the same open-source editor the NESA online exam embeds. -->
-  <script>window.EXCALIDRAW_ASSET_PATH = 'https://unpkg.com/@excalidraw/excalidraw@0.17.6/dist/';</script>
-  <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@excalidraw/excalidraw@0.17.6/dist/excalidraw.production.min.js"></script>
+  <!-- Embedded drawing tool: Excalidraw 0.18 (MIT licence), the same open-source editor (and generation) the NESA online exam embeds:
+       stretch a shape by dragging any edge, elbow arrows, Hand-drawn / Normal / Code fonts plus the font picker. -->
+  <script>window.EXCALIDRAW_ASSET_PATH = 'https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/prod/';</script>
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.3.1",
+      "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+      "react-dom": "https://esm.sh/react-dom@18.3.1",
+      "react-dom/client": "https://esm.sh/react-dom@18.3.1/client"
+    }
+  }
+  </script>
+  <link rel="stylesheet" href="https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/prod/index.css">
   <script src="ec-library.js"></script>
   <style>
     html, body, #root { height: 100%; margin: 0; }
     body { font-family: 'Public Sans', Arial, sans-serif; background: #fff; }
-    /* Match the NESA exam build: no main menu, no image tool, no "browse libraries" link */
+    /* Match the NESA exam build: no main menu, no image / extra tools, no "browse libraries" link, no help button */
     .main-menu-trigger, .library-menu-browse-button, .dropdown-menu-button, .help-icon,
     .ToolIcon[aria-label="Insert image"], [data-testid="toolbar-image"], .App-toolbar__extra-tools-trigger,
-    .layer-ui__wrapper__footer-right, .disable-zen-mode, .welcome-screen-center { display: none !important; }
+    .layer-ui__wrapper__footer-right, .disable-zen-mode, .welcome-screen-center, .welcome-screen-decor { display: none !important; }
+    /* NESA's build has no frames or links: hide those right-click items and the Link action button */
+    .context-menu li[data-testid="wrapSelectionInFrame"], .context-menu li[data-testid="hyperlink"], .context-menu li[data-testid="copyElementLink"],
+    .App-menu__left [title^="Link"], .App-menu__left [aria-label^="Link"] { display: none !important; }
     .error { padding: 1.5rem; color: #b81237; font: 15px Arial, sans-serif; }
   </style>
 </head>
 <body>
   <div id="root"></div>
-  <script>
-  (function () {
+  <script type="module">
+    import React from 'react';
+    import { createRoot } from 'react-dom/client';
+    var ExcalidrawLib = null;
+    try { ExcalidrawLib = await import('https://esm.sh/@excalidraw/excalidraw@0.18.0?external=react,react-dom'); } catch (e) { console.error(e); }
+
     var id = decodeURIComponent((/[#&]id=([^&]+)/.exec(location.hash) || [])[1] || '');
     function post(type, value, reqId) { parent.postMessage({ source: 'epc-embed', id: id, type: type, value: value, reqId: reqId }, '*'); }
 
-    if (!window.ExcalidrawLib || !window.React) {
+    if (!ExcalidrawLib || !ExcalidrawLib.Excalidraw) {
       document.getElementById('root').innerHTML = '<div class="error">The drawing tool could not be loaded. Check your internet connection and reload the page.</div>';
-      return;
-    }
-    var h = React.createElement;
-    var Excalidraw = ExcalidrawLib.Excalidraw;
-    var api = null, lastSent = '', suppress = false, readOnly = false, pendingValue = null, mounted = false, root = null;
-    var defaultsAppState = {
-      viewBackgroundColor: '#ffffff', currentItemRoughness: 0, currentItemFontFamily: 2, currentItemStrokeWidth: 1,
-      currentItemStrokeColor: '#1e1e1e', currentItemBackgroundColor: 'transparent', currentItemFillStyle: 'solid',
-    };
-    var library = (window.EC_LIBRARY || []).map(function (item, i) {
-      return { id: item.id || ('ec-' + i), status: 'unpublished', created: item.created || 1700000000000 + i, name: item.name, elements: item.elements };
-    });
-
-    function sceneValue(elements, appState) {
-      return { elements: elements.filter(function (e) { return !e.isDeleted; }), appState: { viewBackgroundColor: (appState && appState.viewBackgroundColor) || '#ffffff' } };
-    }
-    var timer = null;
-    function onChange(elements, appState) {
-      if (suppress || readOnly) return;
-      clearTimeout(timer);
-      timer = setTimeout(function () {
-        var v = sceneValue(elements, appState);
-        var s = JSON.stringify(v.elements);
-        if (s === lastSent) return;
-        lastSent = s; post('value', v);
-      }, 400);
-    }
-
-    function App(props) {
-      return h(Excalidraw, {
-        excalidrawAPI: function (a) { api = a; },
-        initialData: { elements: props.elements, appState: Object.assign({}, defaultsAppState), libraryItems: library, scrollToContent: true },
-        onChange: onChange,
-        viewModeEnabled: props.readOnly,
-        UIOptions: {
-          canvasActions: { changeViewBackgroundColor: false, clearCanvas: false, export: false, loadScene: false, saveToActiveFile: false, toggleTheme: null, saveAsImage: false },
-          tools: { image: false },
-        },
-        gridModeEnabled: false,
-        name: 'answer',
+    } else {
+      var h = React.createElement;
+      var Excalidraw = ExcalidrawLib.Excalidraw;
+      var api = null, lastSent = '', suppress = false, readOnly = false, mounted = false, root = null;
+      // NESA's defaults: Bold stroke, Architect (no sloppiness), sharp edges, Helvetica text, curved arrows
+      var defaultsAppState = {
+        viewBackgroundColor: '#ffffff', currentItemRoughness: 0, currentItemFontFamily: 2, currentItemStrokeWidth: 2,
+        currentItemStrokeColor: '#1e1e1e', currentItemBackgroundColor: 'transparent', currentItemFillStyle: 'solid',
+        currentItemRoundness: 'sharp', currentItemArrowType: 'round',
+      };
+      var library = (window.EC_LIBRARY || []).map(function (item, i) {
+        return { id: item.id || ('ec-' + i), status: 'unpublished', created: item.created || 1700000000000 + i, name: item.name, elements: item.elements };
       });
-    }
-    function mount(value) {
-      var elements = (value && Array.isArray(value.elements)) ? value.elements : [];
-      lastSent = JSON.stringify(elements);
-      root = root || ReactDOM.createRoot(document.getElementById('root'));
-      root.render(h(App, { elements: elements, readOnly: readOnly }));
-      mounted = true;
-    }
 
-    window.addEventListener('message', function (e) {
-      var d = e.data;
-      if (!d || d.source !== 'epc-host' || d.id !== id) return;
-      if (d.type === 'export') {
-        // render a saved drawing to SVG for the downloadable answer report
-        var els = (d.value && d.value.elements) || [];
-        if (!els.length) { post('exported', { svg: '' }, d.reqId); return; }
-        ExcalidrawLib.exportToSvg({ elements: els, appState: { exportBackground: true, viewBackgroundColor: '#ffffff', exportWithDarkMode: false }, files: (d.value && d.value.files) || null, exportPadding: 16 })
-          .then(function (svg) { post('exported', { svg: svg.outerHTML }, d.reqId); })
-          .catch(function (err) { post('exported', { svg: '', error: String(err) }, d.reqId); });
-        return;
+      function sceneValue(elements, appState) {
+        return { elements: elements.filter(function (e) { return !e.isDeleted; }), appState: { viewBackgroundColor: (appState && appState.viewBackgroundColor) || '#ffffff' } };
       }
-      if (d.type === 'config') {
-        var changedRO = readOnly !== !!d.readOnly;
-        readOnly = !!d.readOnly;
-        if (mounted && changedRO) root.render(h(App, { elements: api ? api.getSceneElements() : [], readOnly: readOnly }));
-      } else if (d.type === 'value') {
-        if (!mounted) { mount(d.value); return; }
-        var els = (d.value && d.value.elements) || [];
-        if (api) {
-          suppress = true;
-          api.updateScene({ elements: els });
-          if (d.reset && api.history) api.history.clear();
-          lastSent = JSON.stringify(els);
-          setTimeout(function () { suppress = false; }, 50);
-          if (d.reset) post('value', null);
+      var timer = null;
+      function onChange(elements, appState) {
+        if (suppress || readOnly) return;
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          var v = sceneValue(elements, appState);
+          var s = JSON.stringify(v.elements);
+          if (s === lastSent) return;
+          lastSent = s; post('value', v);
+        }, 400);
+      }
+
+      function App(props) {
+        return h(Excalidraw, {
+          excalidrawAPI: function (a) { api = a; },
+          initialData: { elements: props.elements, appState: Object.assign({}, defaultsAppState), libraryItems: library, scrollToContent: true },
+          onChange: onChange,
+          viewModeEnabled: props.readOnly,
+          UIOptions: {
+            canvasActions: { changeViewBackgroundColor: false, clearCanvas: false, export: false, loadScene: false, saveToActiveFile: false, toggleTheme: null, saveAsImage: false },
+            tools: { image: false },
+          },
+          name: 'answer',
+        });
+      }
+      function mount(value) {
+        var elements = (value && Array.isArray(value.elements)) ? value.elements : [];
+        lastSent = JSON.stringify(elements);
+        root = root || createRoot(document.getElementById('root'));
+        root.render(h(App, { elements: elements, readOnly: readOnly }));
+        mounted = true;
+      }
+
+      window.addEventListener('message', function (e) {
+        var d = e.data;
+        if (!d || d.source !== 'epc-host' || d.id !== id) return;
+        if (d.type === 'export') {
+          // render a saved drawing to SVG for the downloadable answer report
+          var els = (d.value && d.value.elements) || [];
+          if (!els.length) { post('exported', { svg: '' }, d.reqId); return; }
+          ExcalidrawLib.exportToSvg({ elements: els, appState: { exportBackground: true, viewBackgroundColor: '#ffffff', exportWithDarkMode: false }, files: (d.value && d.value.files) || null, exportPadding: 16 })
+            .then(function (svg) { post('exported', { svg: svg.outerHTML }, d.reqId); })
+            .catch(function (err) { post('exported', { svg: '', error: String(err) }, d.reqId); });
+          return;
         }
-      }
-    });
-    post('loaded');
-    // standalone use (opened directly): mount an empty canvas
-    if (window.parent === window) mount(null);
-  })();
+        if (d.type === 'config') {
+          var changedRO = readOnly !== !!d.readOnly;
+          readOnly = !!d.readOnly;
+          if (mounted && changedRO) root.render(h(App, { elements: api ? api.getSceneElements() : [], readOnly: readOnly }));
+        } else if (d.type === 'value') {
+          if (!mounted) { mount(d.value); return; }
+          var els2 = (d.value && d.value.elements) || [];
+          if (api) {
+            suppress = true;
+            api.updateScene({ elements: els2 });
+            if (d.reset && api.history) api.history.clear();
+            lastSent = JSON.stringify(els2);
+            setTimeout(function () { suppress = false; }, 50);
+            if (d.reset) post('value', null);
+          }
+        }
+      });
+      post('loaded');
+      // standalone use (opened directly): mount an empty canvas
+      if (window.parent === window) mount(null);
+    }
   </script>
 </body>
 </html>
