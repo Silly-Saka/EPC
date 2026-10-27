@@ -43,6 +43,9 @@ body { font-family: 'Public Sans', Roboto, Arial, sans-serif; font-size: 15px; c
 /* grid */
 .ss-grid-wrap { flex: 1 1 auto; overflow: auto; position: relative; background: #fff; }
 .ss-sheet { position: relative; display: inline-block; min-width: 100%; }
+/* NESA: when zoomed, text is 14px scaled by the zoom (16px only at 100%) */
+.ss-sheet.zoomed { --cell-font: 14px; min-width: 0; }
+.ss-sheet.zoomed .ss-grid td, .ss-sheet.zoomed .ss-grid th { font-size: 14px; }
 .ss-grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: var(--cell-font, 15px); color: #000; user-select: none; }
 .ss-grid th { background: #ebf0f4; color: #475466; font-weight: 400; font-size: 14px; position: sticky; z-index: 3; border-right: 1px solid #dde3e8; border-bottom: 1px solid #dde3e8; padding: 0; text-align: center; overflow: hidden; }
 .ss-grid thead th { top: 0; height: 28px; }

@@ -7,7 +7,7 @@
  */
 (function () {
   'use strict';
-  var ROWS = 50, COLS = 20, DEF_W = 120, DEF_H = 36, MAX_UNDO = 80;   // NESA (Webix): 50 rows x 20 columns (A–T), 120 x 36 cells
+  var ROWS = 50, COLS = 20, DEF_W = 100, DEF_H = 36, MAX_UNDO = 80;   // NESA (Webix): 50 rows x 20 columns (A–T), 100 x 36 cells (questions widen their own columns)
   var embedId = decodeURIComponent((/[#&]id=([^&]+)/.exec(location.hash) || [])[1] || '');
   var $ = function (id) { return document.getElementById(id); };
   var grid = $('grid'), wrap = $('gridwrap'), editor = $('editor'), fx = $('fx'), namebox = $('namebox');
@@ -481,7 +481,8 @@
       (count > 1 ? 'Count: ' + count + (nums ? '&nbsp;&nbsp; Sum: ' + (+sum.toPrecision(12)) + '&nbsp;&nbsp; Average: ' + (+(sum / nums).toPrecision(10)) : '') : '') + '</span>';
   }
   function scrollIntoViewCell(r, c) {
-    var rc = cellRect(r, c);
+    var rc = cellRect(r, c), z = typeof zoomLvl === 'number' ? zoomLvl : 1;
+    rc = { x: rc.x * z, y: rc.y * z, w: rc.w * z, h: rc.h * z };
     if (rc.x - 40 < wrap.scrollLeft) wrap.scrollLeft = rc.x - 40;
     else if (rc.x + rc.w > wrap.scrollLeft + wrap.clientWidth) wrap.scrollLeft = rc.x + rc.w - wrap.clientWidth;
     if (rc.y - 22 < wrap.scrollTop) wrap.scrollTop = rc.y - 22;
@@ -746,7 +747,7 @@
     function mv(ev) {
       if (Math.abs((isCol ? ev.clientX : ev.clientY) - start) < 2 && !moved) return;
       moved = true;
-      var n = Math.max(isCol ? 24 : 18, orig + (isCol ? ev.clientX : ev.clientY) - start);
+      var n = Math.max(isCol ? 24 : 18, Math.round(orig + ((isCol ? ev.clientX : ev.clientY) - start) / zoomLvl));
       if (isCol) { colW[idx] = n; grid.querySelector('colgroup').children[idx + 1].style.width = n + 'px'; var w = 40; for (var c = 0; c < COLS; c++) w += (colW[c] || DEF_W); grid.style.width = w + 'px'; }
       else { rowH[idx] = n; grid.tBodies[0].rows[idx].style.height = n + 'px'; }
       renderSelection(); renderCharts();
@@ -768,17 +769,65 @@
     drag.target = t;
     var fb = $('fillbox'); fb.classList.remove('hidden'); place(fb, rangeRect(t));
   }
+  // Webix/NESA autofill: numbers continue their series (a single number counts up by 1, 1,3 -> 5,7),
+  // day and month names continue (keeping lower/UPPER case), formulas shift, other text is copied.
+  var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  function seriesInfo(raw) {
+    if (raw === '' || raw == null) return null;
+    raw = String(raw);
+    if (/^-?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(raw.trim())) return { kind: 'num', n: +raw };
+    var ds = mdyToSerial(raw); if (ds != null) return { kind: 'date', n: ds, pad: /^\s*\d\d\//.test(raw) };
+    var t = raw.trim(), lo = t.toLowerCase();
+    function find(list, kind) {
+      for (var i = 0; i < list.length; i++) {
+        var full = list[i].toLowerCase(), short = full.slice(0, 3);
+        if (lo === full || lo === short) return { kind: kind, n: i, len: list.length, short: lo === short && lo !== full, cs: t === lo ? 'lower' : t === t.toUpperCase() ? 'upper' : 'title' };
+      }
+      return null;
+    }
+    return find(DAYS, 'day') || find(MONTHS, 'month');
+  }
+  function seriesText(info, i) {
+    var list = info.kind === 'day' ? DAYS : MONTHS, s = list[((i % info.len) + info.len) % info.len];
+    if (info.short) s = s.slice(0, 3);
+    return info.cs === 'lower' ? s.toLowerCase() : info.cs === 'upper' ? s.toUpperCase() : s;
+  }
+  // value for position p (0-based, may be negative) along one source line of raws
+  function fillValue(src, p) {
+    var n = src.length, slot = ((p % n) + n) % n, block = Math.floor(p / n), raw = src[slot];
+    if (raw && raw[0] === '=') return { raw: raw, slot: slot };
+    var info = seriesInfo(raw); if (!info) return { raw: raw, slot: slot };
+    // the run of neighbouring source cells of the same kind that this slot belongs to
+    var a = slot, b = slot;
+    function same(x) { var o = seriesInfo(src[x]); return o && o.kind === info.kind && (o.kind === 'num' || o.kind === 'date' || o.short === info.short); }
+    while (a > 0 && same(a - 1)) a--;
+    while (b < n - 1 && same(b + 1)) b++;
+    var len = b - a + 1, first = seriesInfo(src[a]), last = seriesInfo(src[b]);
+    var step = len > 1 ? (last.n - first.n) / (len - 1) : 1;
+    if ((info.kind === 'day' || info.kind === 'month') && len > 1) { step = ((last.n - first.n) % info.len + info.len) % info.len / (len - 1); if (!step) step = 1; }
+    var pos = block * len + (slot - a), v = first.n + step * pos;
+    if (info.kind === 'num') return { raw: String(+v.toPrecision(15)), slot: slot };
+    if (info.kind === 'date') {
+      var d = new Date(Date.UTC(1899, 11, 30) + Math.round(v) * 86400000), mo = d.getUTCMonth() + 1, dy = d.getUTCDate();
+      var p2 = function (x) { return info.pad ? String(x).padStart(2, '0') : String(x); };
+      return { raw: p2(mo) + '/' + p2(dy) + '/' + d.getUTCFullYear(), slot: slot };
+    }
+    return { raw: seriesText(info, Math.round(v)), slot: slot };
+  }
   function doFill() {
     $('fillbox').classList.add('hidden');
     var t = drag.target; if (!t) return;
     var g = norm(sel), h = g.r2 - g.r1 + 1, w = g.c2 - g.c1 + 1;
+    var vertical = t.c1 === g.c1 && t.c2 === g.c2;
     beginChange();
     hf.batch(function () {
       for (var r = t.r1; r <= t.r2; r++) for (var c = t.c1; c <= t.c2; c++) {
         if (inRange(g, r, c) || (styles[key(r, c)] || {}).lock) continue;
-        var sr = g.r1 + (((r - g.r1) % h) + h) % h, sc = g.c1 + (((c - g.c1) % w) + w) % w;
-        setRawNoRender(r, c, shiftFormula(getRaw(sr, sc), r - sr, c - sc));
+        var src = [], i, fv, sr, sc;
+        if (vertical) { for (i = g.r1; i <= g.r2; i++) src.push(getRaw(i, c)); fv = fillValue(src, r - g.r1); sr = g.r1 + fv.slot; sc = c; }
+        else { for (i = g.c1; i <= g.c2; i++) src.push(getRaw(r, i)); fv = fillValue(src, c - g.c1); sr = r; sc = g.c1 + fv.slot; }
         var st = styles[key(sr, sc)]; if (st) styles[key(r, c)] = Object.assign({}, st); else delete styles[key(r, c)];
+        setRawNoRender(r, c, fv.raw && fv.raw[0] === '=' ? shiftFormula(fv.raw, r - sr, c - sc) : fv.raw);
       }
     });
     setSelection(t.r1, t.c1, t.r2, t.c2, act.r, act.c);
@@ -852,6 +901,31 @@
     updateFormulaUI();
     renderSelection(); editor.focus({ preventScroll: true });
   }
+  function jumpEdge(r, c, dr, dc) {
+    function inb(r2, c2) { return r2 >= 0 && r2 < ROWS && c2 >= 0 && c2 < COLS; }
+    function full(r2, c2) { return getRaw(r2, c2) !== ''; }
+    if (!inb(r + dr, c + dc)) return { r: r, c: c };
+    if (full(r + dr, c + dc)) { while (inb(r + 2 * dr, c + 2 * dc) && full(r + 2 * dr, c + 2 * dc)) { r += dr; c += dc; } return { r: r + dr, c: c + dc }; }
+    r += dr; c += dc;
+    while (inb(r + dr, c + dc) && !full(r, c)) { r += dr; c += dc; }
+    return { r: r, c: c };
+  }
+
+  // ------------------------------------------------------------------ zoom (Ctrl + mouse wheel, Ctrl + / Ctrl - / Ctrl 0), same steps as NESA
+  var ZOOMS = [0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 3, 4], zoomLvl = 1;
+  function setZoom(dir) {
+    var i = ZOOMS.indexOf(zoomLvl);
+    zoomLvl = dir === 0 ? 1 : ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, i + dir))];
+    var sh = $('sheet'); sh.style.zoom = zoomLvl === 1 ? '' : zoomLvl; sh.classList.toggle('zoomed', zoomLvl !== 1);
+    renderSelection(); scrollIntoViewCell(act.r, act.c);
+  }
+  wrap.addEventListener('wheel', function (e) {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault();
+    var now = Date.now(); if (now - (setZoom.last || 0) < 150) return; setZoom.last = now;
+    setZoom(e.deltaY < 0 ? 1 : -1);
+  }, { passive: false });
+
   function moveActive(dr, dc, extend) {
     if (extend) { var g = { r2: Math.max(0, Math.min(ROWS - 1, sel.r2 + dr)), c2: Math.max(0, Math.min(COLS - 1, sel.c2 + dc)) }; sel = { r1: act.r, c1: act.c, r2: g.r2, c2: g.c2 }; renderSelection(); scrollIntoViewCell(g.r2, g.c2); return; }
     var r = act.r, c = act.c, m = mergeAt(r, c);
@@ -917,6 +991,9 @@
 
   editor.addEventListener('keydown', function (e) {
     var ctrl = e.ctrlKey || e.metaKey;
+    if (ctrl && !e.altKey && (e.key === '=' || e.key === '+' || e.key === '-' || e.key === '_' || e.key === '0')) {
+      e.preventDefault(); setZoom(e.key === '0' ? 0 : (e.key === '-' || e.key === '_') ? -1 : 1); return;
+    }
     if (editing) {
       if (e.key === 'Enter' && !e.altKey) { e.preventDefault(); commitEdit(e.shiftKey ? [-1, 0] : [1, 0]); }
       else if (e.key === 'Enter' && e.altKey) { e.preventDefault(); var p = editor.selectionStart; editor.value = editor.value.slice(0, p) + '\n' + editor.value.slice(editor.selectionEnd); editor.setSelectionRange(p + 1, p + 1); fx.value = editor.value; autoSizeEditor(); }
@@ -933,7 +1010,16 @@
     }
     if (ctrl && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
     if (ctrl && (e.key === 'y' || e.key === 'Y')) { e.preventDefault(); redo(); return; }
-    if (ctrl && /^[biu]$/i.test(e.key)) { e.preventDefault(); toggleStyle({ b: 'b', i: 'i', u: 'u' }[e.key.toLowerCase()]); return; }
+    // strikethrough: Ctrl+Alt+S (Windows) / Cmd+Shift+X (Mac), as in the Webix guide
+    if ((e.ctrlKey && e.altKey && e.code === 'KeyS') || (e.metaKey && e.shiftKey && e.code === 'KeyX')) { e.preventDefault(); toggleStyle('s'); return; }
+    if (ctrl && !e.altKey && /^[biu]$/i.test(e.key)) { e.preventDefault(); toggleStyle({ b: 'b', i: 'i', u: 'u' }[e.key.toLowerCase()]); return; }
+    // Ctrl+Shift+Arrow: extend the selection to the last non-empty cell (or the next non-empty one)
+    if (ctrl && e.shiftKey && /^Arrow/.test(e.key)) {
+      e.preventDefault();
+      var dd = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }[e.key];
+      var to = jumpEdge(sel.r2, sel.c2, dd[0], dd[1]);
+      sel = { r1: act.r, c1: act.c, r2: to.r, c2: to.c }; renderSelection(); scrollIntoViewCell(to.r, to.c); return;
+    }
     if (ctrl && (e.key === 'a' || e.key === 'A')) { e.preventDefault(); setSelection(0, 0, ROWS - 1, COLS - 1, 0, 0); return; }
     if (ctrl && e.key === '`') { e.preventDefault(); toggleShowFormulas(); return; }
     if (ctrl && /^[cxv]$/i.test(e.key)) return;
@@ -943,7 +1029,7 @@
       case 'ArrowDown': e.preventDefault(); moveActive(1, 0, e.shiftKey); return;
       case 'ArrowLeft': e.preventDefault(); moveActive(0, -1, e.shiftKey); return;
       case 'ArrowRight': e.preventDefault(); moveActive(0, 1, e.shiftKey); return;
-      case 'Enter': e.preventDefault(); moveActive(e.shiftKey ? -1 : 1, 0); return;
+      case 'Enter': e.preventDefault(); beginEdit(false); return;   // Webix/NESA: Enter opens the editor in the cell
       case 'Tab': e.preventDefault(); moveActive(0, e.shiftKey ? -1 : 1); return;
       case 'Delete': case 'Backspace': e.preventDefault(); clearRange('values'); return;
       case 'F2': e.preventDefault(); beginEdit(false); return;
@@ -1614,8 +1700,9 @@
         var ch = findChart(id), sx = e.clientX, sy = e.clientY, o = { x: ch.x, y: ch.y, w: ch.w, h: ch.h }, snap = snapshot(), moved = false;
         function mv(ev) {
           moved = true;
-          if (resize) { ch.w = Math.max(220, o.w + ev.clientX - sx); ch.h = Math.max(160, o.h + ev.clientY - sy); }
-          else { ch.x = Math.max(0, o.x + ev.clientX - sx); ch.y = Math.max(0, o.y + ev.clientY - sy); }
+          var ddx = (ev.clientX - sx) / zoomLvl, ddy = (ev.clientY - sy) / zoomLvl;
+          if (resize) { ch.w = Math.max(220, o.w + ddx); ch.h = Math.max(160, o.h + ddy); }
+          else { ch.x = Math.max(0, o.x + ddx); ch.y = Math.max(0, o.y + ddy); }
           box.style.left = ch.x + 'px'; box.style.top = ch.y + 'px'; box.style.width = ch.w + 'px'; box.style.height = ch.h + 'px';
         }
         function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); if (moved) { undoStack.push(snap); redoStack = []; endChange(false); } }
