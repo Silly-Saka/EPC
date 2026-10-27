@@ -693,29 +693,112 @@
     }
     return out;
   }
-  // Builds the sheet with the given formulas (filled down/across) and returns the values of every target cell.
-  function evalFormulas(HF, item, formulas) {
-    var sheets = { Sheet1: (item.sheet || []).map(function (r) { return r.slice(); }) };
-    Object.keys(item.sheets || {}).forEach(function (n) { sheets[n] = item.sheets[n].map(function (r) { return r.slice(); }); });
-    Object.keys(sheets).forEach(function (n) { sheets[n] = sheets[n].map(function (r) { return r.map(function (v) { return typeof v === 'string' && v[0] === '=' ? engineFormula(v) : v; }); }); });
-    var hf = HF.buildFromSheets(sheets, { licenseKey: 'gpl-v3', thousandSeparator: '', decimalSeparator: '.', functionArgSeparator: ',', leapYear1900: false, precisionRounding: 10, smartRounding: true, dateFormats: ['DD/MM/YYYY', 'YYYY-MM-DD'] });
+  // ---- formula questions are answered in the spreadsheet tool (like NESA); the response is the tool's sheet ----
+  // item.style (optional) = extra seed styling: { bold, center, merge, currency, percent, colWidths }
+  var TARGET_BORDER = '#4a86e8';
+  function cellRef(r, c) { return colName(c) + (r + 1); }
+  function fillCells(t) {
+    var out = [], r = parseRange(t.fill || t.cell);
+    for (var row = r.r1; row <= r.r2; row++) for (var col = r.c1; col <= r.c2; col++) out.push(cellRef(row, col));
+    return out;
+  }
+  // the starting sheet given to the tool
+  function formulaSeed(item) {
+    if (item._seed) return item._seed;
+    var st = item.style || {}, cells = {}, data = item.sheet || [], widths = {};
+    data.forEach(function (row, r) { (row || []).forEach(function (v, c) { if (v != null && v !== '') cells[cellRef(r, c)] = v; }); });
+    var targets = {}; (item.cells || []).forEach(function (t) { targets[t.cell] = 1; });
+    var bold = st.bold || (data.length > 1 ? ['A1:' + colName(Math.max(0, (data[0] || []).length - 1)) + '1'] : []);
+    var boldAt = {}; bold.forEach(function (s) { var g = parseRange(s); for (var r = g.r1; r <= g.r2; r++) for (var c = g.c1; c <= g.c2; c++) boldAt[r + ':' + c] = 1; });
+    var merged = {}; (st.merge || []).forEach(function (s) { var g = parseRange(s); for (var r = g.r1; r <= g.r2; r++) for (var c = g.c1; c <= g.c2; c++) merged[r + ':' + c] = 1; });
+    // column widths: wide enough for every value (the tool clips text, like NESA's), measured like the tool's autofit
+    var ctx2d = document.createElement('canvas').getContext('2d');
+    data.forEach(function (row, r) {
+      (row || []).forEach(function (v, c) {
+        if (v == null || v === '' || (typeof v === 'string' && v[0] === '=') || merged[r + ':' + c]) return;
+        ctx2d.font = (boldAt[r + ':' + c] ? '700 ' : '400 ') + '16px "Public Sans", Roboto, Arial, sans-serif';
+        var text = typeof v === 'number' ? showVal(v) : String(v);
+        if (st.currency && typeof v === 'number') text = '$' + v.toFixed(2);
+        widths[c] = Math.max(widths[c] || 0, Math.ceil(ctx2d.measureText(text).width * 1.03 + 30));
+      });
+    });
+    var colWidths = {};
+    Object.keys(st.colWidths || {}).forEach(function (k) { colWidths[k] = st.colWidths[k]; });
+    Object.keys(widths).forEach(function (c) { var n = colName(+c), w = Math.min(300, widths[c]); if (w > (colWidths[n] || 100)) colWidths[n] = w; });
+    var seed = { cells: cells, bold: bold, center: st.center, merge: st.merge, currency: st.currency, percent: st.percent, colWidths: colWidths };
+    // outline the cells the answers go in
+    (item.cells || []).forEach(function (t) {
+      var v = cells[t.cell];
+      cells[t.cell] = { v: v == null ? '' : v, s: { bt: true, bb: true, bl: true, br: true, bc: TARGET_BORDER, bs: 'medium' } };
+    });
+    if (item.sheets) seed.sheets = JSON.parse(JSON.stringify(item.sheets));
+    return (item._seed = seed);
+  }
+  ITEMS.formulaSeed = formulaSeed;
+  function rawOf(c) { if (c == null) return ''; if (typeof c === 'object') return c.v == null ? '' : String(c.v); return String(c); }
+  // { A1: raw } for the student's sheet. Old saves were { D2: '=formula' }: those are put into the starting sheet.
+  function sheetCells(item, value) {
+    var seed = formulaSeed(item), out = {};
+    if (value && (value.format === 'epc-sheet' || value.cells)) {
+      Object.keys(value.cells || {}).forEach(function (k) { var s = rawOf(value.cells[k]); if (s !== '') out[k] = s; });
+      return out;
+    }
+    Object.keys(seed.cells).forEach(function (k) { var s = rawOf(seed.cells[k]); if (s !== '') out[k] = s; });
+    Object.keys(value || {}).forEach(function (k) { if (/^[A-Z]+\d+$/.test(k) && value[k]) out[k] = String(value[k]); });
+    return out;
+  }
+  function seedCells(item) { return sheetCells(item, null); }
+  ITEMS.formulaValue = function (item, value) {
+    if (!value) return null;
+    if (value.format === 'epc-sheet' || value.cells) return value;
+    var seed = JSON.parse(JSON.stringify(formulaSeed(item)));
+    Object.keys(value).forEach(function (k) { if (/^[A-Z]+\d+$/.test(k) && value[k]) { var c = seed.cells[k]; if (c && typeof c === 'object') c.v = value[k]; else seed.cells[k] = value[k]; } });
+    seed.changed = true;
+    return seed;
+  };
+  // the student's entry in each answer cell
+  ITEMS.formulaAnswers = function (item, value) {
+    var cells = sheetCells(item, value), seed = seedCells(item), out = {};
+    (item.cells || []).forEach(function (t) { var s = cells[t.cell] || ''; if (s !== (seed[t.cell] || '')) out[t.cell] = s; });
+    return out;
+  };
+  function hfInput(s) {
+    if (s == null || s === '') return null;
+    if (typeof s === 'number') return s;
+    s = String(s);
+    if (s[0] === '=') return engineFormula(s);
+    if (/^\s*[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?\s*$/i.test(s)) return +s;
+    if (/^\s*\d{1,2}\/\d{1,2}\/\d{4}\s*$/.test(s)) return s.trim();   // a date, read the way the tool reads it (m/d/yyyy)
+    return "'" + s;
+  }
+  function rowsFrom(cells) {
+    var rows = [];
+    Object.keys(cells).forEach(function (k) { var a = parseCell(k); if (!a) return; (rows[a.row] = rows[a.row] || [])[a.col] = hfInput(cells[k]); });
+    for (var r = 0; r < rows.length; r++) { rows[r] = rows[r] || []; for (var c = 0; c < rows[r].length; c++) if (rows[r][c] === undefined) rows[r][c] = null; }
+    return rows;
+  }
+  // Calculates a sheet ({ A1: raw }). Each answer cell's entry is copied (like fill down/across) into the cells of its
+  // fill range that still hold the starting content; cells the student changed themselves are kept as they are.
+  function evalFormulas(HF, item, cells) {
+    var seed = seedCells(item);
+    var sheets = { Sheet1: rowsFrom(cells) };
+    Object.keys(item.sheets || {}).forEach(function (n) { sheets[n] = item.sheets[n].map(function (r) { return r.map(function (v) { return hfInput(v); }); }); });
+    var hf = HF.buildFromSheets(sheets, { licenseKey: 'gpl-v3', thousandSeparator: '', decimalSeparator: '.', functionArgSeparator: ',', leapYear1900: false, nullDate: { year: 1899, month: 12, day: 30 },
+      precisionRounding: 10, smartRounding: true, dateFormats: ['MM/DD/YYYY', 'MM/DD/YY', 'YYYY-MM-DD'], currencySymbol: ['$'] });
     var sid = hf.getSheetId('Sheet1'), out = {};
     try {
       (item.cells || []).forEach(function (t) {
-        var a = parseCell(t.cell), f = engineFormula(formulas[t.cell]);
-        hf.setCellContents({ sheet: sid, col: a.col, row: a.row }, [[f || null]]);
-        if (t.fill && f) {
-          var r = parseRange(t.fill);
-          hf.copy({ start: { sheet: sid, col: a.col, row: a.row }, end: { sheet: sid, col: a.col, row: a.row } });
-          for (var row = r.r1; row <= r.r2; row++) for (var col = r.c1; col <= r.c2; col++) if (row !== a.row || col !== a.col) hf.paste({ sheet: sid, col: col, row: row });
-        }
+        if (!t.fill || !String(cells[t.cell] || '').trim()) return;
+        var a = parseCell(t.cell);
+        hf.copy({ start: { sheet: sid, col: a.col, row: a.row }, end: { sheet: sid, col: a.col, row: a.row } });
+        fillCells(t).forEach(function (ref) {
+          if (ref === t.cell || (cells[ref] || '') !== (seed[ref] || '')) return;
+          var p = parseCell(ref); hf.paste({ sheet: sid, col: p.col, row: p.row });
+        });
       });
       (item.cells || []).forEach(function (t) {
-        var r = parseRange(t.fill || t.cell), vals = [];
-        for (var row = r.r1; row <= r.r2; row++) for (var col = r.c1; col <= r.c2; col++) vals.push({ cell: colName(col) + (row + 1), value: hf.getCellValue({ sheet: sid, col: col, row: row }) });
-        out[t.cell] = vals;
+        out[t.cell] = fillCells(t).map(function (ref) { var p = parseCell(ref); return { cell: ref, value: hf.getCellValue({ sheet: sid, col: p.col, row: p.row }) }; });
       });
-      out.__grid = hf.getSheetValues(sid);
     } finally { hf.destroy(); }
     return out;
   }
@@ -731,96 +814,59 @@
     if (typeof a === 'number' && typeof b === 'number') return Math.abs(a - b) < 1e-9;
     return showVal(a) === showVal(b);
   }
+  function cellMarks(item) {
+    var ts = item.cells || [], given = ts.reduce(function (s, t) { return s + (t.marks || 0); }, 0);
+    var each = ts.filter(function (t) { return !t.marks; }).length ? Math.max(0, (item.marks || ts.length) - given) / ts.filter(function (t) { return !t.marks; }).length : 0;
+    return ts.map(function (t) { return t.marks || each; });
+  }
   ITEMS.checkFormula = function (item, value) {
-    value = value || {};
-    var key = JSON.stringify(value);
+    var cells = sheetCells(item, value), answers = ITEMS.formulaAnswers(item, value);
+    var key = JSON.stringify(cells);
     if (item._formulaCheck && item._formulaCheck.key === key) return Promise.resolve(item._formulaCheck);
     return getHF().then(function (HF) {
-      var model = {}; (item.cells || []).forEach(function (t) { model[t.cell] = t.answer; });
-      var exp = evalFormulas(HF, item, model), got = evalFormulas(HF, item, value);
-      var cells = (item.cells || []).map(function (t) {
-        var e = exp[t.cell], g = got[t.cell];
-        var ok = !!String(value[t.cell] || '').trim() && e.every(function (x, i) { return sameVal(g[i].value, x.value); });
-        return { cell: t.cell, ok: ok, exp: e, got: g };
+      var model = seedCells(item); (item.cells || []).forEach(function (t) { model[t.cell] = t.answer; });
+      var exp = evalFormulas(HF, item, model), got = evalFormulas(HF, item, cells), wts = cellMarks(item);
+      var res = (item.cells || []).map(function (t, i) {
+        var e = exp[t.cell], g = got[t.cell], f = answers[t.cell] || '';
+        var ok = /^\s*=/.test(f) && e.every(function (x, j) { return sameVal(g[j].value, x.value); });   // a formula is needed, not a typed-in result
+        return { cell: t.cell, ok: ok, exp: e, got: g, formula: f, marks: wts[i] };
       });
-      var rows = cells.map(function (c) {
+      var rows = res.map(function (c) {
         return c.exp.map(function (x, i) {
-          var g = c.got[i].value, good = sameVal(g, x.value);
+          var g = c.got[i].value, good = /^\s*=/.test(c.formula) && sameVal(g, x.value);
           return '<tr><td>' + x.cell + '</td><td>' + escapeHtml(showVal(g)) + '</td><td>' + escapeHtml(showVal(x.value)) + '</td><td>' + (good ? '<i class="fas fa-check" style="color:#00804f"></i>' : '<i class="fas fa-times" style="color:#b81237"></i>') + '</td></tr>';
         }).join('');
       }).join('');
+      var formulas = '<table class="hoa-table-normal formula-results"><thead><tr><th>Cell</th><th>Your entry</th><th></th></tr></thead><tbody>' + res.map(function (c) {
+        return '<tr><td>' + c.cell + '</td><td><code>' + escapeHtml(c.formula || '(empty)') + '</code>' + (c.formula && !/^\s*=/.test(c.formula) ? ' <em>(not a formula)</em>' : '') + '</td><td>' + (c.ok ? '<i class="fas fa-check" style="color:#00804f"></i>' : '<i class="fas fa-times" style="color:#b81237"></i>') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+      var filled = (item.cells || []).some(function (t) { return t.fill; });
       item._formulaCheck = {
-        key: key, match: cells.every(function (c) { return c.ok; }), cells: cells,
-        nRight: cells.filter(function (c) { return c.ok; }).length,
-        detailHtml: '<table class="hoa-table-normal formula-results"><thead><tr><th>Cell</th><th>Your result</th><th>Expected</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>',
+        key: key, match: res.every(function (c) { return c.ok; }), cells: res,
+        nRight: res.filter(function (c) { return c.ok; }).length,
+        got: Math.round(res.reduce(function (s, c) { return s + (c.ok ? c.marks : 0); }, 0) * 100) / 100,
+        detailHtml: formulas + '<div class="label" style="margin-top:.6em">Results' + (filled ? ' (formulas filled as the question asks)' : '') + '</div>' +
+          '<table class="hoa-table-normal formula-results"><thead><tr><th>Cell</th><th>Your result</th><th>Expected</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>',
       };
       return item._formulaCheck;
     }).catch(function (e) { console.warn(e); return null; });
   };
   ITEMS.formula = function (item, ctx) {
-    var wrap = frame(item, []);
-    var data = item.sheet || [];
-    var targets = {}; (item.cells || []).forEach(function (t) { var a = parseCell(t.cell); targets[a.row + ':' + a.col] = t.cell; if (t.fill) { var r = parseRange(t.fill); for (var row = r.r1; row <= r.r2; row++) for (var col = r.c1; col <= r.c2; col++) if (!targets[row + ':' + col]) targets[row + ':' + col] = '~'; } });
-    var nRows = data.length, nCols = data.reduce(function (m, r) { return Math.max(m, r.length); }, 0);
-    Object.keys(targets).forEach(function (k) { var p = k.split(':'); nRows = Math.max(nRows, +p[0] + 1); nCols = Math.max(nCols, +p[1] + 1); });
-    var html = '<div class="fx-sheet-wrap"><table class="fx-sheet"><thead><tr><th></th>';
-    for (var c = 0; c < nCols; c++) html += '<th>' + colName(c) + '</th>';
-    html += '</tr></thead><tbody>';
-    for (var r = 0; r < nRows; r++) {
-      html += '<tr><th>' + (r + 1) + '</th>';
-      for (c = 0; c < nCols; c++) {
-        var t = targets[r + ':' + c], v = (data[r] || [])[c];
-        html += '<td data-rc="' + r + ':' + c + '" class="' + (t ? (t === '~' ? 'fx-fill' : 'fx-target') : '') + (typeof v === 'number' ? ' num' : '') + '">' + (t ? '' : escapeHtml(typeof v === 'string' && v[0] === '=' ? '' : showVal(v))) + '</td>';
-      }
-      html += '</tr>';
-    }
-    html += '</tbody></table></div><div class="fx-inputs"></div>';
-    var box = el('<div class="fx-wrap">' + html + '</div>');
-    wrap.querySelector('.item-control').appendChild(box);
-    var inputsEl = box.querySelector('.fx-inputs'), inputs = {}, sheetWrap = box.querySelector('.fx-sheet-wrap');
-    (item.cells || []).forEach(function (t) {
-      var row = el('<label class="fx-row"><span class="fx-cell">' + t.cell + '</span><span class="fx-eq">fx</span><input type="text" class="fx-input" spellcheck="false" autocomplete="off" placeholder="=formula"><span class="fx-mark"></span>' + (t.fill ? '<span class="fx-note">filled ' + (parseRange(t.fill).r2 > parseRange(t.fill).r1 ? 'down' : 'across') + ' to ' + t.fill.split(':')[1] + '</span>' : '') + '</label>');
-      var inp = row.querySelector('input');
-      inp.addEventListener('input', function () { ctx.save(api.getValue()); schedulePreview(); });
-      inputs[t.cell] = { input: inp, mark: row.querySelector('.fx-mark') };
-      inputsEl.appendChild(row);
-    });
-    // live preview: show what the formulas calculate in the grid (formula cells in the sheet data are calculated too)
-    var pv = null;
-    function schedulePreview() { clearTimeout(pv); pv = setTimeout(preview, 250); }
-    function preview() {
-      getHF().then(function (HF) {
-        var res = evalFormulas(HF, item, api.getValue()), grid = res.__grid || [];
-        Array.prototype.forEach.call(sheetWrap.querySelectorAll('td[data-rc]'), function (td) {
-          var p = td.getAttribute('data-rc').split(':'), v = (grid[+p[0]] || [])[+p[1]];
-          var raw = (data[+p[0]] || [])[+p[1]];
-          if (td.classList.contains('fx-target') || td.classList.contains('fx-fill') || (typeof raw === 'string' && raw[0] === '=')) {
-            td.textContent = showVal(v); td.classList.toggle('num', typeof v === 'number'); td.classList.toggle('fx-err', !!v && typeof v === 'object');
-          }
-        });
-      }).catch(function () { });
-    }
-    var api = {
-      el: wrap,
-      getValue: function () { var o = {}; Object.keys(inputs).forEach(function (k) { var s = inputs[k].input.value.trim(); if (s) o[k] = s; }); return o; },
-      setValue: function (v) { v = v || {}; Object.keys(inputs).forEach(function (k) { inputs[k].input.value = v[k] || ''; }); schedulePreview(); },
-      isAnswered: function (v) { return !!v && (item.cells || []).every(function (t) { return !!String(v[t.cell] || '').trim(); }); },
-      setReadOnly: function (ro) { Object.keys(inputs).forEach(function (k) { inputs[k].input.readOnly = ro; }); },
-      stimEl: sheetWrap,
-      onShow: function () { schedulePreview(); },
-      autoMark: function (v) {
-        var c = item._formulaCheck; if (!c || c.key !== JSON.stringify(v || {})) return null;
-        var n = (item.cells || []).length || 1, max = item.marks || n;
-        return { got: Math.round(max * c.nRight / n * 100) / 100, max: max, detail: c.nRight + ' of ' + n + ' cell' + (n === 1 ? '' : 's') + ' correct' };
-      },
-      review: function (v) {
-        var c = item._formulaCheck; if (!c || c.key !== JSON.stringify(v || {})) return;
-        c.cells.forEach(function (x) { var i = inputs[x.cell]; if (i) { i.mark.innerHTML = x.ok ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'; i.mark.className = 'fx-mark ' + (x.ok ? 'ok' : 'bad'); } });
-        var extra = wrap.querySelector('.item-extra');
-        if (!extra.querySelector('.check-box') && !extra.querySelector('.formula-results')) { var d = el('<div class="sql-check"></div>'); d.innerHTML = c.detailHtml; extra.appendChild(d); }
-      },
+    item.seed = formulaSeed(item);
+    var api = embedItem('spreadsheet', item, ctx);
+    var setBase = api.setValue;
+    api.setValue = function (v) { setBase(v == null ? null : ITEMS.formulaValue(item, v)); };
+    api.isAnswered = function (v) { var a = ITEMS.formulaAnswers(item, v); return !!v && (item.cells || []).every(function (t) { return !!String(a[t.cell] || '').trim(); }); };
+    api.autoMark = function (v) {
+      var c = item._formulaCheck; if (!c || c.key !== JSON.stringify(sheetCells(item, v))) return null;
+      var n = (item.cells || []).length || 1, max = item.marks || n;
+      return { got: c.got, max: max, detail: c.nRight + ' of ' + n + ' cell' + (n === 1 ? '' : 's') + ' correct' };
     };
-    schedulePreview();
+    api.review = function (v) {
+      var c = item._formulaCheck; if (!c || c.key !== JSON.stringify(sheetCells(item, v))) return;
+      var extra = api.el.querySelector('.item-extra');
+      if (!extra.querySelector('.check-box') && !extra.querySelector('.formula-results')) { var d = el('<div class="sql-check"></div>'); d.innerHTML = c.detailHtml; extra.appendChild(d); }
+    };
     return api;
   };
 
@@ -832,7 +878,7 @@
   });
   function embedItem(kind, item, ctx) {
     var id = 'embed-' + item.key.replace(/\W/g, '_');
-    var src = 'tools/' + kind + '.html?v=20261101';   // version tag so browsers fetch the updated tool
+    var src = 'tools/' + kind + '.html?v=20261102';   // version tag so browsers fetch the updated tool
     var seed = null;
     if (kind === 'spreadsheet') {
       var ex = ITEMS.extractInitial(item.question);
@@ -902,7 +948,7 @@
         } };
       });
       ex.frame = el('<iframe title="export" style="position:fixed;left:-3000px;top:0;width:1200px;height:800px;border:0" tabindex="-1" aria-hidden="true"></iframe>');
-      ex.frame.src = 'tools/' + kind + '.html?v=20261101#id=' + id;
+      ex.frame.src = 'tools/' + kind + '.html?v=20261102#id=' + id;
       document.body.appendChild(ex.frame);
     }
     var job = ex.queue.then(function () {

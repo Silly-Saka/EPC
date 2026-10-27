@@ -24,6 +24,7 @@
   var undoStack = [], redoStack = [];
   var clip = null;
   var chartObjs = {}, chartPanelFor = null;
+  var extraSheets = null;
 
   // ------------------------------------------------------------------ addressing
   function colName(c) { var s = ''; c++; while (c > 0) { var m = (c - 1) % 26; s = String.fromCharCode(65 + m) + s; c = Math.floor((c - 1) / 26); } return s; }
@@ -540,7 +541,8 @@
     return { format: 'epc-sheet', cells: cells, colW: cw, rowH: Object.assign({}, rowH), merges: merges.slice(), conds: conds.map(function (x) { return Object.assign({}, x); }),
       comments: cm, charts: charts.map(function (ch) { return JSON.parse(JSON.stringify(ch)); }), named: Object.assign({}, named), filter: filter ? JSON.parse(JSON.stringify(filter)) : null,
       showFormulas: showFormulas, hiddenRows: Object.keys(hiddenRows).map(Number), hiddenCols: Object.keys(hiddenCols).map(Number),
-      groups: JSON.parse(JSON.stringify(groups)), highlightInvalid: highlightInvalid, changed: changed };
+      groups: JSON.parse(JSON.stringify(groups)), highlightInvalid: highlightInvalid, changed: changed,
+      sheets: extraSheets ? JSON.parse(JSON.stringify(extraSheets)) : undefined };
   }
   function clearModel() { raws = {}; styles = {}; comments = {}; colW = {}; rowH = {}; merges = []; conds = []; charts = []; named = {}; filter = null; showFormulas = false; hiddenRows = {}; hiddenCols = {}; groups = { r: [], c: [] }; highlightInvalid = false; newEngine(); }
   function eachRange(spec, fn) { (Array.isArray(spec) ? spec : spec ? [spec] : []).forEach(function (s) { var g = parseRange(s); if (!g) return; for (var r = g.r1; r <= g.r2; r++) for (var c = g.c1; c <= g.c2; c++) fn(r, c); }); }
@@ -582,6 +584,7 @@
       (v.hiddenCols || []).forEach(function (c) { hiddenCols[c] = true; });
       if (v.groups) groups = { r: (v.groups.r || []).map(function (x) { return Object.assign({}, x); }), c: (v.groups.c || []).map(function (x) { return Object.assign({}, x); }) };
       highlightInvalid = !!v.highlightInvalid;
+      addExtraSheets(v.sheets);
       syncNamed();
       pushAllToEngine();
     }
@@ -589,6 +592,17 @@
     changed = !!(v && v.changed);
     ensureSize();
     buildGrid();
+  }
+  // Other sheets a question's formulas may refer to (e.g. =Sales!B10). They are not shown (NESA's tool has one sheet);
+  // the question shows them as tables. v.sheets = { Name: [[row1...], ...] }
+  function addExtraSheets(sh) {
+    extraSheets = sh || null;
+    Object.keys(sh || {}).forEach(function (n) {
+      try {
+        var id = hf.getSheetId(hf.addSheet(n));
+        hf.setSheetContent(id, (sh[n] || []).map(function (row) { return (row || []).map(function (x) { return x == null || x === '' ? null : toEngine(String(x)); }); }));
+      } catch (e) { console.warn('sheet', n, e.message); }
+    });
   }
   function pushAllToEngine() {
     hf.batch(function () { Object.keys(raws).forEach(function (k) { var p = k.split(','); try { hf.setCellContents(addr(+p[0], +p[1]), [[toEngine(raws[k])]]); } catch (e) { } }); });

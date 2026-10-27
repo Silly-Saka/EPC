@@ -4,10 +4,10 @@
 registerExam({
   id: 'logic-ss',
   title: 'Logic — Spreadsheet formulas',
-  source: 'ec.eforge.online + EPC textbook', year: 2026, kind: 'textbook',
+  source: 'ec.eforge.online + EPC textbook + CSSA style', year: 2026, kind: 'textbook',
   readingMinutes: 0, workingMinutes: 0,
-  totalMarks: 53,
-  coverNotes: `<p>Write spreadsheet formulas and check them: your formula is calculated on the sheet shown and compared with the expected results. Questions from ec.eforge.online (Data Science) and the EPC textbook.</p>`,
+  totalMarks: 86,
+  coverNotes: `<p>Answer each question in the spreadsheet tool used in the HSC online exam. Type your formulas into the outlined cells; they are calculated on the sheet and compared with the expected results (formulas that should be filled down are checked as if filled down). Questions 1 to 26 are from ec.eforge.online (Data Science) and the EPC textbook. Questions 27 to 35 are in the CSSA style: you are given a scenario and the cells to complete, and you decide which formulas to use.</p>`,
   groups: [
     // ================= Ec.eforge — Data Science: Summarise Data using Spreadsheets =================
     { number: '1', marks: 1, layout: 0, section: 'Ec.eforge · Calculate the Total',
@@ -178,7 +178,7 @@ registerExam({
   ] },
 { number: '12', marks: 7, layout: 0, section: 'Textbook p. 205 · Summarising data using a spreadsheet',
   items: [
-    { type: 'formula', marks: 4,
+    { type: 'formula', part: 'a', marks: 4,
       question: `<p>A weather station recorded the daily temperature and rainfall for 10 days (sample data, rows 2 to 11). Use the basic functions SUM, AVERAGE, MIN and MAX to summarise the data. Write a formula in each cell:</p>
 <ul><li><strong>B13</strong>: the total rainfall</li><li><strong>B14</strong>: the average temperature</li><li><strong>B15</strong>: the highest temperature</li><li><strong>B16</strong>: the lowest temperature</li></ul>`,
       sheet: [
@@ -206,7 +206,7 @@ registerExam({
         { cell: 'B16', answer: '=MIN(B2:B11)' }
       ],
       guide: `<p><strong>Sample answers:</strong> B13 <code>=SUM(C2:C11)</code> (68), B14 <code>=AVERAGE(B2:B11)</code> (24.2), B15 <code>=MAX(B2:B11)</code> (31), B16 <code>=MIN(B2:B11)</code> (19).</p><p>SUM adds a range, AVERAGE finds the mean, and MIN and MAX find the smallest and largest values (textbook p. 205).</p>` },
-    { type: 'formula', marks: 3,
+    { type: 'formula', part: 'b', marks: 3,
       question: `<p>Using the same weather data, write <strong>conditional summary</strong> formulas (SUMIF, COUNTIF, AVERAGEIF) in each cell:</p>
 <ul><li><strong>B13</strong>: the total rainfall on days when the temperature exceeded 25°C</li><li><strong>B14</strong>: the number of rainy days (days with more than 0 mm of rain)</li><li><strong>B15</strong>: the average temperature on rainy days</li></ul>`,
       sheet: [
@@ -531,6 +531,7 @@ registerExam({
         ['Std Deviation', null, null, null],
         ['Correlation', null, null, null]
       ],
+      style: { bold: ['A1', 'A3', 'A4:D4', 'A21'], merge: ['A1:D1'] },
       cells: [
         { cell: 'B22', fill: 'B22:D22', answer: '=AVERAGE(B5:B19)' },
         { cell: 'B24', fill: 'B24:D24', answer: '=MEDIAN(B5:B19)' },
@@ -641,7 +642,317 @@ registerExam({
         { cell: 'D7', answer: '=AVERAGE(D2:D6)' }
       ],
       guide: `<p><strong>Sample answers:</strong> D2 <code>=C2-B2</code> filled down to D6 (−20, 10, 10, −10, 20); D7 <code>=AVERAGE(D2:D6)</code> (2).</p><p>A positive difference means the DSS under-predicted. The predictions were never more than 20 loaves out, and on average the DSS under-predicted by only 2 loaves a week, so it does not consistently over- or under-estimate (graph on textbook p. 518; discussion questions on p. 519).</p>` }
+  ] },
+    // ================= CSSA-style: a scenario and the cells to fill — you decide which formulas to use =================
+{ number: '27', marks: 4, layout: 0, section: 'CSSA 2026 Q18 · Car dealership commissions',
+  stimulus: `<p>A small used car dealership wants to use a spreadsheet to keep track of its sales and the commissions earned by each of its sales staff each month.</p>
+<p>Sales staff receive a commission of 10% of the profits from each car they sell. If a car is sold for more than double its original trade-in price, then the sales staff receive a higher commission of 15% for that sale. If no profit is made on a sale, then the commission will be a flat rate of $50.00.</p>
+<p>To further reward high-performing sales staff, a bonus is also added based on the commission earned from each sale, shown in the Bonus Calculation Table in the spreadsheet.</p>`,
+  items: [
+    { type: 'formula', marks: 4,
+      question: `<p>Part of the spreadsheet has been set up. Complete the spreadsheet so that the required information will automatically be displayed when the sales figures are entered. You need to allow for ‘fill down’ when appropriate.</p>
+<p>Complete the outlined cells <strong>F3</strong>, <strong>G3</strong> and <strong>H3</strong>.</p>`,
+      sheet: [
+        ['Sales for July 2026'],
+        ['StockID', 'Trade-In Price', 'Sale Date', 'Sale Price', 'Sold By', 'Profit', 'Commission', 'Bonus'],
+        ['MAZ754', 13500, '1 Jul 2026', 21500, 'Peter', null, null, null],
+        ['TOY432', 23000, '5 Jul 2026', 34600, 'Deborah', 11600, 1160, 1000],
+        ['FOR983', 8000, '10 Jul 2026', 12990, 'Chloe', 4990, 499, 0],
+        ['PEU834', 9900, '10 Jul 2026', 21400, 'Andrew', 11500, 1725, 1500],
+        ['TES315', 21500, '11 Jul 2026', 28990, 'Andrew', 7490, 749, 500],
+        ['VOL174', 11000, '20 Jul 2026', 16500, 'Alison', 5500, 550, 500],
+        ['REN432', 3500, '21 Jul 2026', 9990, 'Amelia', 6490, 973.5, 500],
+        ['SUB953', 1500, '24 Jul 2026', 4000, 'Peter', 2500, 375, 0],
+        ['MIT235', 1000, '24 Jul 2026', 950, 'Peter', -50, 50, 0],
+        [],
+        ['Bonus Calculation Table'],
+        ['Commission', 'Min', 'Bonus'],
+        ['0-500', 0, 0],
+        ['501-1000', 501, 500],
+        ['1001-1500', 1001, 1000],
+        ['1501-2000', 1501, 1500],
+        ['>= 2001', 2001, 2000]
+      ],
+      style: { bold: ['A1:H2', 'A13:C14'], center: ['A1:H1', 'A13:C13'], merge: ['A1:H1', 'A13:C13'],
+        colWidths: { A: 110, B: 115, C: 105, D: 90, E: 90, F: 80, G: 105, H: 80 } },
+      cells: [
+        { cell: 'F3', fill: 'F3:F11', marks: 1, answer: '=D3-B3' },
+        { cell: 'G3', fill: 'G3:G11', marks: 2, answer: '=IF(F3<=0,50,IF(D3>B3*2,F3*0.15,F3*0.1))' },
+        { cell: 'H3', fill: 'H3:H11', marks: 1, answer: '=VLOOKUP(G3,$B$15:$C$19,2)' }
+      ],
+      guide: `<p><strong>Sample answer:</strong></p>
+<pre class="hoa-code">F3: =D3-B3
+G3: =IF(F3&lt;=0, 50, IF(D3&gt;B3*2, F3*0.15, F3*0.1))
+H3: =VLOOKUP(G3,$B$15:$C$19,2)</pre>
+<p>Row 3 (MAZ754) gives Profit 8000, Commission 800 and Bonus 500. The commission needs a nested IF: check for no profit first, then whether the sale price is more than double the trade-in price. The VLOOKUP looks the commission up in the <strong>Min</strong> column (B15:B19), not the text ranges in column A, and leaves out the last argument so it finds the band the commission falls in. The lookup table must be absolute ($B$15:$C$19) so it stays put when filled down.</p>
+<p>Marking (CSSA): 4 marks for addressing all the requirements. Here F3 and H3 are worth 1 mark each and G3 is worth 2.</p>` }
+  ] },
+{ number: '28', marks: 4, layout: 0, section: 'CSSA style · Gym membership fees',
+  stimulus: `<p>FitLife Gym charges each member a monthly fee that depends on their membership type. The fee for each type is listed in the Membership Table in the spreadsheet, so the gym can change its prices without changing any formulas.</p>
+<p>Members who are students or seniors are entitled to a concession: they receive a discount of 20% off their monthly fee. Everyone else pays the full fee.</p>
+<p>The manager also wants to see the total amount the gym will collect for the month.</p>`,
+  items: [
+    { type: 'formula', marks: 4,
+      question: `<p>Part of the spreadsheet has been set up. Complete the spreadsheet so that the monthly fee, discount and amount due are calculated automatically for each member, along with the total for the month. You need to allow for ‘fill down’ when appropriate.</p>
+<p>Complete the outlined cells <strong>D3</strong>, <strong>E3</strong>, <strong>F3</strong> and <strong>F11</strong>.</p>`,
+      sheet: [
+        ['FitLife Gym – Monthly Fees', null, null, null, null, null, null, 'Membership Table'],
+        ['Member', 'Membership', 'Concession', 'Monthly Fee', 'Discount', 'Amount Due', null, 'Membership', 'Fee'],
+        ['Ava Lewis', 'Plus', 'Yes', null, null, null, null, 'Basic', 30],
+        ['Ben Ortiz', 'Basic', 'No', 30, 0, 30, null, 'Plus', 45],
+        ['Chloe Park', 'Premium', 'No', 60, 0, 60, null, 'Premium', 60],
+        ['Daniel Reid', 'Basic', 'Yes', 30, 6, 24],
+        ['Ella Moore', 'Premium', 'Yes', 60, 12, 48],
+        ['Finn Hayes', 'Plus', 'No', 45, 0, 45],
+        ['Grace Tan', 'Premium', 'No', 60, 0, 60],
+        [],
+        [null, null, null, null, 'Total', null]
+      ],
+      style: { bold: ['A1:F2', 'H1:I2', 'E11'], merge: ['A1:F1', 'H1:I1'], center: ['A1:F1', 'H1:I1'], currency: ['D3:F11', 'I3:I5'],
+        colWidths: { A: 120, B: 115, C: 105, D: 115, E: 90, F: 115, G: 40, H: 115, I: 70 } },
+      cells: [
+        { cell: 'D3', fill: 'D3:D9', answer: '=VLOOKUP(B3,$H$3:$I$5,2,FALSE)' },
+        { cell: 'E3', fill: 'E3:E9', answer: '=IF(C3="Yes",D3*0.2,0)' },
+        { cell: 'F3', fill: 'F3:F9', answer: '=D3-E3' },
+        { cell: 'F11', answer: '=SUM(F3:F9)' }
+      ],
+      guide: `<p><strong>Sample answer:</strong></p>
+<pre class="hoa-code">D3:  =VLOOKUP(B3,$H$3:$I$5,2,FALSE)
+E3:  =IF(C3="Yes", D3*20%, 0)
+F3:  =D3-E3
+F11: =SUM(F3:F9)</pre>
+<p>Ava's row gives $45.00, $9.00 and $36.00, and the month's total is $303.00. The VLOOKUP needs FALSE (an exact match) because the membership types are text and are not in order. The table reference must be absolute so it does not move when the formula is filled down.</p>` }
+  ] },
+{ number: '29', marks: 4, layout: 0, section: 'CSSA style · Electricity bills',
+  stimulus: `<p>PowerUp Energy sends each household a quarterly electricity bill made up of two parts:</p>
+<ul><li>a <strong>supply charge</strong>: a fixed daily charge for every day in the billing period</li><li>a <strong>usage charge</strong>: the first 1000 kWh used are charged at the standard rate, and any usage above 1000 kWh is charged at the higher rate</li></ul>
+<p>The rates are kept in the Rates table in the spreadsheet so that they can be updated when prices change, without editing any formulas.</p>`,
+  items: [
+    { type: 'formula', marks: 4,
+      question: `<p>Part of the spreadsheet has been set up. Complete the spreadsheet so that each customer’s supply charge, usage charge and total bill are calculated automatically from the rates in the Rates table. You need to allow for ‘fill down’ when appropriate.</p>
+<p>Complete the outlined cells <strong>D3</strong>, <strong>E3</strong> and <strong>F3</strong>.</p>`,
+      sheet: [
+        ['Quarterly Bills', null, null, null, null, null, null, 'Rates'],
+        ['Customer', 'Days', 'Usage (kWh)', 'Supply Charge', 'Usage Charge', 'Total Bill', null, 'Daily supply charge', 1.1],
+        ['Harris', 91, 850, null, null, null, null, 'Standard rate (first 1000 kWh)', 0.3],
+        ['Nguyen', 92, 1240, 101.2, 396, 497.2, null, 'Higher rate (above 1000 kWh)', 0.4],
+        ['Patel', 90, 1000, 99, 300, 399],
+        ['Smith', 91, 640, 100.1, 192, 292.1],
+        ['Taylor', 92, 1515, 101.2, 506, 607.2],
+        ['Wong', 90, 1100, 99, 340, 439]
+      ],
+      style: { bold: ['A1:F2', 'H1:I1'], merge: ['A1:F1', 'H1:I1'], center: ['A1:F1', 'H1:I1'], currency: ['D3:F8', 'I2:I4'],
+        colWidths: { A: 100, B: 70, C: 110, D: 120, E: 120, F: 100, G: 40, H: 250, I: 70 } },
+      cells: [
+        { cell: 'D3', fill: 'D3:D8', marks: 1, answer: '=B3*$I$2' },
+        { cell: 'E3', fill: 'E3:E8', marks: 2, answer: '=IF(C3>1000,1000*$I$3+(C3-1000)*$I$4,C3*$I$3)' },
+        { cell: 'F3', fill: 'F3:F8', marks: 1, answer: '=D3+E3' }
+      ],
+      guide: `<p><strong>Sample answer:</strong></p>
+<pre class="hoa-code">D3: =B3*$I$2
+E3: =IF(C3&gt;1000, 1000*$I$3 + (C3-1000)*$I$4, C3*$I$3)
+F3: =D3+E3</pre>
+<p>Harris's row gives $100.10, $255.00 and $355.10. Only the usage <em>above</em> 1000 kWh is charged at the higher rate, so Nguyen pays 1000 × $0.30 + 240 × $0.40 = $396. The rates must be absolute references ($I$2, $I$3, $I$4); typing the numbers into the formula gives the right answers today but would not update when the rates change.</p>
+<p>Another correct usage formula: <code>=MIN(C3,1000)*$I$3+MAX(C3-1000,0)*$I$4</code>.</p>` }
+  ] },
+{ number: '30', marks: 3, layout: 0, section: 'CSSA style · Library late fees',
+  stimulus: `<p>Northside Library lends books for 14 days. If a book is kept longer than that, a late fee of $0.50 is charged for each day beyond the 14 days, up to a maximum fee of $10.00 per book.</p>
+<p>A borrower whose late fee for a book is $5.00 or more is blocked from borrowing again until the fee is paid. All other borrowers are shown as OK.</p>`,
+  items: [
+    { type: 'formula', marks: 3,
+      question: `<p>Part of the spreadsheet has been set up. Complete the spreadsheet so that the number of days late, the late fee and the borrower’s status are displayed automatically when the number of days a book was kept is entered. You need to allow for ‘fill down’ when appropriate.</p>
+<p>Complete the outlined cells <strong>D3</strong>, <strong>E3</strong> and <strong>F3</strong>.</p>`,
+      sheet: [
+        ['Northside Library – Returns'],
+        ['Borrower', 'Book', 'Days Kept', 'Days Late', 'Late Fee', 'Status'],
+        ['Liam', 'The Hobbit', 21, null, null, null],
+        ['Mia', 'Wonder', 10, 0, 0, 'OK'],
+        ['Noah', 'Holes', 30, 16, 8, 'Blocked'],
+        ['Olivia', 'Matilda', 14, 0, 0, 'OK'],
+        ['Ruby', 'Dune', 45, 31, 10, 'Blocked'],
+        ['Sam', 'Hatchet', 24, 10, 5, 'Blocked'],
+        ['Zoe', 'Coraline', 15, 1, 0.5, 'OK']
+      ],
+      style: { bold: ['A1:F2'], merge: ['A1:F1'], center: ['A1:F1'], currency: ['E3:E9'], colWidths: { A: 100, B: 120 } },
+      cells: [
+        { cell: 'D3', fill: 'D3:D9', answer: '=IF(C3>14,C3-14,0)' },
+        { cell: 'E3', fill: 'E3:E9', answer: '=MIN(D3*0.5,10)' },
+        { cell: 'F3', fill: 'F3:F9', answer: '=IF(E3>=5,"Blocked","OK")' }
+      ],
+      guide: `<p><strong>Sample answer:</strong></p>
+<pre class="hoa-code">D3: =IF(C3&gt;14, C3-14, 0)       (or =MAX(C3-14, 0))
+E3: =MIN(D3*0.5, 10)           (or =IF(D3*0.5&gt;10, 10, D3*0.5))
+F3: =IF(E3&gt;=5, "Blocked", "OK")</pre>
+<p>Liam kept his book 7 days too long, so he owes $3.50 and is OK. Ruby's fee would be $15.50, but MIN caps it at $10.00. Sam owes exactly $5.00, which counts as "$5.00 or more", so the test must be &gt;= and not &gt;.</p>` }
+  ] },
+{ number: '31', marks: 3, layout: 0, section: 'CSSA style · Online store shipping',
+  stimulus: `<p>An online store works out the shipping cost of each order from the parcel’s weight, using the Shipping Rates table in the spreadsheet. A parcel is charged the rate for the band its weight falls in; for example, a 2.5 kg parcel is in the band that starts at 1 kg.</p>
+<p>Orders worth $100 or more are shipped free by standard delivery. Customers who choose Express delivery pay an extra $12.00 on top of the shipping cost, even if their standard shipping is free.</p>`,
+  items: [
+    { type: 'formula', marks: 3,
+      question: `<p>Part of the spreadsheet has been set up. Complete the spreadsheet so that the shipping cost and total cost of each order are calculated automatically. You need to allow for ‘fill down’ when appropriate.</p>
+<p>Complete the outlined cells <strong>E3</strong> and <strong>F3</strong>.</p>`,
+      sheet: [
+        ['Orders', null, null, null, null, null, null, 'Shipping Rates'],
+        ['Order No', 'Order Value', 'Weight (kg)', 'Delivery', 'Shipping', 'Total Cost', null, 'Weight from (kg)', 'Cost'],
+        ['#1001', 45, 0.8, 'Standard', null, null, null, 0, 8.95],
+        ['#1002', 120, 2.5, 'Standard', 0, 120, null, 1, 12.95],
+        ['#1003', 89.9, 3, 'Express', 28.95, 118.85, null, 3, 16.95],
+        ['#1004', 150, 6.2, 'Express', 12, 162, null, 5, 24.95],
+        ['#1005', 35.5, 12, 'Standard', 34.95, 70.45, null, 10, 34.95],
+        ['#1006', 99.99, 1, 'Standard', 12.95, 112.94],
+        ['#1007', 64, 4.9, 'Express', 28.95, 92.95]
+      ],
+      style: { bold: ['A1:F2', 'H1:I2'], merge: ['A1:F1', 'H1:I1'], center: ['A1:F1', 'H1:I1'], currency: ['B3:B9', 'E3:F9', 'I3:I7'],
+        colWidths: { A: 90, B: 110, C: 105, D: 90, E: 90, F: 100, G: 40, H: 140, I: 80 } },
+      cells: [
+        { cell: 'E3', fill: 'E3:E9', marks: 2, answer: '=IF(B3>=100,0,VLOOKUP(C3,$H$3:$I$7,2))+IF(D3="Express",12,0)' },
+        { cell: 'F3', fill: 'F3:F9', marks: 1, answer: '=B3+E3' }
+      ],
+      guide: `<p><strong>Sample answer:</strong></p>
+<pre class="hoa-code">E3: =IF(B3&gt;=100, 0, VLOOKUP(C3,$H$3:$I$7,2)) + IF(D3="Express", 12, 0)
+F3: =B3+E3</pre>
+<p>Order #1001 gives $8.95 and $53.95. The VLOOKUP has no FALSE: it needs the <em>approximate</em> match, which finds the largest "Weight from" that is not more than the parcel's weight. Order #1004 is over $100, so its standard shipping is free, but Express still adds $12.00. An order of exactly $100 also ships free, so the test is &gt;=.</p>
+<p>Another correct answer: <code>=IF(D3="Express",12,0)+IF(B3&lt;100,VLOOKUP(C3,$H$3:$I$7,2),0)</code>.</p>` }
+  ] },
+{ number: '32', marks: 4, layout: 0, section: 'CSSA style · Café payroll',
+  stimulus: `<p>The Corner Café pays its staff an hourly rate. Any hours worked above 38 in a week are overtime and are paid at time-and-a-half (1.5 × the employee’s hourly rate).</p>
+<p>Tax is withheld from each employee’s gross pay before they are paid: 15% if the gross pay is $1000 or less, otherwise 25%. The net pay is what is left after tax.</p>
+<p>The owner also needs to know the total gross pay for the week.</p>`,
+  items: [
+    { type: 'formula', marks: 4,
+      question: `<p>Part of the spreadsheet has been set up. Complete the spreadsheet so that each employee’s gross pay, tax and net pay, and the week’s total gross pay, are calculated automatically when the hours are entered. You need to allow for ‘fill down’ when appropriate.</p>
+<p>Complete the outlined cells <strong>D3</strong>, <strong>E3</strong>, <strong>F3</strong> and <strong>D10</strong>.</p>`,
+      sheet: [
+        ['Weekly Payroll'],
+        ['Employee', 'Hourly Rate', 'Hours Worked', 'Gross Pay', 'Tax', 'Net Pay'],
+        ['Aisha', 28, 40, null, null, null],
+        ['Ben', 25, 30, 750, 112.5, 637.5],
+        ['Carla', 32, 38, 1216, 304, 912],
+        ['Dev', 24, 20, 480, 72, 408],
+        ['Emma', 30, 44, 1410, 352.5, 1057.5],
+        ['Felix', 26, 35, 910, 136.5, 773.5],
+        [],
+        [null, null, 'Total', null]
+      ],
+      style: { bold: ['A1:F2', 'C10'], merge: ['A1:F1'], center: ['A1:F1'], currency: ['B3:B8', 'D3:F10'], colWidths: { A: 100, B: 110, C: 120, D: 105, E: 90, F: 100 } },
+      cells: [
+        { cell: 'D3', fill: 'D3:D8', answer: '=IF(C3>38,38*B3+(C3-38)*B3*1.5,C3*B3)' },
+        { cell: 'E3', fill: 'E3:E8', answer: '=IF(D3<=1000,D3*0.15,D3*0.25)' },
+        { cell: 'F3', fill: 'F3:F8', answer: '=D3-E3' },
+        { cell: 'D10', answer: '=SUM(D3:D8)' }
+      ],
+      guide: `<p><strong>Sample answer:</strong></p>
+<pre class="hoa-code">D3:  =IF(C3&gt;38, 38*B3 + (C3-38)*B3*1.5, C3*B3)
+E3:  =IF(D3&lt;=1000, D3*15%, D3*25%)
+F3:  =D3-E3
+D10: =SUM(D3:D8)</pre>
+<p>Aisha worked 2 hours of overtime: 38 × $28 + 2 × $42 = $1148.00 gross, $287.00 tax and $861.00 net. The week's total gross pay is $5914.00. Only the hours <em>above</em> 38 are paid at 1.5 times the rate. Carla worked exactly 38 hours, so she has no overtime.</p>
+<p>Each of the four cells is worth 1 mark. D10 only gives the right total once D3, E3 and F3 work for every row.</p>` }
+  ] },
+{ number: '33', marks: 4, layout: 0, section: 'CSSA style · Hardware store stock',
+  stimulus: `<p>A hardware store uses a spreadsheet to track its stock. Each item has a reorder level: when the quantity in stock falls to or below the reorder level, the item must be reordered. When an item is reordered, the store orders enough to bring its stock back up to the item’s maximum stock level. Items that do not need reordering have an order quantity of 0.</p>
+<p>For insurance purposes, the store also needs the value of the stock on hand for each item (unit cost × quantity in stock) and the total value of all its stock.</p>`,
+  items: [
+    { type: 'formula', marks: 4,
+      question: `<p>Part of the spreadsheet has been set up. Complete the spreadsheet so that the required information is displayed automatically when the stock levels are updated. You need to allow for ‘fill down’ when appropriate.</p>
+<p>Complete the outlined cells <strong>F3</strong>, <strong>G3</strong>, <strong>H3</strong> and <strong>H10</strong>.</p>`,
+      sheet: [
+        ['Stock Report'],
+        ['Item', 'Unit Cost', 'In Stock', 'Reorder Level', 'Max Stock', 'Reorder?', 'Order Qty', 'Stock Value'],
+        ['Hammer', 18.5, 12, 15, 60, null, null, null],
+        ['Screwdriver set', 24, 40, 20, 80, 'No', 0, 960],
+        ['Drill bits', 12.75, 20, 20, 50, 'Yes', 30, 255],
+        ['Tape measure', 9.9, 35, 10, 40, 'No', 0, 346.5],
+        ['Spirit level', 32, 3, 8, 25, 'Yes', 22, 96],
+        ['Paint brush', 6.45, 100, 30, 150, 'No', 0, 645],
+        [],
+        [null, null, null, null, null, null, 'Total', null]
+      ],
+      style: { bold: ['A1:H2', 'G10'], merge: ['A1:H1'], center: ['A1:H1'], currency: ['B3:B8', 'H3:H10'], colWidths: { A: 140, D: 120, E: 100, G: 100, H: 110 } },
+      cells: [
+        { cell: 'F3', fill: 'F3:F8', answer: '=IF(C3<=D3,"Yes","No")' },
+        { cell: 'G3', fill: 'G3:G8', answer: '=IF(F3="Yes",E3-C3,0)' },
+        { cell: 'H3', fill: 'H3:H8', answer: '=B3*C3' },
+        { cell: 'H10', answer: '=SUM(H3:H8)' }
+      ],
+      guide: `<p><strong>Sample answer:</strong></p>
+<pre class="hoa-code">F3:  =IF(C3&lt;=D3, "Yes", "No")
+G3:  =IF(F3="Yes", E3-C3, 0)      (or =IF(C3&lt;=D3, E3-C3, 0))
+H3:  =B3*C3
+H10: =SUM(H3:H8)</pre>
+<p>The hammers need reordering (12 is at or below 15), so the store orders 60 − 12 = 48; their stock value is $222.00. The total stock value is $2524.50. The drill bits are exactly at their reorder level, so the test must be &lt;= ("falls to or below").</p>` }
+  ] },
+{ number: '34', marks: 4, layout: 0, section: 'CSSA style · Final marks and grades',
+  stimulus: `<p>A school works out each student’s final mark for a course from three assessments. Each assessment has a weighting, stored in row 11 of the spreadsheet so that the weightings can be changed later. The final mark is the weighted total, rounded to the nearest whole number.</p>
+<p>The final mark is then converted to a grade using the Grade Table.</p>
+<p>To pass the course, a student must have a final mark of at least 50 <strong>and</strong> a mark of at least 40 in the exam. Otherwise the result is a Fail.</p>`,
+  items: [
+    { type: 'formula', marks: 4,
+      question: `<p>Part of the spreadsheet has been set up. Complete the spreadsheet so that each student’s final mark, grade and result are displayed automatically when their marks are entered. You need to allow for ‘fill down’ when appropriate.</p>
+<p>Complete the outlined cells <strong>E3</strong>, <strong>F3</strong> and <strong>G3</strong>.</p>`,
+      sheet: [
+        ['Course Results'],
+        ['Student', 'Task 1', 'Task 2', 'Exam', 'Final Mark', 'Grade', 'Result'],
+        ['Ava', 80, 70, 90, null, null, null],
+        ['Ben', 60, 55, 38, 48, 'E', 'Fail'],
+        ['Chloe', 92, 88, 95, 93, 'A', 'Pass'],
+        ['Daniel', 70, 80, 35, 55, 'D', 'Fail'],
+        ['Ella', 65, 60, 72, 67, 'C', 'Pass'],
+        ['Finn', 45, 50, 52, 50, 'D', 'Pass'],
+        ['Grace', 78, 74, 76, 76, 'B', 'Pass'],
+        [],
+        ['Weighting', 0.25, 0.25, 0.5],
+        [],
+        ['Grade Table'],
+        ['Mark', 'Grade'],
+        [0, 'E'], [50, 'D'], [65, 'C'], [75, 'B'], [85, 'A']
+      ],
+      style: { bold: ['A1:G2', 'A11', 'A13:B14'], merge: ['A1:G1', 'A13:B13'], center: ['A1:G1', 'B2:G9', 'A13:B19'], percent: ['B11:D11'], colWidths: { A: 110, E: 105 } },
+      cells: [
+        { cell: 'E3', fill: 'E3:E9', marks: 2, answer: '=ROUND(B3*$B$11+C3*$C$11+D3*$D$11,0)' },
+        { cell: 'F3', fill: 'F3:F9', answer: '=VLOOKUP(E3,$A$15:$B$19,2)' },
+        { cell: 'G3', fill: 'G3:G9', answer: '=IF(AND(E3>=50,D3>=40),"Pass","Fail")' }
+      ],
+      guide: `<p><strong>Sample answer:</strong></p>
+<pre class="hoa-code">E3: =ROUND(B3*$B$11 + C3*$C$11 + D3*$D$11, 0)
+F3: =VLOOKUP(E3,$A$15:$B$19,2)
+G3: =IF(AND(E3&gt;=50, D3&gt;=40), "Pass", "Fail")</pre>
+<p>Ava: 80 × 25% + 70 × 25% + 90 × 50% = 82.5, which rounds to 83, so she gets a B and passes. The weightings must be absolute ($B$11, $C$11, $D$11) or they would move down a row with every student. Daniel's final mark of 55 is enough, but his exam mark of 35 is not, so AND makes him Fail. Finn's 49.75 rounds to 50, which is a pass.</p>` }
+  ] },
+{ number: '35', marks: 3, layout: 0, section: 'CSSA style · Staff usernames',
+  stimulus: `<p>Harbour Tech creates computer accounts for its new employees automatically from a spreadsheet.</p>
+<ul><li>The <strong>username</strong> is the first letter of the employee’s first name followed by their surname, all in lower case (e.g. Olivia Chen → ochen).</li>
+<li>The <strong>email address</strong> is the username followed by @harbourtech.com.au.</li>
+<li>The <strong>staff code</strong> is the first three letters of the surname in capitals, followed by the year the employee started (e.g. CHE2026).</li></ul>`,
+  items: [
+    { type: 'formula', marks: 3,
+      question: `<p>Part of the spreadsheet has been set up. Complete the spreadsheet so that each new employee’s username, email address and staff code are created automatically when their details are entered. You need to allow for ‘fill down’ when appropriate.</p>
+<p>Complete the outlined cells <strong>D3</strong>, <strong>E3</strong> and <strong>F3</strong>.</p>`,
+      sheet: [
+        ['New Staff Accounts'],
+        ['First Name', 'Surname', 'Start Year', 'Username', 'Email', 'Staff Code'],
+        ['Olivia', 'Chen', 2026, null, null, null],
+        ['Marcus', 'Williams', 2025, 'mwilliams', 'mwilliams@harbourtech.com.au', 'WIL2025'],
+        ['Priya', 'Sharma', 2026, 'psharma', 'psharma@harbourtech.com.au', 'SHA2026'],
+        ['Tom', 'Nguyen', 2024, 'tnguyen', 'tnguyen@harbourtech.com.au', 'NGU2024'],
+        ['Sofia', 'Rossi', 2026, 'srossi', 'srossi@harbourtech.com.au', 'ROS2026'],
+        ['Ethan', 'Brown', 2025, 'ebrown', 'ebrown@harbourtech.com.au', 'BRO2025']
+      ],
+      style: { bold: ['A1:F2'], merge: ['A1:F1'], center: ['A1:F1'], colWidths: { A: 110, B: 100, C: 100, D: 110, E: 260, F: 110 } },
+      cells: [
+        { cell: 'D3', fill: 'D3:D8', answer: '=LOWER(LEFT(A3,1)&B3)' },
+        { cell: 'E3', fill: 'E3:E8', answer: '=D3&"@harbourtech.com.au"' },
+        { cell: 'F3', fill: 'F3:F8', answer: '=UPPER(LEFT(B3,3))&C3' }
+      ],
+      guide: `<p><strong>Sample answer:</strong></p>
+<pre class="hoa-code">D3: =LOWER(LEFT(A3,1) &amp; B3)
+E3: =D3 &amp; "@harbourtech.com.au"
+F3: =UPPER(LEFT(B3,3)) &amp; C3</pre>
+<p>LEFT takes characters from the start of the text, &amp; joins text together (CONCATENATE does the same), and LOWER and UPPER change the case. Olivia Chen gets ochen, ochen@harbourtech.com.au and CHE2026.</p>` }
   ] }
+
+
   ]
 });
 })();

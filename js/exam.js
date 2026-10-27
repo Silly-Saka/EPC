@@ -8,7 +8,7 @@
   var highlighter = null; // 'yellow' | 'blue' | 'red' | 'none' | null
 
   // ---------------------------------------------------------------- loading
-  var PV = '?v=20261030';   // version tag so browsers fetch updated papers
+  var PV = '?v=20261102';   // version tag so browsers fetch updated papers
   loadScript('papers/' + examId + '.js' + PV).then(function () {
     return loadScript('papers/' + examId + '-guide.js' + PV).catch(function () { /* optional */ });
   }).then(function () {
@@ -82,7 +82,23 @@
       g.index = gi;
       // SQL / formula practice questions: tables and sheets on the left, question and answer on the right (like the past papers)
       // (a written context passage, if the question has one, comes first, then the data)
-      if (exam.kind === 'textbook' && g.items.length && g.items.every(function (it) { return it.type === 'sql' || it.type === 'formula'; })) {
+      // spreadsheet formula questions: the whole question on the left, the spreadsheet tool on the right (like CSSA / NESA)
+      if (g.items.length && g.items.every(function (it) { return it.type === 'formula'; })) {
+        g.layout = 3;
+        var multi = g.items.length > 1;
+        g.stimulus = (g.stimulus || '') + g.items.map(function (it) {
+          var q = (multi && it.part ? '<p><strong>(' + it.part + ')</strong></p>' : '') + it.question, cs = (it.cells || []).map(function (t) { return t.cell; });
+          var list = cs.length > 1 ? cs.slice(0, -1).join(', ') + ' and ' + cs[cs.length - 1] : cs[0] || '';
+          var fills = (it.cells || []).filter(function (t) { return t.fill; });
+          it.question = '<p>Enter your formula' + (cs.length > 1 ? 's in cells ' : ' in cell ') + list + '.' +
+            '</p>' + (fills.length ? '<p class="muted" style="font-size:.9em">' + (cs.length > 1 ? 'Formulas are' : 'Your formula is') + ' checked as if filled ' + fills.map(function (t) {
+              var p = t.fill.split(':'), down = p[0].replace(/\d+/, '') === p[1].replace(/\d+/, '');
+              return down ? 'down to row ' + p[1].replace(/[A-Z]+/, '') : 'across to column ' + p[1].replace(/\d+/, '');
+            }).filter(function (s, i, a) { return a.indexOf(s) === i; }).join(' / ') + '.</p>' : '');
+          return q;
+        }).join('');
+      }
+      else if (exam.kind === 'textbook' && g.items.length && g.items.every(function (it) { return it.type === 'sql' || it.type === 'formula'; })) {
         g.layout = 1; g.autoStim = true;
         g.stimulus = (g.stimulus || '') + g.items.map(function (it) { var s = splitTables(it.question); it.question = s.question; return s.tables; }).join('');
       }
@@ -640,12 +656,10 @@
     bar.innerHTML = '<strong><i class="fas fa-clipboard-check"></i> Review mode</strong><span>Marks so far: <strong>' + r.got + ' / ' + r.total + '</strong>' + (r.pending ? ' — ' + r.pending + ' marks still to self-mark using the marking guidelines' : '') + '</span>' +
       '<button class="nsw-button nsw-button--dark nsw-button--small" id="rb-results">Results summary</button>' +
       '<button class="nsw-button nsw-button--dark nsw-button--small" id="rb-download"><i class="fas fa-download"></i> Download answers + marking guidelines (PDF)</button>' +
-      '<button class="nsw-button nsw-button--dark-outline nsw-button--small" id="rb-print"><i class="fas fa-print"></i> Print / save as PDF</button>' +
       '<button class="nsw-button nsw-button--dark-outline nsw-button--small" id="rb-retake">Retake exam</button>' +
       '<a class="nsw-button nsw-button--dark-outline nsw-button--small" href="index.html"><i class="fas fa-arrow-left"></i> Back to exams</a>';
     bar.querySelector('#rb-results').addEventListener('click', showResults);
     bar.querySelector('#rb-download').addEventListener('click', function () { exportReport(false); });
-    bar.querySelector('#rb-print').addEventListener('click', function () { exportReport(true); });
     bar.querySelector('#rb-retake').addEventListener('click', function () {
       if (!confirm('Clear your answers and marks for this exam and start again?')) return;
       store.remove('exam:' + examId); location.reload();
@@ -665,12 +679,11 @@
     var ov = el('<div class="info-modal"><button class="close-x">Close this screen X</button><div class="results"><h2>Results — ' + escapeHtml(model.title) + '</h2>' +
       '<div class="results-summary"><div class="stat">Total so far<b>' + r.got + ' / ' + r.total + '</b></div><div class="stat">Auto-marked items<b>' + objective + ' / ' + objectiveMax + '</b></div><div class="stat">Still to self-mark<b>' + r.pending + ' marks</b></div></div>' +
       '<p>Click a question to review it. Written answers, drawings, spreadsheets and SQL show the marking guidelines underneath your response — choose a mark for each one to complete your score.</p>' +
-      '<p style="display:flex;gap:1rem;flex-wrap:wrap"><button class="nsw-button nsw-button--dark" data-x="download"><i class="fas fa-download"></i> Download answers + marking guidelines (PDF)</button><button class="nsw-button nsw-button--dark-outline" data-x="print"><i class="fas fa-print"></i> Print / save as PDF</button><a class="nsw-button nsw-button--dark-outline" href="index.html"><i class="fas fa-arrow-left"></i> Back to exams</a></p>' +
+      '<p style="display:flex;gap:1rem;flex-wrap:wrap"><button class="nsw-button nsw-button--dark" data-x="download"><i class="fas fa-download"></i> Download answers + marking guidelines (PDF)</button><a class="nsw-button nsw-button--dark-outline" href="index.html"><i class="fas fa-arrow-left"></i> Back to exams</a></p>' +
       '<table><thead><tr><th>Question</th><th>Status</th><th>Mark</th><th>Out of</th><th>Marking</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>');
     ov.querySelector('.close-x').addEventListener('click', function () { ov.remove(); });
     ov.querySelector('tbody').addEventListener('click', function (e) { var tr = e.target.closest('tr[data-g]'); if (tr) { ov.remove(); go(+tr.getAttribute('data-g')); } });
     ov.querySelector('[data-x=download]').addEventListener('click', function () { exportReport(false); });
-    ov.querySelector('[data-x=print]').addEventListener('click', function () { exportReport(true); });
     document.body.appendChild(ov);
   }
 
